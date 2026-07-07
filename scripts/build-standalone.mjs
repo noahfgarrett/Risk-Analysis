@@ -1,9 +1,11 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const dist = join(root, 'dist')
+const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
+const outputName = `Risk-Analysis-v${pkg.version}.html`
 const replacements = [
   ['<script src="vendor/xlsx.bundle.js"></script>', 'vendor/xlsx.bundle.js'],
   ['<script src="vendor/chart.umd.min.js"></script>', 'vendor/chart.umd.min.js'],
@@ -18,6 +20,9 @@ for (const [tag, assetPath] of replacements) {
 }
 
 mkdirSync(dist, { recursive: true })
-writeFileSync(join(dist, 'Risk-Analysis.html'), html)
+for (const file of readdirSync(dist)) {
+  if (/^Risk-Analysis.*\.html(\.gz)?$/.test(file)) rmSync(join(dist, file))
+}
+writeFileSync(join(dist, outputName), html)
 
-console.log('Built dist/Risk-Analysis.html')
+console.log(`Built dist/${outputName}`)

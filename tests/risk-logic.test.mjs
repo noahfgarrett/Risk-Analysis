@@ -140,14 +140,15 @@ test('step issue contribution ranks QAQC DV and EHS by caught issues', () => {
   assert.equal(JSON.stringify(rows.map((row) => row.ratio)), JSON.stringify([41, 35, 24]))
 })
 
-test('update asset selection uses the plain HTML asset for simple downloads', () => {
+test('update asset selection prefers the versioned plain HTML asset for simple downloads', () => {
   const ctx = loadPipeline()
   const selected = ctx.selectUpdateAsset([
     { name: 'Risk-Analysis.html.gz', url: 'api-gzip', browser_download_url: 'download-gzip' },
     { name: 'Risk-Analysis.html', url: 'api-html', browser_download_url: 'download-html' },
+    { name: 'Risk-Analysis-v1.0.1.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
   ])
 
   assert.equal(selected.downloadKind, 'html')
-  assert.equal(selected.assetName, 'Risk-Analysis.html')
-  assert.equal(selected.downloadUrl, 'download-html')
+  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.1.html')
+  assert.equal(selected.downloadUrl, 'download-versioned')
 })

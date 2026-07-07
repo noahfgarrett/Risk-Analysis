@@ -21,7 +21,7 @@ The update modal checks:
 https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest
 ```
 
-Attach a downloadable `.html` asset to each release for in-app updates.
+Attach a downloadable `Risk-Analysis-v<version>.html` asset to each release for in-app updates.
 
 Build those assets with:
 

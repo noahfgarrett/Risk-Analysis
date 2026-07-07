@@ -909,7 +909,8 @@ function scoreRisk(areas, resolved){
   return areas;
 }
 function selectUpdateAsset(assets){
-  const html=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html'));
+  const htmlAssets=(assets||[]).filter(a=>String(a.name||'').toLowerCase().endsWith('.html'));
+  const html=htmlAssets.find(a=>/^Risk-Analysis-v\d+\.\d+\.\d+\.html$/i.test(String(a.name||''))) || htmlAssets[0];
   if(!html) return null;
   return {downloadUrl:html.browser_download_url,assetApiUrl:html.url,assetName:html.name,downloadKind:'html'};
 }
