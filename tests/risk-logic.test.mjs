@@ -117,3 +117,37 @@ test('blind-spot risk scoring produces finite bars from coverage rows', () => {
   assert.equal(alpha.scoreDist[0], 1)
   assert.equal(alpha.scoreDist[1], 1)
 })
+
+test('issue distribution rows include share labels for chart bars', () => {
+  const ctx = loadPipeline()
+  const rows = ctx.issueShareRows([
+    { key: 'Alpha', issueCount: 1 },
+    { key: 'Beta', issueCount: 3 },
+  ])
+
+  assert.equal(rows[0].issueShare, 25)
+  assert.equal(rows[0].issueShareLabel, '25%')
+  assert.equal(rows[1].issueShare, 75)
+  assert.equal(rows[1].issueShareLabel, '75%')
+})
+
+test('step issue contribution ranks QAQC DV and EHS by caught issues', () => {
+  const ctx = loadPipeline()
+  const rows = ctx.stepIssueContributions(equipment)
+
+  assert.equal(JSON.stringify(rows.map((row) => row.step)), JSON.stringify(['QAQC', 'DV', 'EHS']))
+  assert.equal(JSON.stringify(rows.map((row) => row.issueCount)), JSON.stringify([7, 6, 4]))
+  assert.equal(JSON.stringify(rows.map((row) => row.ratio)), JSON.stringify([41, 35, 24]))
+})
+
+test('update asset selection uses the plain HTML asset for simple downloads', () => {
+  const ctx = loadPipeline()
+  const selected = ctx.selectUpdateAsset([
+    { name: 'Risk-Analysis.html.gz', url: 'api-gzip', browser_download_url: 'download-gzip' },
+    { name: 'Risk-Analysis.html', url: 'api-html', browser_download_url: 'download-html' },
+  ])
+
+  assert.equal(selected.downloadKind, 'html')
+  assert.equal(selected.assetName, 'Risk-Analysis.html')
+  assert.equal(selected.downloadUrl, 'download-html')
+})

@@ -1,4 +1,3 @@
-import { gzipSync } from 'node:zlib'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,6 +19,5 @@ for (const [tag, assetPath] of replacements) {
 
 mkdirSync(dist, { recursive: true })
 writeFileSync(join(dist, 'Risk-Analysis.html'), html)
-writeFileSync(join(dist, 'Risk-Analysis.html.gz'), gzipSync(Buffer.from(html)))
 
-console.log('Built dist/Risk-Analysis.html and dist/Risk-Analysis.html.gz')
+console.log('Built dist/Risk-Analysis.html')

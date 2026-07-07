@@ -164,8 +164,9 @@ button{font-family:inherit}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:12px;flex-wrap:wrap}
 .section-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.grid-2>*{min-width:0}
+@media(max-width:900px){.grid-2{grid-template-columns:minmax(0,1fr)}}
 
 /* ---- controls ---- */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -379,8 +380,18 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .mbreak{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.2,.7,.2,1)}
 .mbreak.open{grid-template-rows:1fr}
 .mbreak-inner{overflow:hidden;min-height:0}
-.mbreak.open .mbreak-inner{padding:4px 6px 14px 66px}
-.bcombo{display:grid;grid-template-columns:minmax(160px,220px) 96px 1fr 128px;gap:12px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.mbreak.open .mbreak-inner{padding:4px 6px 14px 28px}
+.stepcatch{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin:0 0 14px}
+.stepcatch-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.stepcatch-title{font-size:12px;font-weight:750;color:var(--ink)}
+.stepcatch-note{font-size:11px;color:var(--ink-3)}
+.stepcatch-row{display:grid;grid-template-columns:56px 1fr 92px;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.stepcatch-row:first-of-type{border-top:0}
+.stepcatch-step{font-size:12px;font-weight:800}
+.stepcatch-track{height:20px;background:var(--paper);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.stepcatch-fill{height:100%;border-radius:4px 0 0 4px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-family:var(--mono);font-size:11px;font-weight:800;min-width:30px}
+.stepcatch-meta{font-size:11.5px;color:var(--ink-2);font-family:var(--mono);text-align:right}
+.bcombo{display:grid;grid-template-columns:minmax(130px,1fr) 82px minmax(200px,2fr) 96px;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
 .bcombo:first-child{border-top:0}
 .bchips{display:flex;gap:3px;flex-wrap:wrap}
 .bname{font-weight:650;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -390,6 +401,13 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .bbar-val{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--ink);min-width:32px;text-align:right}
 .bbar-fill{height:100%;border-radius:4px 0 0 4px;background:var(--accent);transition:width .4s ease}
 .bmeta{font-size:11.5px;color:var(--ink-2);text-align:right;font-family:var(--mono)}
+@media(max-width:720px){
+  .stepcatch-row{grid-template-columns:48px 1fr}
+  .stepcatch-meta{grid-column:2;text-align:left}
+  .bcombo{grid-template-columns:minmax(100px,1fr) 80px}
+  .bbar{grid-column:1/-1}
+  .bmeta{grid-column:1/-1;text-align:left}
+}
 .covmix{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .covmix .score-0,.covmix .score-1,.covmix .score-2,.covmix .score-3{
   display:inline-flex;gap:4px;align-items:baseline;border:1px solid currentColor;border-radius:5px;padding:1px 5px;
@@ -443,7 +461,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.0.0</span>
+      Risk Analysis v<span id="version-label">1.0.1</span>
     </button>
   </header>
 
@@ -810,6 +828,25 @@ function tierBreakdown(equipment, score, dim){
   rows.sort((a,b)=>b.count-a.count || b.issueCount-a.issueCount || String(a.key).localeCompare(String(b.key)));
   return rows;
 }
+function issueShareRows(rows){
+  const total=rows.reduce((sum,row)=>sum+(row.issueCount||0),0);
+  return rows.map(row=>{
+    const issueShare=total?Math.round(((row.issueCount||0)/total)*100):0;
+    return {...row, issueShare, issueShareLabel:issueShare+'%'};
+  });
+}
+function stepIssueContributions(equipment){
+  const rows=STEP_CATEGORIES.map(step=>{
+    const items=equipment.filter(e=>e.present&&e.present[step]);
+    const issueCount=items.reduce((sum,e)=>sum+(e.issueCount||0),0);
+    const equipmentCount=items.length;
+    return {step, issueCount, equipmentCount, avgIssues:equipmentCount?issueCount/equipmentCount:0, ratio:0};
+  });
+  const total=rows.reduce((sum,row)=>sum+row.issueCount,0);
+  rows.forEach(row=>{ row.ratio=total?Math.round((row.issueCount/total)*100):0; });
+  rows.sort((a,b)=>b.issueCount-a.issueCount || STEP_CATEGORIES.indexOf(a.step)-STEP_CATEGORIES.indexOf(b.step));
+  return rows;
+}
 function areaStatsFrom(equip, keyFn){
   const areas=coverageBreakdownBy(equip,keyFn);
   const maxIPE=Math.max(1e-9,...areas.map(a=>(a.issueCount||0)/Math.max(1,a.n)));
@@ -828,6 +865,11 @@ function scoreRisk(areas, resolved){
   areas.forEach(a=>{ a.risk=Math.round(a.exposure/maxExp*100); });
   areas.sort((x,y)=>y.risk-x.risk || y.exposure-x.exposure);
   return areas;
+}
+function selectUpdateAsset(assets){
+  const html=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html'));
+  if(!html) return null;
+  return {downloadUrl:html.browser_download_url,assetApiUrl:html.url,assetName:html.name,downloadKind:'html'};
 }
 
 // opts.catAssign: { headerLower: ['QAQC',...] } overrides classifyStep for that column.
@@ -985,7 +1027,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.0.0';
+const APP_VERSION='1.0.1';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1004,6 +1046,15 @@ const state = {
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.0.1',
+    date:'2026-07-07T12:30:00Z',
+    type:'fix',
+    stats:'Small update',
+    notes:`### Updates
+- Minor dashboard refinements
+- Small update flow improvements`
+  },
   {
     version:'1.0.0',
     date:'2026-07-07T12:00:00Z',
@@ -1026,16 +1077,6 @@ function isNewer(remote, local){
   const len=Math.max(r.length,l.length);
   for(let i=0;i<len;i++){ const rv=r[i]||0, lv=l[i]||0; if(rv>lv) return true; if(rv<lv) return false; }
   return false;
-}
-function selectUpdateAsset(assets){
-  const html=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html'));
-  if(!html) return null;
-  const gzip=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html.gz'));
-  if(!gzip) return {downloadUrl:html.browser_download_url,assetApiUrl:html.url,assetName:html.name,downloadKind:'html'};
-  return {
-    downloadUrl:gzip.browser_download_url, assetApiUrl:gzip.url, assetName:gzip.name, downloadKind:'gzip-html',
-    fallbackDownloadUrl:html.browser_download_url, fallbackAssetApiUrl:html.url, fallbackAssetName:html.name
-  };
 }
 async function checkForUpdate(){
   try{
@@ -1129,39 +1170,20 @@ function directUpdateDownload(url, filename){
   const a=document.createElement('a'); a.href=url; a.download=filename; a.target='_blank'; a.rel='noopener noreferrer';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
-function canDecompressGzip(){ return typeof DecompressionStream==='function'; }
-async function decompressGzipHtml(blob){
-  const stream=blob.stream().pipeThrough(new DecompressionStream('gzip'));
-  const htmlBlob=await new Response(stream).blob();
-  return new Blob([htmlBlob],{type:'text/html'});
-}
 async function fetchAssetBlob(assetApiUrl){
   const response=await fetch(assetApiUrl,{headers:{Accept:'application/octet-stream'}});
   if(!response.ok) throw new Error('HTTP '+response.status);
   return response.blob();
 }
 async function downloadUpdateFile(info){
-  const direct=info.downloadKind==='gzip-html'
-    ? (info.fallbackDownloadUrl&&info.fallbackAssetName?{url:info.fallbackDownloadUrl,filename:info.fallbackAssetName}:null)
-    : {url:info.downloadUrl,filename:info.assetName};
+  const direct={url:info.downloadUrl,filename:info.assetName};
   if(isStandaloneFileContext() && direct){ directUpdateDownload(direct.url,direct.filename); return; }
-  if(info.downloadKind==='gzip-html' && canDecompressGzip()){
-    try{
-      const compressed=await fetchAssetBlob(info.assetApiUrl);
-      const html=await decompressGzipHtml(compressed);
-      download(html,info.fallbackAssetName||info.assetName.replace(/\.gz$/,''));
-      return;
-    }catch(_){}
-  }
-  const api=info.downloadKind==='gzip-html'?info.fallbackAssetApiUrl:info.assetApiUrl;
-  const name=info.downloadKind==='gzip-html'?info.fallbackAssetName:info.assetName;
-  if(!api||!name){ if(direct){ directUpdateDownload(direct.url,direct.filename); return; } throw new Error('No compatible update asset.'); }
+  if(!info.assetApiUrl||!info.assetName){ directUpdateDownload(direct.url,direct.filename); return; }
   try{
-    const html=await fetchAssetBlob(api);
-    download(new Blob([html],{type:'text/html'}),name);
+    const html=await fetchAssetBlob(info.assetApiUrl);
+    download(new Blob([html],{type:'text/html'}),info.assetName);
   }catch(_){
-    if(direct){ directUpdateDownload(direct.url,direct.filename); return; }
-    throw new Error('Download failed.');
+    directUpdateDownload(direct.url,direct.filename);
   }
 }
 $('#version-btn').addEventListener('click',()=>openUpdateModal(null,'changelog'));
@@ -1611,7 +1633,7 @@ const CHART_VP=420, CHART_PERBAR=22, CHART_MAXH=15000;
 function renderChart(){
   const dim=state.dim;
   const eqset=catActive()?state.model.equipment.filter(catMatch):state.model.equipment;
-  const rows=rollupBy(eqset,dim); // ALL groups — no cap; the plot scrolls to fit them
+  const rows=issueShareRows(rollupBy(eqset,dim)); // ALL groups — no cap; the plot scrolls to fit them
   const summary=stepSelectionSummary(catSelection(),'No filter');
   const suffix=summary==='No filter'?'':` · ${summary}`;
   $('#chart-title').textContent=`Issues by ${dim}${suffix}`;
@@ -1628,7 +1650,7 @@ function renderChart(){
   const ctx=$('#mainchart').getContext('2d');
   state.chart=new Chart(ctx,{
     type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26,barLabels:rows.map(r=>`${r.issueCount.toLocaleString()} · ${r.issueShareLabel}`)}]},
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
@@ -1726,6 +1748,22 @@ function riskColor(t){ t=Math.max(0,Math.min(1,t));
   let col; if(t<0.5){ const k=t/0.5; col=a.map((v,i)=>Math.round(v+(b[i]-v)*k)); }
   else{ const k=(t-0.5)/0.5; col=b.map((v,i)=>Math.round(v+(c[i]-v)*k)); }
   return `rgb(${col[0]},${col[1]},${col[2]})`; }
+function stepColor(step){ return step==='QAQC'?'var(--qaqc)':step==='DV'?'var(--dv)':'var(--ehs)'; }
+function stepContributionHTML(equipment){
+  const rows=stepIssueContributions(equipment);
+  const max=Math.max(1,...rows.map(r=>r.issueCount));
+  return `<div class="stepcatch" data-tip="Issues caught by step category. Equipment with multiple step types contributes to each step it has.">
+    <div class="stepcatch-head">
+      <div class="stepcatch-title hastip">Step issue contribution</div>
+      <div class="stepcatch-note">share of QAQC / DV / EHS issue touches</div>
+    </div>
+    ${rows.map(r=>`<div class="stepcatch-row">
+      <div class="stepcatch-step" style="color:${stepColor(r.step)}">${r.step}</div>
+      <div class="stepcatch-track"><div class="stepcatch-fill" style="width:${Math.max(r.issueCount?8:0,Math.round(r.issueCount/max*100))}%;background:${stepColor(r.step)}">${r.ratio}%</div></div>
+      <div class="stepcatch-meta">${r.issueCount.toLocaleString()} iss · ${r.equipmentCount.toLocaleString()} eq</div>
+    </div>`).join('')}
+  </div>`;
+}
 
 /* ---- risk matrix (signature) ----
    Reframed: QAQC/DV/EHS steps EXIST to surface issues, so catching more is GOOD.
@@ -1747,6 +1785,7 @@ function renderMatrix(){
     : '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#8b97a4" stroke-width="2"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>';
   const bdim=state.matrixDim||'Steps';
   let html=`<div class="verdict ${verdict.cls}">${vic}<div><b>${verdict.cls==='good'?'Steps are catching issues':verdict.cls==='bad'?'Coverage is finding fewer issues':'Signal inconclusive'}</b><span>${verdict.text}</span></div></div>`;
+  html+=stepContributionHTML(state.model.equipment);
   for(const x of m){
     const w=Math.round((x.avgIssues/maxAvg)*100);
     const col=goodColor(x.avgIssues);
@@ -2142,7 +2181,30 @@ $('#dl-analysis').addEventListener('click',async()=>{
 });
 /* PNG exports */
 // paint white behind chart canvas for clean PNG
-Chart.register({id:'whitebg',beforeDraw:(c)=>{const {ctx}=c; ctx.save(); ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore();}});
+Chart.register(
+  {id:'whitebg',beforeDraw:(c)=>{const {ctx}=c; ctx.save(); ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore();}},
+  {id:'barValueLabels',afterDatasetsDraw(chart){
+    if(chart.canvas.id!=='mainchart') return;
+    const dataset=chart.data.datasets&&chart.data.datasets[0];
+    const labels=dataset&&dataset.barLabels;
+    if(!labels||!labels.length) return;
+    const meta=chart.getDatasetMeta(0), ctx=chart.ctx, xScale=chart.scales.x;
+    ctx.save();
+    ctx.font='700 11px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');
+    ctx.textBaseline='middle';
+    meta.data.forEach((bar,i)=>{
+      const label=labels[i]; if(!label) return;
+      const x=xScale.getPixelForValue(dataset.data[i]||0), y=bar.y;
+      const width=Math.abs(x-xScale.getPixelForValue(0));
+      const textW=ctx.measureText(label).width;
+      const inside=width>textW+18;
+      ctx.fillStyle=inside?'#fff':'#111820';
+      ctx.textAlign=inside?'right':'left';
+      ctx.fillText(label, inside?x-8:x+8, y);
+    });
+    ctx.restore();
+  }}
+);
 $('#dl-chart').addEventListener('click',()=>{ if(!state.chart)return;
   const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${state.dim.toLowerCase()}.png`; a.click(); toast('Chart PNG saved'); });
 async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}

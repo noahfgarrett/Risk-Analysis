@@ -21,7 +21,7 @@ The update modal checks:
 https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest
 ```
 
-Attach a downloadable `.html` asset to each release for in-app updates. A `.html.gz` asset can also be attached as the preferred smaller download, as long as the plain `.html` asset is present too.
+Attach a downloadable `.html` asset to each release for in-app updates.
 
 Build those assets with:
 
