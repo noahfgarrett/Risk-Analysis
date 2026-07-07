@@ -206,9 +206,14 @@ button{font-family:inherit}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:12px;flex-wrap:wrap}
 .section-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
+.section-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 .grid-2>*{min-width:0}
 @media(max-width:900px){.grid-2{grid-template-columns:minmax(0,1fr)}}
+.card.fullscreen{position:fixed!important;inset:14px;z-index:96;overflow:auto;box-shadow:0 24px 80px rgba(17,24,32,.34)}
+.card.fullscreen .chartwrap{height:calc(100vh - 250px)}
+.card.fullscreen.matrix{padding:18px}
+body.chart-fullscreen{overflow:hidden}
 
 /* ---- controls ---- */
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -249,6 +254,10 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .kpi .v{font-size:30px;font-weight:680;letter-spacing:-.02em;font-family:var(--mono)}
 .kpi .s{font-size:12px;color:var(--ink-3);margin-top:2px}
 .kpi.warn .v{color:var(--risk-hi)}
+.dash-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:-4px 0 14px}
+.toggle-control{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer}
+.toggle-control input{margin:0;accent-color:var(--accent)}
+.toggle-control span{font-size:11px;font-weight:600;color:var(--ink-3)}
 
 /* ---- hierarchy table ---- */
 .htable{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
@@ -503,7 +512,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.0.1</span>
+      Risk Analysis v<span id="version-label">1.0.2</span>
     </button>
   </header>
 
@@ -570,6 +579,12 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     <!-- DASHBOARD -->
     <section class="view" id="view-dashboard">
       <div class="kpis" id="kpis"></div>
+      <div class="dash-controls">
+        <label class="toggle-control" data-tip="Removes equipment whose System or UPN starts with RR from every dashboard chart and chart export.">
+          <input type="checkbox" id="excludeRooms" />
+          Remove rooms <span>RR systems / UPNs</span>
+        </label>
+      </div>
 
       <div class="grid-2">
         <div class="card" style="padding:18px" id="chartcard">
@@ -578,9 +593,13 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
               <div class="eyebrow">Issue distribution</div>
               <h3 id="chart-title">Issues by System</h3>
             </div>
-            <button class="btn ghost" id="dl-chart" title="Download chart PNG">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
-            </button>
+            <div class="section-actions">
+              <button class="btn ghost" data-fullscreen-target="chartcard" title="View issue distribution full screen">Full</button>
+              <button class="btn ghost" id="xlsx-chart" title="Export filtered issue distribution XLSX">XLSX</button>
+              <button class="btn ghost" id="dl-chart" title="Download chart PNG">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+              </button>
+            </div>
           </div>
           <div class="pills" id="dimpills" style="margin-bottom:10px">
             <button class="pill active" data-dim="System">System</button>
@@ -618,9 +637,13 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
               <div class="eyebrow">Risk hypothesis</div>
               <h3>Are QAQC · DV · EHS steps catching issues?</h3>
             </div>
-            <button class="btn ghost" id="dl-matrix" title="Download matrix PNG">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
-            </button>
+            <div class="section-actions">
+              <button class="btn ghost" data-fullscreen-target="matrixcard" title="View risk hypothesis full screen">Full</button>
+              <button class="btn ghost" id="xlsx-matrix" title="Export filtered risk hypothesis XLSX">XLSX</button>
+              <button class="btn ghost" id="dl-matrix" title="Download matrix PNG">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+              </button>
+            </div>
           </div>
           <div class="subfilter matrix-filter">
             <span class="subfilter-label">Breakdown</span>
@@ -643,9 +666,13 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
             <div class="eyebrow">Risk analysis</div>
             <h3 id="risk-title">Highest Risk Areas</h3>
           </div>
-          <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
-          </button>
+          <div class="section-actions">
+            <button class="btn ghost" data-fullscreen-target="riskcard" title="View risk analysis full screen">Full</button>
+            <button class="btn ghost" id="xlsx-risk" title="Export filtered risk analysis XLSX">XLSX</button>
+            <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+            </button>
+          </div>
         </div>
         <div class="pills" id="riskdim" style="margin-bottom:10px">
           <button class="pill active" data-dim="System">System</button>
@@ -820,6 +847,23 @@ function matchStepSelection(e, selection){
     ? sel.categories.every(c=>e.present&&e.present[c])
     : sel.categories.some(c=>e.present&&e.present[c]);
 }
+function roomCodeMatch(value){
+  const text=String(value==null?'':value).trim().toUpperCase();
+  return text==='RR' || /^RR[\s\-_:/#]/.test(text);
+}
+function isRoomEquipment(e){
+  return roomCodeMatch(e&&e.systemName) || roomCodeMatch(e&&e.upnRaw) || roomCodeMatch(e&&e.upn);
+}
+function filterRoomEquipment(equipment, excludeRooms){
+  const rows=equipment||[];
+  return excludeRooms ? rows.filter(e=>!isRoomEquipment(e)) : rows.slice();
+}
+function filterEquipmentForChart(equipment, opts){
+  opts=opts||{};
+  let rows=filterRoomEquipment(equipment, !!opts.excludeRooms);
+  if(opts.stepSelection) rows=rows.filter(e=>matchStepSelection(e, opts.stepSelection));
+  return rows;
+}
 function dimensionKey(e, dim){
   if(dim==='System') return e.systemName || '(no system)';
   if(dim==='Discipline') return e.discipline || '(none)';
@@ -870,12 +914,25 @@ function tierBreakdown(equipment, score, dim){
   rows.sort((a,b)=>b.count-a.count || b.issueCount-a.issueCount || String(a.key).localeCompare(String(b.key)));
   return rows;
 }
+function scoreMatrix(equipment){
+  const rows=[0,1,2,3].map(score=>{
+    const grp=(equipment||[]).filter(e=>e.score===score);
+    const eqCount=grp.length; const issueCount=grp.reduce((a,e)=>a+(e.issueCount||0),0);
+    const withIssues=grp.filter(e=>e.hasIssues).length;
+    return {score,label:score+'/3',equipmentCount:eqCount,issueCount,
+      avgIssues:eqCount?issueCount/eqCount:0, pctWithIssues:eqCount?(withIssues/eqCount)*100:0};
+  });
+  return rows;
+}
 function issueShareRows(rows){
   const total=rows.reduce((sum,row)=>sum+(row.issueCount||0),0);
   return rows.map(row=>{
     const issueShare=total?Math.round(((row.issueCount||0)/total)*100):0;
     return {...row, issueShare, issueShareLabel:issueShare+'%'};
   });
+}
+function issueDistributionRows(equipment, dim, opts){
+  return issueShareRows(rollupBy(filterEquipmentForChart(equipment, opts), dim));
 }
 function stepIssueContributions(equipment){
   const rows=STEP_CATEGORIES.map(step=>{
@@ -888,6 +945,12 @@ function stepIssueContributions(equipment){
   rows.forEach(row=>{ row.ratio=total?Math.round((row.issueCount/total)*100):0; });
   rows.sort((a,b)=>b.issueCount-a.issueCount || STEP_CATEGORIES.indexOf(a.step)-STEP_CATEGORIES.indexOf(b.step));
   return rows;
+}
+function toggleExpandedScore(scores, score){
+  const set=new Set((scores||[]).map(Number));
+  score=Number(score);
+  set.has(score) ? set.delete(score) : set.add(score);
+  return [...set].sort((a,b)=>a-b);
 }
 function areaStatsFrom(equip, keyFn){
   const areas=coverageBreakdownBy(equip,keyFn);
@@ -1024,13 +1087,7 @@ function buildModel(esr, dropdowns, issues, fullExport){
     const s=(systems[eq.systemName] ||= {systemName:eq.systemName,equipmentCount:0,issueCount:0,withIssues:0,scoreDist:{0:0,1:0,2:0,3:0}});
     s.equipmentCount++; s.issueCount+=eq.issueCount; if(eq.hasIssues)s.withIssues++; s.scoreDist[eq.score]++;
   }
-  const matrix=[0,1,2,3].map(score=>{
-    const grp=equipment.filter(e=>e.score===score);
-    const eqCount=grp.length; const issueCount=grp.reduce((a,e)=>a+e.issueCount,0);
-    const withIssues=grp.filter(e=>e.hasIssues).length;
-    return {score,label:score+'/3',equipmentCount:eqCount,issueCount,
-      avgIssues:eqCount?issueCount/eqCount:0, pctWithIssues:eqCount?(withIssues/eqCount)*100:0};
-  });
+  const matrix=scoreMatrix(equipment);
   const unmatchedArr=[...unmatched].map(k=>({id:issues.raw[k],count:issues.counts[k]})).sort((a,b)=>b.count-a.count);
   return { equipment,
     systems:Object.values(systems).sort((a,b)=>b.issueCount-a.issueCount),
@@ -1070,7 +1127,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.0.1';
+const APP_VERSION='1.0.2';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1083,12 +1140,22 @@ const state = {
   riskCatSel:new Set(), riskCatNone:false, riskCatMode:'any',
   catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{},
   collapsed:new Set(), catInit:false, chart:null,
+  excludeRooms:false, matrixExpanded:new Set(), fullscreenCard:null,
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
 };
 
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.0.2',
+    date:'2026-07-07T13:00:00Z',
+    type:'feature',
+    stats:'Small update',
+    notes:`### Updates
+- Minor chart workflow refinements
+- Small export improvements`
+  },
   {
     version:'1.0.1',
     date:'2026-07-07T12:30:00Z',
@@ -1596,6 +1663,7 @@ window.addEventListener('resize',debounce(()=>{ if(state.visible) renderWindow()
 /* ---- dashboard ---- */
 function renderDashboard(){
   const t=state.model.totals;
+  const roomToggle=$('#excludeRooms'); if(roomToggle) roomToggle.checked=state.excludeRooms;
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
   // counted once (no double-count across multiple step types).
   const caught=state.model.equipment.reduce((a,e)=>a+(e.score>=1?e.issueCount:0),0);
@@ -1608,6 +1676,9 @@ function renderDashboard(){
   if($('#view-dashboard').classList.contains('active')){ renderChart(); renderRisk(); }
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
+function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
+function baseChartEquipment(){ return filterRoomEquipment(state.model.equipment,state.excludeRooms); }
+function matrixEquipment(){ return baseChartEquipment(); }
 
 $$('#dimpills .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#dimpills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
@@ -1661,11 +1732,44 @@ function catMatch(e){ return matchStepSelection(e,catSelection()); }
 function riskMatch(e){ return matchStepSelection(e,riskSelection()); }
 function catActive(){ return state.catNone || state.catSel.size>0; }
 function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
+function issueChartEquipment(){ return filterEquipmentForChart(state.model.equipment,{excludeRooms:state.excludeRooms,stepSelection:catSelection()}); }
+function riskChartEquipment(){ return filterEquipmentForChart(state.model.equipment,{excludeRooms:state.excludeRooms,stepSelection:riskSelection()}); }
+function currentIssueRows(){ return issueDistributionRows(state.model.equipment,state.dim,{excludeRooms:state.excludeRooms,stepSelection:catSelection()}); }
+$('#excludeRooms').addEventListener('change',e=>{
+  state.excludeRooms=e.target.checked;
+  exitFocus(true); exitRiskFocus(true);
+  renderDashboard();
+});
+function resizeChartsSoon(){
+  setTimeout(()=>{ if(state.chart) state.chart.resize(); if(state.riskChart) state.riskChart.resize(); },80);
+}
+function setFullscreenCard(cardId){
+  if(state.fullscreenCard && state.fullscreenCard!==cardId){
+    const prev=$('#'+state.fullscreenCard); if(prev) prev.classList.remove('fullscreen');
+  }
+  const card=cardId?$('#'+cardId):null;
+  const opening=!!card && !card.classList.contains('fullscreen');
+  $$('.card.fullscreen').forEach(c=>c.classList.remove('fullscreen'));
+  state.fullscreenCard=opening?cardId:null;
+  if(card&&opening) card.classList.add('fullscreen');
+  document.body.classList.toggle('chart-fullscreen',!!state.fullscreenCard);
+  $$('[data-fullscreen-target]').forEach(btn=>{
+    const active=btn.dataset.fullscreenTarget===state.fullscreenCard;
+    btn.textContent=active?'Exit':'Full';
+    btn.setAttribute('aria-pressed',active?'true':'false');
+  });
+  resizeChartsSoon();
+}
+$$('[data-fullscreen-target]').forEach(btn=>btn.addEventListener('click',()=>setFullscreenCard(btn.dataset.fullscreenTarget)));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&state.fullscreenCard) setFullscreenCard(null); });
 // click anywhere on a tier row to expand/collapse its step-pairing breakdown (animated)
 $('#matrixbody').addEventListener('click',ev=>{
   const row=ev.target.closest&&ev.target.closest('.mrow[data-score]'); if(!row) return;
   const box=$('#mbreak-'+row.dataset.score); if(!box) return;
-  const open=box.classList.toggle('open');
+  const score=+row.dataset.score;
+  state.matrixExpanded=new Set(toggleExpandedScore([...state.matrixExpanded],score));
+  const open=state.matrixExpanded.has(score);
+  box.classList.toggle('open',open);
   const c=row.querySelector('.bcaret'); if(c) c.setAttribute('aria-expanded',open?'true':'false');
 });
 $$('#matrixdim .pill').forEach(p=>p.addEventListener('click',()=>{
@@ -1675,8 +1779,7 @@ $$('#matrixdim .pill').forEach(p=>p.addEventListener('click',()=>{
 const CHART_VP=420, CHART_PERBAR=22, CHART_MAXH=15000;
 function renderChart(){
   const dim=state.dim;
-  const eqset=catActive()?state.model.equipment.filter(catMatch):state.model.equipment;
-  const rows=issueShareRows(rollupBy(eqset,dim)); // ALL groups — no cap; the plot scrolls to fit them
+  const rows=currentIssueRows(); // ALL groups — no cap; the plot scrolls to fit them
   const summary=stepSelectionSummary(catSelection(),'No filter');
   const suffix=summary==='No filter'?'':` · ${summary}`;
   $('#chart-title').textContent=`Issues by ${dim}${suffix}`;
@@ -1712,7 +1815,7 @@ function rankOf(rows,key){ return rows.findIndex(r=>r.key===key)+1; }
 function enterFocus(dim,row,rows){
   const max=Math.max(1,...rows.map(r=>r.issueCount));
   const keyFn={System:e=>e.systemName,Discipline:e=>e.discipline||'(none)',Building:e=>e.building||'(none)',Milestone:e=>e.milestone||'(none)',Classification:e=>e.classification||'(unclassified)'}[dim];
-  const all=state.model.equipment.filter(e=>keyFn(e)===row.key && catMatch(e));
+  const all=issueChartEquipment().filter(e=>keyFn(e)===row.key);
   const dist={0:0,1:0,2:0,3:0}; all.forEach(e=>dist[e.score]++);
   const withIssues=all.filter(e=>e.hasIssues).length;
   const pct=all.length?Math.round(withIssues/all.length*100):0;
@@ -1812,11 +1915,12 @@ function stepContributionHTML(equipment){
    Reframed: QAQC/DV/EHS steps EXIST to surface issues, so catching more is GOOD.
    Color is inverted vs the risk chart — longer/greener bar = more issues caught. */
 function renderMatrix(){
-  const m=state.model.matrix;
+  const equipment=matrixEquipment();
+  const m=scoreMatrix(equipment);
   const maxAvg=Math.max(0.001,...m.map(x=>x.avgIssues));
   const goodColor=(avg)=>riskColor(1-(avg/maxAvg)); // high avg → green, low → red
   // verdict: does more step coverage surface MORE issues (steps doing their job)?
-  const V=stepsVerdict();
+  const V=stepsVerdict(equipment);
   let verdict={cls:'',text:'Not enough coverage to judge yet.'};
   if(V.cls==='flat'&&V.n>=2){ verdict={cls:'',text:'Issues caught are roughly flat across step coverage — no clear signal yet.'}; }
   else if(V.cls==='good'){ verdict={cls:'good',text:`Equipment with more QAQC/DV/EHS coverage is surfacing more issues (${V.lo.toFixed(1)} → ${V.hi.toFixed(1)} per unit). The steps are catching problems.`}; }
@@ -1828,13 +1932,14 @@ function renderMatrix(){
     : '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#8b97a4" stroke-width="2"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>';
   const bdim=state.matrixDim||'Steps';
   let html=`<div class="verdict ${verdict.cls}">${vic}<div><b>${verdict.cls==='good'?'Steps are catching issues':verdict.cls==='bad'?'Coverage is finding fewer issues':'Signal inconclusive'}</b><span>${verdict.text}</span></div></div>`;
-  html+=stepContributionHTML(state.model.equipment);
+  html+=stepContributionHTML(equipment);
   for(const x of m){
     const w=Math.round((x.avgIssues/maxAvg)*100);
     const col=goodColor(x.avgIssues);
     const hasBreak = x.equipmentCount>0;
+    const open=state.matrixExpanded.has(x.score);
     const caret = hasBreak
-      ? `<button class="bcaret" aria-expanded="false" title="Break down ${x.label} by ${esc(bdim)}">▾</button>`
+      ? `<button class="bcaret" aria-expanded="${open?'true':'false'}" title="Break down ${x.label} by ${esc(bdim)}">▾</button>`
       : `<span class="bcaret-sp"></span>`;
     html+=`<div class="mrow"${hasBreak?` data-score="${x.score}"`:''}>
       <div class="tier">${caret}<span class="tierdot" style="background:${col}"></span>${x.label}</div>
@@ -1848,8 +1953,8 @@ function renderMatrix(){
       </div>
     </div>`;
     if(hasBreak){
-      const combos=tierBreakdown(state.model.equipment,x.score,bdim);
-      html+=`<div class="mbreak" id="mbreak-${x.score}"><div class="mbreak-inner">${
+      const combos=tierBreakdown(equipment,x.score,bdim);
+      html+=`<div class="mbreak ${open?'open':''}" id="mbreak-${x.score}"><div class="mbreak-inner">${
         combos.length?combos.map(c=>{
           const avg=c.count?c.issueCount/c.count:0, cw=Math.round((avg/maxAvg)*100), ccol=goodColor(avg);
           const label=bdim==='Steps'
@@ -1869,8 +1974,8 @@ function renderMatrix(){
 }
 
 /* shared read of the hypothesis: does more step coverage surface MORE issues? */
-function stepsVerdict(){
-  const m=state.model.matrix, present=m.filter(x=>x.equipmentCount>0);
+function stepsVerdict(equipment){
+  const m=scoreMatrix(equipment||matrixEquipment()), present=m.filter(x=>x.equipmentCount>0);
   if(present.length<2) return {cls:'flat',lo:0,hi:0,diff:0,n:present.length};
   const lo=present[0].avgIssues, hi=present[present.length-1].avgIssues, diff=hi-lo;
   const cls=Math.abs(diff)<0.05?'flat':(diff>0?'good':'bad');
@@ -1881,8 +1986,7 @@ const DIM_KEYFN={System:e=>e.systemName,Discipline:e=>e.discipline||'(none)',Bui
 const RISK_DIMS=['System','Discipline','Building','Milestone','Classification'];
 function riskResolved(){ const V=stepsVerdict(); return state.riskMode==='auto' ? (V.cls==='bad'?'hot':'blind') : state.riskMode; }
 function areaRisk(dim){
-  const eq=riskActive()?state.model.equipment.filter(riskMatch):state.model.equipment;
-  return areaStatsFrom(eq, DIM_KEYFN[dim]);
+  return areaStatsFrom(riskChartEquipment(), DIM_KEYFN[dim]);
 }
 /* ---- Risk Analysis chart ----
    Blind-spot model (when steps ARE catching issues): risk = low coverage + few issues
@@ -1946,11 +2050,12 @@ $$('#riskmode .pill').forEach(p=>p.addEventListener('click',()=>{
   state.riskMode=p.dataset.mode; exitRiskFocus(true); renderRisk();
 }));
 $('#dl-risk').addEventListener('click',()=>{ if(!state.riskChart)return;
-  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${state.riskDim.toLowerCase()}.png`; a.click(); toast('Risk chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${safeFilePart(state.riskDim)}${state.excludeRooms?'_no_rooms':''}.png`; a.click(); toast('Risk chart PNG saved'); });
+$('#xlsx-risk').addEventListener('click',exportRiskXlsx);
 
 /* ---- risk chart drill-down: click a bar → break its area down by another dimension ---- */
 function enterRiskFocus(dim,row,areas,resolved){
-  const all=state.model.equipment.filter(e=>DIM_KEYFN[dim](e)===row.key && riskMatch(e));
+  const all=riskChartEquipment().filter(e=>DIM_KEYFN[dim](e)===row.key);
   const bdim = dim==='Classification' ? 'System' : 'Classification'; // default breakdown
   state.riskFocus={dim,key:row.key,resolved,all,bdim,rank:areas.findIndex(a=>a.key===row.key)+1,n:areas.length,area:row};
   const others=RISK_DIMS.filter(x=>x!==dim);
@@ -2147,6 +2252,81 @@ $('#h-csv').addEventListener('click',()=>{
 const HEAD_STYLE={font:{bold:true,color:{rgb:'FFFFFF'},sz:11},fill:{fgColor:{rgb:'1F6BB0'}},alignment:{vertical:'center'},border:thin()};
 function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:s,left:s,right:s};}
 function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
+function safeFilePart(v){ return String(v||'data').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'data'; }
+function filterSummaryRows(kind, extra){
+  const rows=[['Export',kind],['Room filter',roomFilterText()]];
+  if(extra) Object.entries(extra).forEach(([k,v])=>rows.push([k,v]));
+  rows.push([]);
+  return rows;
+}
+function appendWorkbookSheet(wb,name,aoa,widths){
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  if(ws['!ref']){
+    const r=XLSX.utils.decode_range(ws['!ref']);
+    for(let C=r.s.c;C<=r.e.c;C++){ const ad=XLSX.utils.encode_cell({r:0,c:C}); if(ws[ad])ws[ad].s=HEAD_STYLE; }
+    for(let R=1;R<=r.e.r;R++)for(let C=r.s.c;C<=r.e.c;C++){ const ad=XLSX.utils.encode_cell({r:R,c:C}); const cell=ws[ad]; if(!cell)continue;
+      cell.s = cell.t==='n'
+        ? {border:thin(),numFmt:Number.isInteger(cell.v)?'#,##0':'#,##0.##',alignment:{horizontal:'right'}}
+        : {border:thin()};
+    }
+    ws['!autofilter']={ref:ws['!ref']};
+  }
+  if(widths) ws['!cols']=widths.map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,name);
+}
+function writeFilteredWorkbook(filename,sheets){
+  const wb=XLSX.utils.book_new();
+  sheets.forEach(s=>appendWorkbookSheet(wb,s.name,s.aoa,s.widths));
+  XLSX.writeFile(wb,filename);
+  toast('XLSX exported');
+}
+function scoreColumns(row){
+  return [row.scoreDist[0],row.scoreDist[1],row.scoreDist[2],row.scoreDist[3],row.scorePct[0],row.scorePct[1],row.scorePct[2],row.scorePct[3]];
+}
+function exportIssueDistributionXlsx(){
+  const rows=currentIssueRows();
+  const filter=stepSelectionSummary(catSelection(),'No filter');
+  const aoa=[
+    ...filterSummaryRows('Issue Distribution',{Dimension:state.dim,'Step filter':filter}),
+    [state.dim,'Issues','Issue share %','Equipment','With issues','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
+    ...rows.map(r=>[r.key,r.issueCount,r.issueShare,r.equipmentCount,r.withIssues,...scoreColumns(r)])
+  ];
+  writeFilteredWorkbook(`issue_distribution_${safeFilePart(state.dim)}.xlsx`,[{name:'Issue Distribution',aoa,widths:[28,10,12,11,11,7,7,7,7,8,8,8,8]}]);
+}
+function exportRiskXlsx(){
+  const resolved=riskResolved(), rows=scoreRisk(areaStatsFrom(riskChartEquipment(),DIM_KEYFN[state.riskDim]),resolved);
+  const filter=stepSelectionSummary(riskSelection(),'No filter');
+  const aoa=[
+    ...filterSummaryRows('Risk Analysis',{Dimension:state.riskDim,'Risk model':resolved==='blind'?'Blind spots':'Hotspots','Step filter':filter}),
+    [state.riskDim,'Risk index','Equipment','Issues','Issues / equipment','Avg coverage %','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
+    ...rows.map(r=>[r.key,r.risk,r.n,r.issues,+r.ipe.toFixed(2),Math.round(r.covFrac*100),...scoreColumns(r)])
+  ];
+  writeFilteredWorkbook(`risk_analysis_${safeFilePart(state.riskDim)}.xlsx`,[{name:'Risk Analysis',aoa,widths:[28,10,11,10,18,14,7,7,7,7,8,8,8,8]}]);
+}
+function exportMatrixXlsx(){
+  const equipment=matrixEquipment(), matrix=scoreMatrix(equipment), bdim=state.matrixDim||'Steps';
+  const matrixAoa=[
+    ...filterSummaryRows('Risk Hypothesis',{Breakdown:bdim}),
+    ['Coverage','Equipment','Issues','Avg issues / equipment','% with issues'],
+    ...matrix.map(m=>[m.label,m.equipmentCount,m.issueCount,+m.avgIssues.toFixed(2),+m.pctWithIssues.toFixed(1)])
+  ];
+  const breakdown=[...filterSummaryRows('Risk Hypothesis Breakdown',{Breakdown:bdim}),['Coverage',bdim,'Share of coverage tier %','Equipment','Issues','Avg issues / equipment']];
+  matrix.forEach(m=>{
+    tierBreakdown(equipment,m.score,bdim).forEach(row=>{
+      breakdown.push([m.label,row.key,row.ratio,row.count,row.issueCount,+row.avgIssues.toFixed(2)]);
+    });
+  });
+  const contributions=[
+    ...filterSummaryRows('Step Issue Contribution'),
+    ['Step','Issue share %','Issues','Equipment','Avg issues / equipment'],
+    ...stepIssueContributions(equipment).map(r=>[r.step,r.ratio,r.issueCount,r.equipmentCount,+r.avgIssues.toFixed(2)])
+  ];
+  writeFilteredWorkbook('risk_hypothesis.xlsx',[
+    {name:'Risk Hypothesis',aoa:matrixAoa,widths:[14,11,10,22,14]},
+    {name:'Breakdown',aoa:breakdown,widths:[14,30,22,11,10,22]},
+    {name:'Step Contribution',aoa:contributions,widths:[12,13,10,11,22]},
+  ]);
+}
 $('#h-xlsx').addEventListener('click',async()=>{
   OV.show('Building Excel'); OV.set(4,'Assembling rows…'); await yieldUI();
   const cols=['System','Equipment','Description','Discipline','Building','Milestone','Classification','Score','Categories','Issues'];
@@ -2249,14 +2429,16 @@ Chart.register(
   }}
 );
 $('#dl-chart').addEventListener('click',()=>{ if(!state.chart)return;
-  const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${state.dim.toLowerCase()}.png`; a.click(); toast('Chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${safeFilePart(state.dim)}${state.excludeRooms?'_no_rooms':''}.png`; a.click(); toast('Chart PNG saved'); });
+$('#xlsx-chart').addEventListener('click',exportIssueDistributionXlsx);
 async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}
   OV.show('Rendering image'); OV.indet('Capturing '+name.replace('.png','')+'…'); await raf();
   try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false});
     c.toBlob(b=>{download(b,name);toast('PNG saved');}); }
   catch(err){ console.error(err); toast('Could not render PNG'); }
   finally{ OV.hide(); } }
-$('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),'risk_matrix.png'));
+$('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypothesis${state.excludeRooms?'_no_rooms':''}.png`));
+$('#xlsx-matrix').addEventListener('click',exportMatrixXlsx);
 $('#dl-dash').addEventListener('click',async()=>{
   // temporarily un-clip both charts so the PNG captures every bar, not just the viewport
   const scs=[$('#chartscroll'),$('#riskscroll')].filter(Boolean);

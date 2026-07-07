@@ -145,10 +145,56 @@ test('update asset selection prefers the versioned plain HTML asset for simple d
   const selected = ctx.selectUpdateAsset([
     { name: 'Risk-Analysis.html.gz', url: 'api-gzip', browser_download_url: 'download-gzip' },
     { name: 'Risk-Analysis.html', url: 'api-html', browser_download_url: 'download-html' },
-    { name: 'Risk-Analysis-v1.0.1.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
+    { name: 'Risk-Analysis-v1.0.2.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
   ])
 
   assert.equal(selected.downloadKind, 'html')
-  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.1.html')
+  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.2.html')
   assert.equal(selected.downloadUrl, 'download-versioned')
+})
+
+test('room filtering removes equipment whose system or UPN is RR', () => {
+  const ctx = loadPipeline()
+  const rows = [
+    { name: 'keep', systemName: 'Alpha', upnRaw: '1001', upn: '1001' },
+    { name: 'room system', systemName: 'RR', upnRaw: '1002', upn: '1002' },
+    { name: 'room prefix', systemName: 'RR - Room Systems', upnRaw: '1003', upn: '1003' },
+    { name: 'room upn', systemName: 'Beta', upnRaw: 'RR', upn: '' },
+  ]
+
+  assert.deepEqual(ctx.filterRoomEquipment(rows, true).map((row) => row.name), ['keep'])
+  assert.equal(ctx.filterRoomEquipment(rows, false).length, 4)
+})
+
+test('issue distribution rows honor room and step filters', () => {
+  const ctx = loadPipeline()
+  const rows = ctx.issueDistributionRows([
+    ...equipment,
+    {
+      systemName: 'RR',
+      upnRaw: 'RR',
+      discipline: 'Rooms',
+      building: 'B3',
+      milestone: 'M3',
+      classification: 'Room',
+      present: { QAQC: true, DV: false, EHS: false },
+      categories: ['QAQC'],
+      score: 1,
+      issueCount: 50,
+      hasIssues: true,
+    },
+  ], 'System', {
+    excludeRooms: true,
+    stepSelection: { none: false, categories: ['QAQC'], mode: 'any' },
+  })
+
+  assert.equal(JSON.stringify(rows.map((row) => row.key)), JSON.stringify(['Beta', 'Alpha']))
+  assert.equal(JSON.stringify(rows.map((row) => row.issueCount)), JSON.stringify([6, 1]))
+})
+
+test('matrix expanded score set toggles without losing other expanded sections', () => {
+  const ctx = loadPipeline()
+
+  assert.equal(JSON.stringify(ctx.toggleExpandedScore([1, 3], 2)), JSON.stringify([1, 2, 3]))
+  assert.equal(JSON.stringify(ctx.toggleExpandedScore([1, 2, 3], 1)), JSON.stringify([2, 3]))
 })
