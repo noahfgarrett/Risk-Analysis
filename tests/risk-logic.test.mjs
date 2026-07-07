@@ -145,11 +145,11 @@ test('update asset selection prefers the versioned plain HTML asset for simple d
   const selected = ctx.selectUpdateAsset([
     { name: 'Risk-Analysis.html.gz', url: 'api-gzip', browser_download_url: 'download-gzip' },
     { name: 'Risk-Analysis.html', url: 'api-html', browser_download_url: 'download-html' },
-    { name: 'Risk-Analysis-v1.0.2.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
+    { name: 'Risk-Analysis-v1.0.3.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
   ])
 
   assert.equal(selected.downloadKind, 'html')
-  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.2.html')
+  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.3.html')
   assert.equal(selected.downloadUrl, 'download-versioned')
 })
 
@@ -197,4 +197,33 @@ test('matrix expanded score set toggles without losing other expanded sections',
 
   assert.equal(JSON.stringify(ctx.toggleExpandedScore([1, 3], 2)), JSON.stringify([1, 2, 3]))
   assert.equal(JSON.stringify(ctx.toggleExpandedScore([1, 2, 3], 1)), JSON.stringify([2, 3]))
+})
+
+test('risk breakdown groups include nested equipment sorted by issue count', () => {
+  const ctx = loadPipeline()
+  const rows = [
+    { name: 'Panel A', systemName: 'Power', discipline: 'Electrical', building: 'B1', milestone: 'M1', classification: 'Panel', score: 2, issueCount: 2, hasIssues: true, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+    { name: 'Panel B', systemName: 'Power', discipline: 'Electrical', building: 'B1', milestone: 'M1', classification: 'Panel', score: 3, issueCount: 5, hasIssues: true, present: { QAQC: true, DV: true, EHS: true }, categories: ['QAQC', 'DV', 'EHS'] },
+    { name: 'Pump A', systemName: 'Water', discipline: 'Mechanical', building: 'B2', milestone: 'M2', classification: 'Pump', score: 1, issueCount: 1, hasIssues: true, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+  ]
+
+  const groups = ctx.riskBreakdownGroups(rows, 'Classification', 'hot')
+  const panel = groups.find((group) => group.key === 'Panel')
+
+  assert.equal(panel.n, 2)
+  assert.equal(panel.issues, 7)
+  assert.equal(JSON.stringify(panel.equipment.map((row) => row.name)), JSON.stringify(['Panel B', 'Panel A']))
+  assert.equal(JSON.stringify(panel.equipment.map((row) => row.issueCount)), JSON.stringify([5, 2]))
+})
+
+test('chart metric sorting supports high-to-low and low-to-high directions', () => {
+  const ctx = loadPipeline()
+  const rows = [
+    { key: 'Middle', issueCount: 4 },
+    { key: 'Low', issueCount: 1 },
+    { key: 'High', issueCount: 9 },
+  ]
+
+  assert.equal(JSON.stringify(ctx.sortRowsByMetric(rows, 'issueCount', 'desc').map((row) => row.key)), JSON.stringify(['High', 'Middle', 'Low']))
+  assert.equal(JSON.stringify(ctx.sortRowsByMetric(rows, 'issueCount', 'asc').map((row) => row.key)), JSON.stringify(['Low', 'Middle', 'High']))
 })
