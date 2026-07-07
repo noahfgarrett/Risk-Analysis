@@ -145,11 +145,11 @@ test('update asset selection prefers the versioned plain HTML asset for simple d
   const selected = ctx.selectUpdateAsset([
     { name: 'Risk-Analysis.html.gz', url: 'api-gzip', browser_download_url: 'download-gzip' },
     { name: 'Risk-Analysis.html', url: 'api-html', browser_download_url: 'download-html' },
-    { name: 'Risk-Analysis-v1.0.3.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
+    { name: 'Risk-Analysis-v1.0.4.html', url: 'api-versioned', browser_download_url: 'download-versioned' },
   ])
 
   assert.equal(selected.downloadKind, 'html')
-  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.3.html')
+  assert.equal(selected.assetName, 'Risk-Analysis-v1.0.4.html')
   assert.equal(selected.downloadUrl, 'download-versioned')
 })
 
@@ -214,6 +214,15 @@ test('risk breakdown groups include nested equipment sorted by issue count', () 
   assert.equal(panel.issues, 7)
   assert.equal(JSON.stringify(panel.equipment.map((row) => row.name)), JSON.stringify(['Panel B', 'Panel A']))
   assert.equal(JSON.stringify(panel.equipment.map((row) => row.issueCount)), JSON.stringify([5, 2]))
+})
+
+test('coverage mix segments keep every score tier available for drilldown labels', () => {
+  const ctx = loadPipeline()
+  const segments = ctx.coverageMixSegments({ 0: 2, 1: 0, 2: 3, 3: 5 }, 10)
+
+  assert.equal(JSON.stringify(segments.map((segment) => segment.label)), JSON.stringify(['0/3', '1/3', '2/3', '3/3']))
+  assert.equal(JSON.stringify(segments.map((segment) => segment.count)), JSON.stringify([2, 0, 3, 5]))
+  assert.equal(JSON.stringify(segments.map((segment) => segment.pctLabel)), JSON.stringify(['20%', '0%', '30%', '50%']))
 })
 
 test('chart metric sorting supports high-to-low and low-to-high directions', () => {
