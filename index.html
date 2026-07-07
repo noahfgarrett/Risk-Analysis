@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cardinal QCx — Equipment Risk Analyzer</title>
+
+<!-- Libraries are vendored locally so workbook analysis stays offline. -->
+<script src="vendor/xlsx.bundle.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/html2canvas.min.js"></script>
+
+<style>
+:root{
+  --paper:#f5f7f9; --surface:#ffffff; --surface-2:#fbfcfd;
+  --ink:#111820; --ink-2:#586573; --ink-3:#8b97a4;
+  --line:#e5eaef; --line-2:#d3dbe3;
+  --accent:#1f6bb0; --accent-2:#2f83cc; --accent-wash:#eaf3fb;
+  --qaqc:#3a6ea5; --dv:#7a5aa8; --ehs:#b8843a;
+  --risk-hi:#c25139; --risk-md:#d59433; --risk-lo:#4d9a72; --risk-none:#3c8560;
+  --good-wash:#eaf5ef; --warn-wash:#fdf1e7; --bad-wash:#faece8;
+  --shadow:0 1px 2px rgba(16,24,32,.05),0 6px 20px rgba(16,24,32,.05);
+  --mono:"SF Mono","JetBrains Mono","Cascadia Code",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--sans);
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+.num{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+button{font-family:inherit}
+.eyebrow{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
+/* ---- mapping accordions ---- */
+.mapintro{font-size:12.5px;color:var(--ink-2);background:var(--accent-wash);border:1px solid #cfe4f5;border-radius:9px;padding:11px 14px;margin-bottom:14px}
+.acc{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);margin-top:14px}
+.acc-head{width:100%;display:flex;align-items:center;gap:12px;background:transparent;border:0;cursor:pointer;padding:15px 18px;text-align:left;font:inherit;color:var(--ink);border-radius:8px}
+.acc-head:hover{background:var(--paper)}
+.acc-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
+.acc-caret{color:var(--ink-3);font-size:12px;width:14px;flex:0 0 auto;transition:transform .18s}
+.acc-head[aria-expanded="false"] .acc-caret{transform:rotate(-90deg)}
+.acc-hint{margin-left:auto;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.2,.7,.2,1)}
+.acc.open .acc-body{grid-template-rows:1fr}
+.acc-inner{overflow:hidden;min-height:0}
+.acc.open .acc-inner{padding:0 18px 18px}
+/* ---- confirm modal ---- */
+.modal{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:rgba(17,24,32,.34);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);opacity:0;transition:opacity .18s ease}
+.modal.show{opacity:1}
+.modal[hidden]{display:none}
+.modal-card{width:min(440px,92vw);background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;box-shadow:var(--shadow);padding:22px 24px;transform:translateY(8px);transition:transform .2s ease}
+.modal.show .modal-card{transform:none}
+.modal-title{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+.modal-text{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin:0 0 18px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.update-card{width:min(720px,94vw);max-height:86vh;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.up-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px 12px;border-bottom:1px solid var(--line)}
+.up-kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
+.up-title{font-size:18px;font-weight:760;letter-spacing:-.01em;margin-top:3px}
+.up-close{appearance:none;border:0;background:transparent;color:var(--ink-3);font-size:22px;line-height:1;cursor:pointer;padding:0 2px}
+.up-close:hover{color:var(--ink)}
+.up-tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.up-tab{appearance:none;border:0;background:transparent;color:var(--ink-2);padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent}
+.up-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.up-body{padding:18px 22px;overflow:auto}
+.up-version-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.up-badge{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line-2);background:var(--paper);padding:3px 9px;font-size:12px;font-family:var(--mono);font-weight:700}
+.up-badge.new{background:var(--accent-wash);border-color:#cfe4f5;color:var(--accent)}
+.release-notes{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--ink-2);line-height:1.55;max-height:240px;overflow:auto;margin-bottom:14px}
+.release-notes h3{font-size:14px;margin:6px 0;color:var(--ink)}
+.release-notes ul{margin:6px 0 0 18px;padding:0}.release-notes li{margin:3px 0}
+.up-note{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-bottom:14px}
+.ch-list{display:flex;flex-direction:column;gap:8px}
+.ch-entry{border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 8px 8px 0;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ch-entry.fix{border-left-color:var(--risk-lo)}.ch-entry.major{border-left-color:var(--risk-md)}
+.ch-head{width:100%;display:flex;align-items:center;gap:9px;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;padding:10px 12px}
+.ch-caret{font-size:11px;color:var(--ink-3);transition:transform .15s}.ch-head[aria-expanded="false"] .ch-caret{transform:rotate(-90deg)}
+.ch-ver{font-family:var(--mono);font-weight:750}.ch-type{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:750}
+.ch-date{margin-left:auto;color:var(--ink-3);font-size:11.5px;white-space:nowrap}
+.ch-body{display:none;padding:0 12px 12px 34px;color:var(--ink-2);font-size:13px}.ch-entry.open .ch-body{display:block}
+.up-error{background:var(--bad-wash);border:1px solid #eccabf;color:#8b3929;border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:12px}
+.fxcompare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.fxcompare{grid-template-columns:1fr}}
+.fxcompare .fxc-h{font-size:11px;color:var(--ink-3);font-weight:650;margin-bottom:6px}
+.fxcompare code{display:inline-block;margin:0 4px 4px 0;font-size:11px;background:var(--paper);border:1px solid var(--line);padding:2px 6px;border-radius:5px;font-family:var(--mono)}
+.fxcompare .empty{color:var(--ink-3);font-size:12px;padding:0}
+/* ---- hover tooltips (metric definitions) ---- */
+#app-tooltip{position:fixed;z-index:200;max-width:290px;background:var(--ink);color:#fff;padding:9px 12px;border-radius:9px;
+  font-size:12.5px;line-height:1.5;font-weight:450;box-shadow:0 8px 28px rgba(16,24,32,.24);
+  opacity:0;transform:translateY(3px);transition:opacity .12s ease,transform .12s ease;pointer-events:none}
+#app-tooltip.show{opacity:1;transform:none}
+[data-tip]{cursor:help}
+.hastip{text-decoration:underline dotted rgba(139,151,164,.7);text-underline-offset:3px;text-decoration-thickness:1px}
+
+/* ---- shell ---- */
+.app{display:flex;flex-direction:column;min-height:100%}
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--surface);
+  border-bottom:1px solid var(--line);border-top:3px solid var(--accent);
+  padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-size:15px;letter-spacing:-.01em}
+.brand span{font-size:11px;color:var(--ink-3)}
+.filepill{
+  display:none;align-items:center;gap:8px;background:var(--accent-wash);
+  color:var(--accent);border:1px solid #cfe4f5;border-radius:999px;
+  padding:5px 12px;font-size:12px;font-weight:600;max-width:340px;
+}
+.filepill .num{font-family:var(--mono)}
+.topbar-spacer{flex:1}
+.tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px}
+.tab{
+  appearance:none;border:0;background:transparent;color:var(--ink-2);
+  padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.tab:hover{color:var(--ink)}
+/* ---- progress overlay ---- */
+.overlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(17,24,32,.28);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.overlay-card{width:min(420px,90vw);background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;box-shadow:var(--shadow);padding:20px 22px}
+.ov-title{font-size:14px;font-weight:650;letter-spacing:-.01em;margin-bottom:12px}
+.ov-track{height:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.ov-bar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .18s ease}
+.ov-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;font-size:12px;color:var(--ink-2)}
+.ov-meta #ov-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-meta .num{color:var(--ink);font-weight:650;font-family:var(--mono)}
+.overlay.indet .ov-bar{width:36% !important;animation:indet 1.05s ease-in-out infinite;transition:none}
+@keyframes indet{0%{margin-left:-38%}100%{margin-left:102%}}
+.tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.tab:disabled{opacity:.4;cursor:not-allowed}
+.versionbtn{
+  appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);
+  border-radius:999px;padding:6px 10px;font-size:12px;font-weight:650;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;box-shadow:var(--shadow)
+}
+.versionbtn:hover{border-color:var(--accent);color:var(--accent)}
+.version-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:none}
+.versionbtn.has-update .version-dot{display:inline-block}
+
+.main{flex:1;padding:20px;max-width:1360px;width:100%;margin:0 auto}
+.view{display:none;animation:fade .18s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* ---- upload ---- */
+.drop{
+  border:2px dashed var(--line-2);border-radius:16px;background:var(--surface);
+  padding:56px 28px;text-align:center;transition:.15s;cursor:pointer;max-width:720px;margin:32px auto;
+}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-wash)}
+.drop .ic{width:52px;height:52px;margin:0 auto 16px;color:var(--accent)}
+.drop h2{margin:0 0 6px;font-size:20px;letter-spacing:-.01em}
+.drop p{margin:0;color:var(--ink-2);font-size:13px}
+.drop .req{margin-top:18px;font-size:12px;color:var(--ink-3)}
+.drop .req code{font-family:var(--mono);background:var(--paper);border:1px solid var(--line);
+  padding:2px 6px;border-radius:5px;color:var(--ink-2);font-size:11.5px}
+.hint{max-width:720px;margin:0 auto;color:var(--ink-3);font-size:12px;text-align:center;line-height:1.6}
+
+/* ---- cards / sections ---- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:12px;flex-wrap:wrap}
+.section-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* ---- controls ---- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650;padding-left:2px}
+input[type=text],select{
+  appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;min-width:150px;
+}
+input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-color:var(--accent)}
+.search{min-width:220px}
+.btn{
+  appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
+  padding:8px 13px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;gap:7px;align-items:center;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--paper);color:var(--ink)}
+.btn svg{width:15px;height:15px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
+
+/* ---- pills ---- */
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{
+  appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill.active{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* ---- KPI ---- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:820px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{padding:16px 18px}
+.kpi .eyebrow{margin-bottom:8px}
+.kpi .v{font-size:30px;font-weight:680;letter-spacing:-.02em;font-family:var(--mono)}
+.kpi .s{font-size:12px;color:var(--ink-3);margin-top:2px}
+.kpi.warn .v{color:var(--risk-hi)}
+
+/* ---- hierarchy table ---- */
+.htable{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.htable th{
+  text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:650;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:5;
+}
+.htable td{padding:9px 12px;border-bottom:1px solid var(--line);overflow:hidden;vertical-align:middle}
+.htable th.n,.htable td.n{text-align:right;font-family:var(--mono)}
+/* two-row sticky header: titles + aligned per-column filters */
+.htable thead .hcols th{top:0;z-index:6;height:34px}
+.htable thead .hfilters th{position:sticky;top:34px;z-index:5;background:var(--surface);padding:6px 8px;border-bottom:1px solid var(--line)}
+.hfilters input,.hfilters select{width:100%;min-width:0;padding:5px 8px;font-size:12px;border-radius:6px;height:30px}
+.hfilters input::placeholder{color:var(--ink-3)}
+/* virtualized scroll viewport: only the visible window of rows is in the DOM */
+#hscroll{height:calc(100vh - 214px);min-height:340px;overflow:auto;position:relative;padding:0}
+.htable tbody tr.datarow{height:48px}
+.htable tbody tr.datarow>td{padding-top:0;padding-bottom:0}
+.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eqcell{height:36px;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.eqname{font-weight:600;line-height:1.2}
+.vspacer td{padding:0;border:0;height:auto}
+.vspacer:hover{background:transparent}
+.sysrow{cursor:pointer;background:var(--surface-2)}
+.sysrow:hover{background:var(--accent-wash)}
+.sysrow td{font-weight:650;border-bottom:1px solid var(--line-2)}
+.sysrow .caret{display:inline-block;width:12px;transition:transform .15s;color:var(--ink-3);margin-right:8px}
+.sysrow.collapsed .caret{transform:rotate(-90deg)}
+.eqrow td:first-child{padding-left:34px}
+.eqrow .desc{color:var(--ink-3);font-size:12px}
+.metacell{color:var(--ink-2);font-size:12.5px}
+.badge{display:inline-block;font-family:var(--mono);font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;border:1px solid transparent}
+.score-0{background:var(--paper);color:var(--ink-3);border-color:var(--line-2)}
+.score-1{background:var(--warn-wash);color:var(--risk-md);border-color:#f0d8b8}
+.score-2{background:#eef4fb;color:var(--accent);border-color:#cfe0f2}
+.score-3{background:var(--good-wash);color:var(--risk-none);border-color:#c3e2d1}
+.chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:5px;margin-right:4px;color:#fff}
+.chip.qaqc{background:var(--qaqc)}.chip.dv{background:var(--dv)}.chip.ehs{background:var(--ehs)}
+.chip.muted{background:transparent;color:var(--ink-3);border:1px dashed var(--line-2)}
+.issue-flag{font-family:var(--mono);font-weight:700}
+.issue-flag.has{color:var(--risk-hi)}
+.issue-flag.none{color:var(--ink-3)}
+.sysmini{display:inline-flex;gap:5px;margin-left:8px}
+.sysmini b{font-family:var(--mono);font-weight:700;font-size:11px;padding:1px 6px;border-radius:5px}
+.empty{padding:40px;text-align:center;color:var(--ink-3);font-size:13px}
+.hcount{padding:8px 4px 0;font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.drillmore{margin:8px 2px 0;font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+
+/* ---- dashboard ---- */
+.chartwrap{position:relative;height:420px;padding:8px 4px;overflow-y:auto;overflow-x:hidden}
+.chartholder{position:relative;min-height:100%}
+.charthint{font-size:11px;color:var(--ink-3);margin:2px 4px 0}
+.riskbanner{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin:4px 0 12px;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.riskbanner .rb-ic{flex:0 0 auto;width:18px;height:18px;margin-top:1px}
+.riskbanner b{color:var(--ink)}
+.riskbanner .rb-mode{display:inline-block;font-family:var(--mono);font-weight:700;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--ink);color:#fff;margin-left:2px}
+/* ---- click-to-focus panel ---- */
+.plotregion{position:relative}
+.chartwrap.dive{opacity:0;transform:translateY(30px);transition:opacity .3s ease,transform .42s cubic-bezier(.4,0,.6,1);pointer-events:none}
+.charthint.dive{opacity:0;transition:opacity .2s ease}
+.chartfocus{position:absolute;inset:0;background:var(--surface);border-radius:8px;padding:2px 4px 8px;overflow:auto;
+  opacity:0;transform:translateY(16px);transition:opacity .32s ease,transform .4s cubic-bezier(.2,.7,.2,1)}
+.chartfocus.in{opacity:1;transform:none}
+.chartfocus[hidden]{display:none}
+.focus-back{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:999px;
+  padding:5px 13px;font-size:12px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.focus-back:hover{border-color:var(--accent);color:var(--accent)}
+.focus-head{margin:12px 2px 2px}
+.focus-name{font-size:21px;font-weight:750;letter-spacing:-.01em;line-height:1.1}
+.focus-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.focus-bar-wrap{display:flex;align-items:center;gap:8px;margin:8px 2px 12px}
+.focus-bar{height:36px;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;overflow:hidden;flex:0 0 auto;
+  width:0;transition:width .62s cubic-bezier(.2,.7,.2,1);box-shadow:inset 0 -2px 6px rgba(0,0,0,.06)}
+.fb-in{color:#fff;font-family:var(--mono);font-weight:700;font-size:14px;padding-right:11px;white-space:nowrap}
+.fb-out{color:var(--ink);font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap;display:none}
+.focus-bar-wrap.outside .fb-in{display:none}
+.focus-bar-wrap.outside .fb-out{display:inline}
+.focus-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;padding:2px 2px 12px}
+.fstat{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.fstat .l{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.fstat .v{font-size:23px;font-weight:750;font-family:var(--mono);letter-spacing:-.01em;margin-top:3px;line-height:1.05}
+.fstat .v small{font-size:12px;color:var(--ink-3);font-weight:600}
+.fstat .v .score-3,.fstat .v .score-2,.fstat .v .score-1,.fstat .v .score-0{font-size:12px;font-weight:700}
+.focus-list{margin-top:2px}
+.fc-head{font-size:11px;color:var(--ink-3);margin:2px 2px 6px;letter-spacing:.02em}
+.fc-group{border-top:1px solid var(--line)}
+.fc-group:first-of-type{border-top:0}
+.fc-row{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;cursor:pointer;padding:9px 4px;text-align:left;font:inherit;color:var(--ink)}
+.fc-row:hover{background:var(--paper)}
+.fc-caret{color:var(--ink-3);font-size:11px;width:12px;flex:0 0 auto;transition:transform .15s}
+.fc-row[aria-expanded="false"] .fc-caret{transform:rotate(-90deg)}
+.fc-cls{font-weight:650;font-size:13.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-gmeta{font-size:12px;color:var(--ink-2);font-family:var(--mono);white-space:nowrap;flex:0 0 auto}
+.fc-gmeta b{color:var(--ink)}
+.fc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.2,.7,.2,1)}
+.fc-body.open{grid-template-rows:1fr}
+.fc-inner{overflow:hidden;min-height:0}
+.fc-inner .drilltable{margin:0 0 8px}
+/* ---- risk chart drill-down breakdown ---- */
+.rf-explain{font-size:12px;color:var(--ink-2);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 2px 12px;line-height:1.5}
+.rf-explain b{color:var(--ink)}
+.rf-controls{display:flex;align-items:center;gap:10px;margin:6px 2px 12px;flex-wrap:wrap}
+.rf-controls select{min-width:160px;padding:6px 10px;font-size:13px;border-radius:7px}
+.rf-hint{font-size:11.5px;color:var(--ink-3)}
+.rf-row{display:grid;grid-template-columns:160px 1fr 40px minmax(280px,420px);gap:12px;align-items:center;padding:7px 2px;border-top:1px solid var(--line)}
+.rf-row:first-child{border-top:0}
+.rf-name{font-weight:600;font-size:13px}
+.rf-bar-wrap{height:18px;background:var(--paper);border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.rf-bar{height:100%;border-radius:4px 0 0 4px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.rf-val{font-family:var(--mono);font-weight:700;font-size:13px;text-align:right}
+.rf-meta{font-size:11.5px;color:var(--ink-2);font-family:var(--mono);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.rf-row{grid-template-columns:110px 1fr 34px}.rf-meta{display:none}}
+.chartwrap.short{height:340px}
+.drill{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.drill h4{margin:0 0 10px;font-size:13px}
+.drilltable{width:100%;border-collapse:collapse;font-size:12.5px}
+.drilltable th,.drilltable td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left}
+.drilltable th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.drilltable td.n,.drilltable th.n{text-align:right;font-family:var(--mono)}
+
+/* ---- risk matrix (signature) ---- */
+.matrix{padding:20px}
+.matrix .verdict{
+  display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;margin-bottom:18px;
+  background:var(--paper);border:1px solid var(--line);
+}
+.matrix .verdict.good{background:var(--good-wash);border-color:#c3e2d1}
+.matrix .verdict.bad{background:var(--bad-wash);border-color:#eccabf}
+.matrix .verdict .vic{width:22px;height:22px;flex:none;margin-top:1px}
+.matrix .verdict b{display:block;font-size:13.5px;margin-bottom:2px}
+.matrix .verdict span{font-size:12.5px;color:var(--ink-2)}
+.mrow{display:grid;grid-template-columns:64px 1fr 150px;gap:16px;align-items:center;padding:12px 4px;border-top:1px solid var(--line)}
+.mrow:first-of-type{border-top:0}
+.mrow .tier{font-family:var(--mono);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.mrow .tierdot{width:9px;height:9px;border-radius:50%}
+.mbar-track{height:26px;background:var(--paper);border-radius:6px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.mbar-fill{height:100%;border-radius:5px 0 0 5px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-family:var(--mono);font-weight:700;font-size:12px;min-width:34px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.mstats{text-align:right;display:flex;flex-direction:column;gap:0;line-height:1.2}
+.mstats .ms-line{display:flex;align-items:baseline;justify-content:flex-end;gap:6px}
+.mstats .ms-n{font-family:var(--mono);font-weight:750;color:var(--ink);font-size:16px}
+.mstats .ms-l{color:var(--ink-2);font-size:12px}
+.mstats .ms-pct{color:var(--ink-3);font-size:11px;margin-top:3px}
+.mrow[data-score]{cursor:pointer;border-radius:8px;transition:background .12s}
+.mrow[data-score]:hover{background:var(--paper)}
+.matrix .axis{font-size:11px;color:var(--ink-3);margin-top:6px;text-align:center}
+/* category sub-filter pills */
+.subfilter{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.subfilter-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.matrix-filter{margin:-2px 0 10px}
+.select-slim{min-width:150px;padding:6px 10px;font-size:13px;border-radius:7px}
+.matchmode{display:inline-flex;align-items:center;gap:4px;margin-left:2px}
+.matchmode[hidden]{display:none}
+.matchmode .mm-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-right:2px}
+.mm-btn{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:650;cursor:pointer}
+.mm-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mm-btn.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.mm-help{font-size:11px;color:var(--ink-3);margin-left:6px}
+.mm-help b{color:var(--ink-2);font-weight:700}
+@media(max-width:720px){.mm-help{flex-basis:100%;margin:4px 0 0}}
+.pill.cat{padding:5px 13px;font-size:12px}
+.pill.cat.active{color:#fff}
+.pill.cat.none.active{background:var(--ink-3);border-color:var(--ink-3)}
+.pill.cat.qaqc.active{background:var(--qaqc);border-color:var(--qaqc)}
+.pill.cat.dv.active{background:var(--dv);border-color:var(--dv)}
+.pill.cat.ehs.active{background:var(--ehs);border-color:var(--ehs)}
+/* matrix step-pairing breakdown */
+.mrow .bcaret{appearance:none;border:0;background:transparent;cursor:pointer;color:var(--ink-3);font-size:11px;padding:0;width:14px;line-height:1;transition:transform .15s}
+.mrow .bcaret[aria-expanded="false"]{transform:rotate(-90deg)}
+.mrow .bcaret:hover{color:var(--accent)}
+.mrow .bcaret-sp{display:inline-block;width:14px}
+.mbreak{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.2,.7,.2,1)}
+.mbreak.open{grid-template-rows:1fr}
+.mbreak-inner{overflow:hidden;min-height:0}
+.mbreak.open .mbreak-inner{padding:4px 6px 14px 66px}
+.bcombo{display:grid;grid-template-columns:minmax(160px,220px) 96px 1fr 128px;gap:12px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.bcombo:first-child{border-top:0}
+.bchips{display:flex;gap:3px;flex-wrap:wrap}
+.bname{font-weight:650;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bpct{font-size:12px;color:var(--ink-2)} .bpct b{font-family:var(--mono);color:var(--ink)}
+.bbar-track{height:18px;background:var(--paper);border:1px solid var(--line);border-radius:5px;overflow:hidden;flex:1}
+.bbar{display:flex;align-items:center;gap:8px}
+.bbar-val{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--ink);min-width:32px;text-align:right}
+.bbar-fill{height:100%;border-radius:4px 0 0 4px;background:var(--accent);transition:width .4s ease}
+.bmeta{font-size:11.5px;color:var(--ink-2);text-align:right;font-family:var(--mono)}
+.covmix{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.covmix .score-0,.covmix .score-1,.covmix .score-2,.covmix .score-3{
+  display:inline-flex;gap:4px;align-items:baseline;border:1px solid currentColor;border-radius:5px;padding:1px 5px;
+  background:transparent;font-family:var(--mono);font-size:11px;font-weight:700
+}
+.covmix small{font-size:9px;color:var(--ink-3);font-weight:650}
+.covtext{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+
+/* ---- mapping ---- */
+.maptable{width:100%;border-collapse:collapse;font-size:13px}
+.maptable th,.maptable td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.maptable th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.maptable code{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.cattoggle{display:inline-flex;gap:10px}
+.catbox{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer;user-select:none;border:1px solid var(--line-2);color:var(--ink-3)}
+.catbox input{margin:0}
+.catbox.on.qaqc{background:var(--qaqc);color:#fff;border-color:var(--qaqc)}
+.catbox.on.dv{background:var(--dv);color:#fff;border-color:var(--dv)}
+.catbox.on.ehs{background:var(--ehs);color:#fff;border-color:var(--ehs)}
+.warnbox{background:var(--warn-wash);border:1px solid #f0d8b8;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#8a5a1f;margin-bottom:14px}
+.okbox{background:var(--good-wash);border:1px solid #c3e2d1;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#2f6b4d;margin-bottom:14px}
+
+/* centered landing: drop zone + runs-locally line vertically centered */
+#view-upload.active{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 140px)}
+#view-upload .drop{margin:0 auto 4px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:600;
+  box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:100;transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <b>Cardinal QCx · Equipment Risk Analyzer</b>
+      <span>Equipment Status × Systems × Issues</span>
+    </div>
+    <div class="filepill" id="filepill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>
+      <span id="filepillname"></span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-view="upload">Upload</button>
+      <button class="tab" data-view="hierarchy" disabled>Hierarchy</button>
+      <button class="tab" data-view="dashboard" disabled>Dashboard</button>
+      <button class="tab" data-view="mapping" disabled>Mapping</button>
+    </nav>
+    <button class="versionbtn" id="version-btn" title="View updates and changelog">
+      <span class="version-dot" aria-hidden="true"></span>
+      Risk Analysis v<span id="version-label">1.0.0</span>
+    </button>
+  </header>
+
+  <main class="main">
+    <!-- UPLOAD -->
+    <section class="view active" id="view-upload">
+      <div class="drop" id="drop">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v13"/></svg>
+        <h2>Drop your workbook here</h2>
+        <p>or click to browse — .xlsx / .xlsm / .xls</p>
+        <div class="req">
+          Expected tabs:
+          <code>Equipment Status Report</code>
+          <code>Drop Downs- VF</code>
+          <code>Issue Grid Report</code>
+        </div>
+      </div>
+      <input type="file" id="fileinput" accept=".xlsx,.xlsm,.xls" style="display:none" />
+      <p class="hint">Everything runs locally in your browser. No file leaves this machine.</p>
+    </section>
+
+    <!-- HIERARCHY -->
+    <section class="view" id="view-hierarchy">
+      <div class="toolbar">
+        <button class="btn ghost" id="h-expand">Expand all</button>
+        <button class="btn ghost" id="h-collapse">Collapse all</button>
+        <button class="btn ghost" id="h-clear">Clear filters</button>
+        <div style="flex:1"></div>
+        <button class="btn" id="h-csv">Export CSV</button>
+        <button class="btn primary" id="h-xlsx">Export Excel</button>
+      </div>
+      <div class="card" id="hscroll">
+        <table class="htable" id="htable">
+          <colgroup>
+            <col style="width:24%"><col style="width:11%"><col style="width:9%"><col style="width:10%">
+            <col style="width:14%"><col style="width:16%"><col style="width:7%"><col style="width:9%">
+          </colgroup>
+          <thead>
+            <tr class="hcols">
+              <th>System / Equipment</th><th>Discipline</th><th>Building</th><th>Milestone</th>
+              <th>Classification</th><th>Steps</th><th class="n">Score</th><th class="n">Issues</th>
+            </tr>
+            <tr class="hfilters">
+              <th><input type="text" id="h-search" placeholder="Search name or description…" /></th>
+              <th><select id="h-disc"></select></th>
+              <th><select id="h-bld"></select></th>
+              <th><select id="h-ms"></select></th>
+              <th><select id="h-cls"></select></th>
+              <th></th>
+              <th><select id="h-score">
+                <option value="">Any</option><option value="0">0/3</option><option value="1">1/3</option><option value="2">2/3</option><option value="3">3/3</option>
+              </select></th>
+              <th><select id="h-iss">
+                <option value="">Any</option><option value="has">Has issues</option><option value="none">No issues</option>
+              </select></th>
+            </tr>
+          </thead>
+          <tbody id="hbody"></tbody>
+        </table>
+      </div>
+      <div class="hcount" id="hcount"></div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="view" id="view-dashboard">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid-2">
+        <div class="card" style="padding:18px" id="chartcard">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Issue distribution</div>
+              <h3 id="chart-title">Issues by System</h3>
+            </div>
+            <button class="btn ghost" id="dl-chart" title="Download chart PNG">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+            </button>
+          </div>
+          <div class="pills" id="dimpills" style="margin-bottom:10px">
+            <button class="pill active" data-dim="System">System</button>
+            <button class="pill" data-dim="Discipline">Discipline</button>
+            <button class="pill" data-dim="Building">Building</button>
+            <button class="pill" data-dim="Milestone">Milestone</button>
+            <button class="pill" data-dim="Classification">Classification</button>
+          </div>
+          <div class="subfilter">
+            <span class="subfilter-label">Step filter</span>
+            <div class="pills" id="catpills">
+              <button class="pill cat active" data-cat="All">No filter</button>
+              <button class="pill cat none" data-cat="None">None</button>
+              <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+              <button class="pill cat dv" data-cat="DV">DV</button>
+              <button class="pill cat ehs" data-cat="EHS">EHS</button>
+            </div>
+            <span class="matchmode" id="matchmode" hidden>
+              <span class="mm-label">match</span>
+              <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+              <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+              <span class="mm-help" id="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+            </span>
+          </div>
+          <div class="plotregion" id="plotregion">
+            <div class="chartwrap" id="chartscroll"><div class="chartholder" id="chartholder"><canvas id="mainchart"></canvas></div></div>
+            <div class="charthint" id="charthint"></div>
+            <div class="chartfocus" id="chartfocus" hidden></div>
+          </div>
+        </div>
+
+        <div class="card matrix" id="matrixcard">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Risk hypothesis</div>
+              <h3>Are QAQC · DV · EHS steps catching issues?</h3>
+            </div>
+            <button class="btn ghost" id="dl-matrix" title="Download matrix PNG">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+            </button>
+          </div>
+          <div class="subfilter matrix-filter">
+            <span class="subfilter-label">Breakdown</span>
+            <div class="pills" id="matrixdim">
+              <button class="pill active" data-dim="Steps">Steps</button>
+              <button class="pill" data-dim="System">System</button>
+              <button class="pill" data-dim="Discipline">Discipline</button>
+              <button class="pill" data-dim="Building">Building</button>
+              <button class="pill" data-dim="Milestone">Milestone</button>
+              <button class="pill" data-dim="Classification">Classification</button>
+            </div>
+          </div>
+          <div id="matrixbody"></div>
+        </div>
+      </div>
+
+      <div class="card riskcard" id="riskcard" style="padding:18px;margin-top:18px">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Risk analysis</div>
+            <h3 id="risk-title">Highest Risk Areas</h3>
+          </div>
+          <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+          </button>
+        </div>
+        <div class="pills" id="riskdim" style="margin-bottom:10px">
+          <button class="pill active" data-dim="System">System</button>
+          <button class="pill" data-dim="Discipline">Discipline</button>
+          <button class="pill" data-dim="Building">Building</button>
+          <button class="pill" data-dim="Milestone">Milestone</button>
+          <button class="pill" data-dim="Classification">Classification</button>
+        </div>
+        <div class="subfilter">
+          <span class="subfilter-label">Risk model</span>
+          <div class="pills" id="riskmode">
+            <button class="pill active" data-mode="auto" title="Pick the model automatically from the Risk Hypothesis result above">Auto</button>
+            <button class="pill" data-mode="blind" title="Low step coverage + few issues found = likely undiscovered issues">Blind spots</button>
+            <button class="pill" data-mode="hot" title="Where issues are actually concentrated right now">Hotspots</button>
+          </div>
+        </div>
+        <div class="subfilter">
+          <span class="subfilter-label">Step filter</span>
+          <div class="pills" id="riskcatpills">
+            <button class="pill cat active" data-cat="All">No filter</button>
+            <button class="pill cat none" data-cat="None">None</button>
+            <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+            <button class="pill cat dv" data-cat="DV">DV</button>
+            <button class="pill cat ehs" data-cat="EHS">EHS</button>
+          </div>
+          <span class="matchmode" id="riskmatchmode" hidden>
+            <span class="mm-label">match</span>
+            <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+            <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+            <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+          </span>
+        </div>
+        <div class="riskbanner" id="riskbanner"></div>
+        <div class="plotregion" id="riskplot">
+          <div class="chartwrap" id="riskscroll"><div class="chartholder" id="riskholder"><canvas id="riskchart"></canvas></div></div>
+          <div class="charthint" id="riskhint"></div>
+          <div class="chartfocus" id="riskfocus" hidden></div>
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:18px;justify-content:flex-end">
+        <button class="btn" id="dl-dash">Export dashboard PNG</button>
+        <button class="btn primary" id="dl-analysis">Export analysis (Excel)</button>
+      </div>
+    </section>
+
+    <!-- MAPPING -->
+    <section class="view" id="view-mapping">
+      <div class="mapintro">These are <b>data mappings only</b> — how your workbook was read. No equipment data here. Expand a section to vet it.</div>
+      <div id="map-alerts"></div>
+
+      <div class="acc">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Sheet &amp; column detection</h3><span class="acc-hint">which tabs &amp; columns were matched</span></button>
+        <div class="acc-body"><div class="acc-inner">
+          <div id="map-sheets"></div>
+          <div id="map-cols" style="margin-top:14px"></div>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Equipment Classification (Full Export)</h3><span class="acc-hint">match rate &amp; column detection</span></button>
+        <div class="acc-body"><div class="acc-inner"><div id="map-fx"></div></div></div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>UPN → System Name</h3><span class="acc-hint">how UPNs map to systems</span></button>
+        <div class="acc-body"><div class="acc-inner"><div id="map-upn"></div></div></div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Step column → category assignment</h3><span class="acc-hint">QAQC / DV / EHS classification</span></button>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="section-head" style="margin:2px 0 10px">
+            <div class="eyebrow">Adjust classification</div>
+            <label class="chk"><input type="checkbox" id="ignoreNA" /> Treat “N/A” as no step</label>
+          </div>
+          <p style="color:var(--ink-2);font-size:12.5px;margin:0 0 12px">Auto-detected from header text. Toggle any column that was mis-classified — the whole analysis recomputes instantly.</p>
+          <div style="overflow:auto"><table class="maptable" id="stepmap"></table></div>
+        </div></div>
+      </div>
+
+      <div class="acc" id="unmatched-card">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Unmatched issue Equipment IDs</h3><span class="acc-hint">issues not linked to equipment</span></button>
+        <div class="acc-body"><div class="acc-inner"><div id="map-unmatched"></div></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="map-modal" hidden>
+  <div class="modal-card">
+    <div class="modal-title">Open data mappings?</div>
+    <p class="modal-text">This tab shows only the <b>data mappings</b> — which tabs and columns were matched, and how UPNs, issues, and classifications were linked. It contains <b>no actual equipment data</b>. Use it to vet and double-check that your workbook was read correctly.</p>
+    <div class="modal-actions">
+      <button class="btn" id="map-cancel">Cancel</button>
+      <button class="btn primary" id="map-open">Open mappings</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="update-modal" hidden>
+  <div class="modal-card update-card">
+    <div class="up-head">
+      <div>
+        <div class="up-kicker" id="update-kicker">Risk Analysis</div>
+        <div class="up-title" id="update-title">Changelog</div>
+      </div>
+      <button class="up-close" id="update-close" aria-label="Close update modal">×</button>
+    </div>
+    <div class="up-tabs" id="update-tabs">
+      <button class="up-tab active" data-tab="update">Update</button>
+      <button class="up-tab" data-tab="changelog">Changelog</button>
+    </div>
+    <div class="up-body" id="update-body"></div>
+  </div>
+</div>
+<div class="overlay" id="overlay" role="progressbar" aria-hidden="true">
+  <div class="overlay-card">
+    <div class="ov-title" id="ov-title">Working…</div>
+    <div class="ov-track"><div class="ov-bar" id="ov-bar"></div></div>
+    <div class="ov-meta"><span id="ov-sub">&nbsp;</span><span id="ov-pct" class="num">0%</span></div>
+  </div>
+</div>
+<script id="pipeline">
+/* ==== PIPELINE (verified in Node, 22/22 assertions) ============================ */
+const norm = (v) => (v == null ? '' : String(v).trim());
+const lc = (v) => norm(v).toLowerCase();
+const digits = (v) => { const m = String(v == null ? '' : v).match(/\d+/); return m ? m[0] : ''; };
+
+const META_ALIASES = {
+  name:['equipment name'], description:['equipment description'], building:['building'],
+  upn:['upn'], discipline:['discipline'], milestone:['milestone'],
+};
+
+function detectHeaderRow(aoa, expectedLabels, maxScan = 15){
+  const want = expectedLabels.map(lc); let best = { idx:0, score:-1 };
+  const limit = Math.min(maxScan, aoa.length);
+  for (let r=0;r<limit;r++){
+    const cells=(aoa[r]||[]).map(lc); let score=0;
+    for (const w of want) if (cells.some(c=>c===w||c.includes(w))) score++;
+    if (score>best.score) best={idx:r,score};
+  }
+  return best.idx;
+}
+function findCol(headerRow, aliases){
+  const cells=headerRow.map(lc);
+  for (const a of aliases){ const i=cells.indexOf(a); if(i!==-1) return i; }
+  for (const a of aliases){ const i=cells.findIndex(c=>c.includes(a)); if(i!==-1) return i; }
+  return -1;
+}
+function classifyStep(header){
+  const h=lc(header); const cats=[];
+  if (h.includes('qaqc')) cats.push('QAQC');
+  if (h.includes('dv'))   cats.push('DV');
+  if (h.includes('ehs'))  cats.push('EHS');
+  return cats;
+}
+
+const STEP_CATEGORIES = ['QAQC','DV','EHS'];
+function stepComboLabel(e){
+  return STEP_CATEGORIES.filter(c=>e.present&&e.present[c]).join(' + ') || 'None';
+}
+function normalizeStepSelection(selection){
+  selection = selection || {};
+  const cats = (selection.categories || []).filter(c=>STEP_CATEGORIES.includes(c));
+  return { none:!!selection.none, categories:cats, mode:selection.mode==='all'?'all':'any' };
+}
+function matchStepSelection(e, selection){
+  const sel=normalizeStepSelection(selection);
+  if(sel.none) return e.score===0;
+  if(!sel.categories.length) return true;
+  return sel.mode==='all'
+    ? sel.categories.every(c=>e.present&&e.present[c])
+    : sel.categories.some(c=>e.present&&e.present[c]);
+}
+function dimensionKey(e, dim){
+  if(dim==='System') return e.systemName || '(no system)';
+  if(dim==='Discipline') return e.discipline || '(none)';
+  if(dim==='Building') return e.building || '(none)';
+  if(dim==='Milestone') return e.milestone || '(none)';
+  if(dim==='Classification') return e.classification || '(unclassified)';
+  return stepComboLabel(e);
+}
+function newCoverageRow(key){
+  return {
+    key, n:0, equipmentCount:0, issueCount:0, withIssues:0,
+    scoreSum:0,
+    scoreDist:{0:0,1:0,2:0,3:0},
+    scorePct:{0:0,1:0,2:0,3:0},
+  };
+}
+function finishCoverageRow(row){
+  [0,1,2,3].forEach(s=>{ row.scorePct[s]=row.n?Math.round((row.scoreDist[s]/row.n)*100):0; });
+  return row;
+}
+function coverageBreakdownBy(equipment, keyFn){
+  const map=new Map();
+  for(const e of equipment){
+    const key=keyFn(e); let row=map.get(key);
+    if(!row){ row=newCoverageRow(key); map.set(key,row); }
+    row.n++; row.equipmentCount++; row.issueCount+=e.issueCount||0; if(e.hasIssues) row.withIssues++;
+    row.scoreSum+=e.score||0;
+    row.scoreDist[e.score]=(row.scoreDist[e.score]||0)+1;
+  }
+  return [...map.values()].map(finishCoverageRow)
+    .sort((a,b)=>b.issueCount-a.issueCount || b.equipmentCount-a.equipmentCount || String(a.key).localeCompare(String(b.key)));
+}
+function tierBreakdown(equipment, score, dim){
+  const tier=equipment.filter(e=>e.score===score);
+  const total=tier.length || 1;
+  const map=new Map();
+  for(const e of tier){
+    const key=dim==='Steps' ? stepComboLabel(e) : dimensionKey(e,dim);
+    let row=map.get(key);
+    if(!row){
+      row={key, score, cats:dim==='Steps' ? STEP_CATEGORIES.filter(c=>e.present&&e.present[c]) : null, count:0, issueCount:0, avgIssues:0, ratio:0};
+      map.set(key,row);
+    }
+    row.count++; row.issueCount+=e.issueCount||0;
+  }
+  const rows=[...map.values()];
+  rows.forEach(row=>{ row.avgIssues=row.count?row.issueCount/row.count:0; row.ratio=Math.round((row.count/total)*100); });
+  rows.sort((a,b)=>b.count-a.count || b.issueCount-a.issueCount || String(a.key).localeCompare(String(b.key)));
+  return rows;
+}
+function areaStatsFrom(equip, keyFn){
+  const areas=coverageBreakdownBy(equip,keyFn);
+  const maxIPE=Math.max(1e-9,...areas.map(a=>(a.issueCount||0)/Math.max(1,a.n)));
+  areas.forEach(a=>{
+    a.issues=a.issueCount||0;
+    a.ipe=a.n?a.issues/a.n:0;
+    a.covFrac=a.n?a.scoreSum/(a.n*3):0;
+    a.issFrac=a.ipe/maxIPE;
+  });
+  return areas;
+}
+function scoreRisk(areas, resolved){
+  if(resolved==='blind') areas.forEach(a=>{ a.raw=(1-a.covFrac)*(1-a.issFrac); a.exposure=a.raw*a.n; });
+  else areas.forEach(a=>{ a.raw=a.issFrac; a.exposure=a.issues; });
+  const maxExp=Math.max(1e-9,...areas.map(a=>a.exposure));
+  areas.forEach(a=>{ a.risk=Math.round(a.exposure/maxExp*100); });
+  areas.sort((x,y)=>y.risk-x.risk || y.exposure-x.exposure);
+  return areas;
+}
+
+// opts.catAssign: { headerLower: ['QAQC',...] } overrides classifyStep for that column.
+// opts.ignoreStepValues: array of values that DON'T count as a populated step (e.g. ['n/a']).
+// opts.colOverride: { role: index } to force a meta column.
+function parseEquipmentStatus(aoa, opts = {}){
+  const ignoreValues = new Set((opts.ignoreStepValues||[]).map(lc));
+  const catAssign = opts.catAssign || {};
+  const colOverride = opts.colOverride || {};
+  const headerIdx = detectHeaderRow(aoa, Object.values(META_ALIASES).flat());
+  const header = (aoa[headerIdx]||[]).map(norm);
+  const cols = {};
+  for (const [k,al] of Object.entries(META_ALIASES)){
+    cols[k] = (colOverride[k] != null && colOverride[k] >= 0) ? colOverride[k] : findCol(header, al);
+  }
+  const metaIdx = new Set(Object.values(cols).filter(i=>i>=0));
+  const discIdx = cols.discipline;
+  const stepCols=[];
+  header.forEach((h,i)=>{
+    if (discIdx>=0 && i<=discIdx) return;
+    if (metaIdx.has(i)) return;
+    if (h==='') return;
+    const key=h.toLowerCase();
+    const cats = (catAssign[key]!==undefined) ? catAssign[key].slice() : classifyStep(h);
+    stepCols.push({ index:i, header:h, cats, defaultCats:classifyStep(h) });
+  });
+  const catCols = {
+    QAQC: stepCols.filter(s=>s.cats.includes('QAQC')),
+    DV:   stepCols.filter(s=>s.cats.includes('DV')),
+    EHS:  stepCols.filter(s=>s.cats.includes('EHS')),
+  };
+  const cellPopulated=(v)=>{ const t=norm(v); return t!=='' && !ignoreValues.has(t.toLowerCase()); };
+  const equipment=[];
+  for (let r=headerIdx+1;r<aoa.length;r++){
+    const row=aoa[r]||[]; const name=norm(row[cols.name]);
+    if (name==='') continue;
+    const hasCat=(b)=>catCols[b].some(c=>cellPopulated(row[c.index]));
+    const present={QAQC:hasCat('QAQC'),DV:hasCat('DV'),EHS:hasCat('EHS')};
+    const categories=Object.keys(present).filter(k=>present[k]);
+    const steps={}; stepCols.forEach(s=>{steps[s.header]=norm(row[s.index]);});
+    equipment.push({
+      name, description:norm(row[cols.description]), building:norm(row[cols.building]),
+      upn:digits(row[cols.upn]), upnRaw:norm(row[cols.upn]),
+      discipline:norm(row[cols.discipline]), milestone:norm(row[cols.milestone]),
+      present, categories, score:categories.length, steps,
+    });
+  }
+  return { equipment, header, headerIdx, cols, stepCols, catCols };
+}
+function parseDropdowns(aoa){
+  const headerIdx=detectHeaderRow(aoa,['system name','system']);
+  const header=(aoa[headerIdx]||[]).map(norm);
+  let sysCol=findCol(header,['system name']); if(sysCol===-1) sysCol=findCol(header,['system']);
+  const map={};
+  if (sysCol!==-1){
+    for (let r=headerIdx+1;r<aoa.length;r++){
+      const val=norm((aoa[r]||[])[sysCol]); if(!val) continue;
+      const upn=digits(val); if(upn && !map[upn]) map[upn]=val;
+    }
+  }
+  return { map, sysCol, headerIdx, header };
+}
+function parseIssues(aoa){
+  const headerIdx=detectHeaderRow(aoa,['equipment id','equipment','issue id']);
+  const header=(aoa[headerIdx]||[]).map(norm);
+  let idCol=findCol(header,['equipment id']); if(idCol===-1) idCol=findCol(header,['equipment']);
+  const counts={}, raw={}; let total=0;
+  if (idCol!==-1){
+    for (let r=headerIdx+1;r<aoa.length;r++){
+      const id=norm((aoa[r]||[])[idCol]); if(!id) continue;
+      const key=id.toLowerCase(); counts[key]=(counts[key]||0)+1; if(!raw[key]) raw[key]=id; total++;
+    }
+  }
+  return { counts, raw, idCol, headerIdx, header, total };
+}
+// Full Export tab: match ESR Equipment Name → this tab's Equipment ID → Equipment Classification
+function parseFullExport(aoa, opts){
+  aoa = aoa || []; opts = opts || {};
+  const headerIdx=detectHeaderRow(aoa,['equipment id','equipment classification','classification']);
+  const header=(aoa[headerIdx]||[]).map(norm);
+  let idCol = (opts.idCol!=null && opts.idCol>=0) ? opts.idCol
+    : (()=>{ let c=findCol(header,['equipment id']); if(c===-1) c=findCol(header,['equipment']); return c; })();
+  let clsCol = (opts.clsCol!=null && opts.clsCol>=0) ? opts.clsCol
+    : (()=>{ let c=findCol(header,['equipment classification']); if(c===-1) c=findCol(header,['classification']); return c; })();
+  const byId=new Map(); const sampleIds=[]; let rows=0;
+  if (idCol!==-1 && clsCol!==-1){
+    for (let r=headerIdx+1;r<aoa.length;r++){
+      const id=norm((aoa[r]||[])[idCol]); if(!id) continue;
+      rows++; const key=id.toLowerCase();
+      if(!byId.has(key)) byId.set(key, norm((aoa[r]||[])[clsCol]));
+      if(sampleIds.length<12) sampleIds.push(id);
+    }
+  }
+  return { byId, idCol, clsCol, headerIdx, header, sampleIds, rows };
+}
+function buildModel(esr, dropdowns, issues, fullExport){
+  const fx = fullExport || { byId:new Map() };
+  const unmatched=new Set(Object.keys(issues.counts));
+  const equipment=esr.equipment.map(eq=>{
+    const systemName=dropdowns.map[eq.upn] || (eq.upnRaw?eq.upnRaw:'(no system)');
+    const key=eq.name.toLowerCase(); const issueCount=issues.counts[key]||0;
+    unmatched.delete(key);
+    const cls=fx.byId.get(key);
+    const classification=(cls==null||cls==='')?'(unclassified)':cls;
+    return {...eq, systemName, issueCount, hasIssues:issueCount>0, classification};
+  });
+  const systems={};
+  for (const eq of equipment){
+    const s=(systems[eq.systemName] ||= {systemName:eq.systemName,equipmentCount:0,issueCount:0,withIssues:0,scoreDist:{0:0,1:0,2:0,3:0}});
+    s.equipmentCount++; s.issueCount+=eq.issueCount; if(eq.hasIssues)s.withIssues++; s.scoreDist[eq.score]++;
+  }
+  const matrix=[0,1,2,3].map(score=>{
+    const grp=equipment.filter(e=>e.score===score);
+    const eqCount=grp.length; const issueCount=grp.reduce((a,e)=>a+e.issueCount,0);
+    const withIssues=grp.filter(e=>e.hasIssues).length;
+    return {score,label:score+'/3',equipmentCount:eqCount,issueCount,
+      avgIssues:eqCount?issueCount/eqCount:0, pctWithIssues:eqCount?(withIssues/eqCount)*100:0};
+  });
+  const unmatchedArr=[...unmatched].map(k=>({id:issues.raw[k],count:issues.counts[k]})).sort((a,b)=>b.count-a.count);
+  return { equipment,
+    systems:Object.values(systems).sort((a,b)=>b.issueCount-a.issueCount),
+    matrix, unmatched:unmatchedArr,
+    totals:{ equipment:equipment.length, issues:equipment.reduce((a,e)=>a+e.issueCount,0),
+      systems:Object.keys(systems).length, unmatchedIssues:unmatchedArr.reduce((a,u)=>a+u.count,0),
+      classifications:new Set(equipment.map(e=>e.classification)).size } };
+}
+function rollupBy(equipment, dim){
+  const keyFn={ System:e=>e.systemName, Discipline:e=>e.discipline||'(none)',
+    Building:e=>e.building||'(none)', Milestone:e=>e.milestone||'(none)',
+    Classification:e=>e.classification||'(unclassified)' }[dim];
+  return coverageBreakdownBy(equipment,keyFn).sort((a,b)=>b.issueCount-a.issueCount);
+}
+</script>
+<script id="appjs">
+/* ==== APP ===================================================================== */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---- hover tooltips: one shared bubble, delegated so it covers rendered content,
+   clamped to the viewport so it never clips at an edge ---- */
+const TT=document.createElement('div'); TT.id='app-tooltip'; document.body.appendChild(TT);
+let _curTip=null;
+function showTip(el){ const txt=el.getAttribute('data-tip'); if(!txt) return;
+  TT.textContent=txt; TT.classList.add('show');
+  const r=el.getBoundingClientRect(), tw=TT.offsetWidth, th=TT.offsetHeight, pad=8;
+  let left=r.left+r.width/2-tw/2; left=Math.max(pad,Math.min(left,window.innerWidth-tw-pad));
+  let top=r.top-th-8; if(top<pad) top=r.bottom+8; // flip below if no room above
+  TT.style.left=left+'px'; TT.style.top=top+'px';
+}
+function hideTip(){ TT.classList.remove('show'); _curTip=null; }
+document.addEventListener('mouseover',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]');
+  if(el&&el!==_curTip){ _curTip=el; showTip(el); } });
+document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(!el) return;
+  const to=e.relatedTarget; if(to&&el.contains(to)) return; if(el===_curTip) hideTip(); });
+document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
+document.addEventListener('focusout',hideTip);
+const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const APP_VERSION='1.0.0';
+$('#version-label').textContent=APP_VERSION;
+
+const state = {
+  fileName:'', aoaBySheet:{}, sheetNames:[],
+  roleSheet:{esr:null,dd:null,iss:null,fx:null}, sheets:{esr:null,dd:null,iss:null,fx:null},
+  esr:null, dd:null, iss:null, model:null,
+  dim:'System', focus:null, matrixDim:'Steps',
+  riskDim:'System', riskMode:'auto', riskChart:null, riskFocus:null,
+  catSel:new Set(), catNone:false, catMode:'any',
+  riskCatSel:new Set(), riskCatNone:false, riskCatMode:'any',
+  catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{},
+  collapsed:new Set(), catInit:false, chart:null,
+  updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
+};
+
+const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
+const UPDATE_TIMEOUT_MS=5000;
+const CHANGELOG=[
+  {
+    version:'1.0.0',
+    date:'2026-07-07T12:00:00Z',
+    type:'feature',
+    stats:'Initial public release',
+    notes:`### Risk Analysis
+- Added step-combination filters with AND / OR matching
+- Added Risk Hypothesis breakdowns by Steps, System, Discipline, Building, Milestone, and Classification
+- Added 0/3 through 3/3 coverage ratios across dashboard drill-downs and exports
+
+### Updates
+- Added offline local vendor libraries
+- Added one-time GitHub release update check
+- Added Update and Changelog modal`
+  }
+];
+function isNewer(remote, local){
+  const r=String(remote||'').replace(/^v/,'').split('.').map(Number);
+  const l=String(local||'').replace(/^v/,'').split('.').map(Number);
+  const len=Math.max(r.length,l.length);
+  for(let i=0;i<len;i++){ const rv=r[i]||0, lv=l[i]||0; if(rv>lv) return true; if(rv<lv) return false; }
+  return false;
+}
+function selectUpdateAsset(assets){
+  const html=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html'));
+  if(!html) return null;
+  const gzip=(assets||[]).find(a=>String(a.name||'').toLowerCase().endsWith('.html.gz'));
+  if(!gzip) return {downloadUrl:html.browser_download_url,assetApiUrl:html.url,assetName:html.name,downloadKind:'html'};
+  return {
+    downloadUrl:gzip.browser_download_url, assetApiUrl:gzip.url, assetName:gzip.name, downloadKind:'gzip-html',
+    fallbackDownloadUrl:html.browser_download_url, fallbackAssetApiUrl:html.url, fallbackAssetName:html.name
+  };
+}
+async function checkForUpdate(){
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),UPDATE_TIMEOUT_MS);
+    const res=await fetch(GITHUB_API_URL,{signal:controller.signal,headers:{Accept:'application/vnd.github.v3+json'}});
+    clearTimeout(timer);
+    if(!res.ok) return null;
+    const release=await res.json();
+    const remoteVersion=String(release.tag_name||'').replace(/^v/,'');
+    if(!isNewer(remoteVersion,APP_VERSION)) return null;
+    const asset=selectUpdateAsset(release.assets);
+    if(!asset) return null;
+    return {version:remoteVersion,releaseNotes:release.body||'',...asset};
+  }catch(_){ return null; }
+}
+function formatDate(iso){
+  const d=new Date(iso); if(Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function renderMarkdownLite(md){
+  const lines=String(md||'').split(/\r?\n/), out=[]; let inList=false;
+  const closeList=()=>{ if(inList){ out.push('</ul>'); inList=false; } };
+  for(const line of lines){
+    if(/^###\s+/.test(line)){ closeList(); out.push(`<h3>${esc(line.replace(/^###\s+/,''))}</h3>`); }
+    else if(/^[-*]\s+/.test(line)){ if(!inList){ out.push('<ul>'); inList=true; } out.push(`<li>${esc(line.replace(/^[-*]\s+/,''))}</li>`); }
+    else if(line.trim()===''){ closeList(); }
+    else { closeList(); out.push(`<p>${esc(line)}</p>`); }
+  }
+  closeList();
+  return out.join('');
+}
+function updateModalEl(){ return $('#update-modal'); }
+function openUpdateModal(info=null, tab){
+  if(info) state.updateInfo=info;
+  state.updateModalTab=tab || (info?'update':'changelog');
+  state.downloadError=null; state.downloadedUpdate=false;
+  renderUpdateModal();
+  const m=updateModalEl(); m.hidden=false; requestAnimationFrame(()=>m.classList.add('show'));
+}
+function closeUpdateModal(){
+  const m=updateModalEl(); m.classList.remove('show'); setTimeout(()=>{m.hidden=true;},180);
+}
+function setUpdateTab(tab){ state.updateModalTab=tab; state.downloadError=null; renderUpdateModal(); }
+function changelogWithUpdate(){
+  const info=state.updateInfo;
+  if(!info||!info.version||!info.releaseNotes) return CHANGELOG;
+  return CHANGELOG.some(e=>e.version===info.version) ? CHANGELOG : [{version:info.version,date:new Date().toISOString(),type:'fix',stats:'Available update',notes:info.releaseNotes},...CHANGELOG];
+}
+function renderChangelog(){
+  const entries=changelogWithUpdate();
+  return `<div class="ch-list">${entries.map((entry,i)=>`
+    <div class="ch-entry ${esc(entry.type)} ${i===0?'open':''}">
+      <button class="ch-head" data-ch="${i}" aria-expanded="${i===0?'true':'false'}">
+        <span class="ch-caret">▾</span><span class="ch-ver">v${esc(entry.version)}</span>
+        <span class="ch-type">${esc(entry.type)}${entry.stats?` · ${esc(entry.stats)}`:''}</span>
+        <span class="ch-date">${formatDate(entry.date)}</span>
+      </button>
+      <div class="ch-body">${renderMarkdownLite(entry.notes)}</div>
+    </div>`).join('')}</div>`;
+}
+function renderUpdateModal(){
+  const info=state.updateInfo;
+  let tab=state.updateModalTab;
+  const updateTab=$('#update-tabs [data-tab="update"]');
+  if(updateTab) updateTab.hidden=!info;
+  if(!info && tab==='update') tab='changelog';
+  state.updateModalTab=tab;
+  $$('#update-tabs .up-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  $('#update-title').textContent=info && tab==='update' ? 'Update Available' : 'Changelog';
+  $('#update-kicker').textContent=`Risk Analysis v${APP_VERSION}`;
+  if(tab==='update' && info){
+    $('#update-body').innerHTML=state.downloadedUpdate ? `
+      <div class="up-note"><b>Download started.</b><br>Replace your current Risk Analysis HTML file with the downloaded copy to update.</div>
+      <div class="modal-actions"><button class="btn primary" id="update-done">Done</button></div>
+    ` : `
+      <div class="up-version-row"><span class="up-badge">v${esc(APP_VERSION)}</span><span style="color:var(--ink-3)">&rarr;</span><span class="up-badge new">v${esc(info.version)}</span></div>
+      ${info.releaseNotes?`<div class="release-notes">${renderMarkdownLite(info.releaseNotes)}</div>`:''}
+      <div class="up-note"><b>After downloading:</b><br>Use the new HTML file as your current Risk Analysis app. Your workbook data still stays local.</div>
+      ${state.downloadError?`<div class="up-error">${esc(state.downloadError)}</div>`:''}
+      <div class="modal-actions">
+        <button class="btn ghost" id="update-skip">Skip this version</button>
+        <button class="btn primary" id="update-download">${state.downloadingUpdate?'Preparing...':`Download v${esc(info.version)}`}</button>
+      </div>`;
+  } else {
+    $('#update-body').innerHTML=renderChangelog();
+  }
+}
+function isStandaloneFileContext(){ return location.protocol==='file:' || location.origin==='null'; }
+function directUpdateDownload(url, filename){
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.target='_blank'; a.rel='noopener noreferrer';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function canDecompressGzip(){ return typeof DecompressionStream==='function'; }
+async function decompressGzipHtml(blob){
+  const stream=blob.stream().pipeThrough(new DecompressionStream('gzip'));
+  const htmlBlob=await new Response(stream).blob();
+  return new Blob([htmlBlob],{type:'text/html'});
+}
+async function fetchAssetBlob(assetApiUrl){
+  const response=await fetch(assetApiUrl,{headers:{Accept:'application/octet-stream'}});
+  if(!response.ok) throw new Error('HTTP '+response.status);
+  return response.blob();
+}
+async function downloadUpdateFile(info){
+  const direct=info.downloadKind==='gzip-html'
+    ? (info.fallbackDownloadUrl&&info.fallbackAssetName?{url:info.fallbackDownloadUrl,filename:info.fallbackAssetName}:null)
+    : {url:info.downloadUrl,filename:info.assetName};
+  if(isStandaloneFileContext() && direct){ directUpdateDownload(direct.url,direct.filename); return; }
+  if(info.downloadKind==='gzip-html' && canDecompressGzip()){
+    try{
+      const compressed=await fetchAssetBlob(info.assetApiUrl);
+      const html=await decompressGzipHtml(compressed);
+      download(html,info.fallbackAssetName||info.assetName.replace(/\.gz$/,''));
+      return;
+    }catch(_){}
+  }
+  const api=info.downloadKind==='gzip-html'?info.fallbackAssetApiUrl:info.assetApiUrl;
+  const name=info.downloadKind==='gzip-html'?info.fallbackAssetName:info.assetName;
+  if(!api||!name){ if(direct){ directUpdateDownload(direct.url,direct.filename); return; } throw new Error('No compatible update asset.'); }
+  try{
+    const html=await fetchAssetBlob(api);
+    download(new Blob([html],{type:'text/html'}),name);
+  }catch(_){
+    if(direct){ directUpdateDownload(direct.url,direct.filename); return; }
+    throw new Error('Download failed.');
+  }
+}
+$('#version-btn').addEventListener('click',()=>openUpdateModal(null,'changelog'));
+$('#update-close').addEventListener('click',closeUpdateModal);
+$('#update-modal').addEventListener('click',e=>{ if(e.target===$('#update-modal')) closeUpdateModal(); });
+$('#update-tabs').addEventListener('click',e=>{ const t=e.target.closest('.up-tab'); if(t&&!t.hidden) setUpdateTab(t.dataset.tab); });
+$('#update-body').addEventListener('click',async e=>{
+  const ch=e.target.closest('.ch-head');
+  if(ch){ const entry=ch.closest('.ch-entry'); const open=entry.classList.toggle('open'); ch.setAttribute('aria-expanded',open?'true':'false'); return; }
+  if(e.target.closest('#update-skip')||e.target.closest('#update-done')){ closeUpdateModal(); return; }
+  if(e.target.closest('#update-download')&&state.updateInfo&&!state.downloadingUpdate){
+    state.downloadingUpdate=true; state.downloadError=null; renderUpdateModal();
+    try{ await downloadUpdateFile(state.updateInfo); state.downloadedUpdate=true; }
+    catch(_){ state.downloadError='Download failed. Try again, or download the HTML release asset directly from GitHub.'; }
+    finally{ state.downloadingUpdate=false; renderUpdateModal(); }
+  }
+});
+window.addEventListener('load',async()=>{
+  const info=await checkForUpdate();
+  if(info){ state.updateInfo=info; $('#version-btn').classList.add('has-update'); openUpdateModal(info,'update'); }
+});
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200); }
+function download(blob, name){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1500); }
+
+/* ==== progress + async helpers ==================================================
+   Perf notes: heavy work (parse, model build, big renders, exports) is broken into
+   phases that yield to the event loop so the UI can paint the bar and stay
+   responsive — no long tasks that freeze the tab. */
+const OV={
+  el:$('#overlay'), bar:$('#ov-bar'), pct:$('#ov-pct'), title:$('#ov-title'), sub:$('#ov-sub'),
+  show(t){ this.title.textContent=t||'Working…'; this.el.classList.remove('indet'); this.set(0,''); this.el.classList.add('show'); this.el.setAttribute('aria-hidden','false'); },
+  set(p,sub){ p=Math.max(0,Math.min(100,p)); this.el.classList.remove('indet'); this.bar.style.width=p+'%'; this.pct.textContent=Math.round(p)+'%'; if(sub!=null) this.sub.textContent=sub||'\u00a0'; },
+  indet(sub){ this.el.classList.add('indet'); this.pct.textContent=''; if(sub!=null) this.sub.textContent=sub||'\u00a0'; },
+  hide(){ this.el.classList.remove('show'); this.el.classList.remove('indet'); this.el.setAttribute('aria-hidden','true'); }
+};
+/* let the browser paint before continuing a heavy phase */
+const yieldUI=()=>new Promise(r=>setTimeout(r,0));
+const raf=()=>new Promise(r=>(window.requestAnimationFrame||setTimeout)(r));
+/* run work in rAF-batched chunks so long lists never block the main thread */
+function runChunked(total, chunkSize, onChunk, onProgress){
+  return new Promise(resolve=>{
+    let i=0;
+    (function step(){
+      const end=Math.min(i+chunkSize,total);
+      for(;i<end;i++) onChunk(i);
+      if(onProgress) onProgress(total?end/total:1);
+      if(end<total) (window.requestAnimationFrame||setTimeout)(step); else resolve();
+    })();
+  });
+}
+/* FileReader with real byte-level progress (0..1) */
+function readFileWithProgress(file, onProg){
+  return new Promise((resolve,reject)=>{
+    const rd=new FileReader();
+    rd.onprogress=e=>{ if(e.lengthComputable&&onProg) onProg(e.loaded/e.total); };
+    rd.onload=()=>{ onProg&&onProg(1); resolve(rd.result); };
+    rd.onerror=()=>reject(rd.error||new Error('read failed'));
+    rd.readAsArrayBuffer(file);
+  });
+}
+
+/* ---- workbook parsing: off-main-thread when possible ----------------------------
+   Parsing + AOA conversion is the single most expensive step. We run it in a Web
+   Worker so the main thread (and the progress bar) stays smooth. A ping/ack
+   handshake detects environments where workers or the CDN import are unavailable
+   (e.g. some file:// sandboxes) and falls back to a chunked main-thread parse. */
+const XLSX_WORKER_SRC=new URL('vendor/xlsx.bundle.js', window.location.href).href;
+function makeParseWorker(){
+  const src=`self.onmessage=function(ev){var m=ev.data;
+    if(m.type==='ping'){self.postMessage({type:'ack'});return;}
+    if(m.type==='parse'){try{importScripts(m.cdn);
+      self.postMessage({type:'progress',pct:0.12,label:'Parsing workbook\u2026'});
+      var wb=XLSX.read(new Uint8Array(m.buf),{type:'array'});
+      var names=wb.SheetNames.slice(),aoa={};
+      for(var i=0;i<names.length;i++){aoa[names[i]]=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,raw:false,defval:''});
+        self.postMessage({type:'progress',pct:0.12+0.88*((i+1)/names.length),label:'Reading '+names[i]});}
+      self.postMessage({type:'done',sheetNames:names,aoaBySheet:aoa});
+    }catch(e){self.postMessage({type:'error',message:String(e&&e.message||e)});}}};`;
+  const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+  const w=new Worker(url); w._url=url; return w;
+}
+function parseInWorker(buf, onProg){
+  return new Promise((resolve,reject)=>{
+    if(!window.Worker) return reject(new Error('no worker'));
+    let w, acked=false, settled=false;
+    const cleanup=()=>{ try{w.terminate();}catch(_){} try{URL.revokeObjectURL(w._url);}catch(_){} };
+    try{ w=makeParseWorker(); }catch(e){ return reject(e); }
+    const ackT=setTimeout(()=>{ if(!acked){ settled=true; cleanup(); reject(new Error('worker ack timeout')); } },2500);
+    const hardT=setTimeout(()=>{ if(!settled){ settled=true; cleanup(); reject(new Error('worker timeout')); } },60000);
+    w.onerror=e=>{ if(settled)return; settled=true; clearTimeout(ackT); clearTimeout(hardT); cleanup(); reject(new Error('worker error: '+(e.message||''))); };
+    w.onmessage=e=>{
+      const d=e.data;
+      if(d.type==='ack'){ acked=true; clearTimeout(ackT); w.postMessage({type:'parse',buf:buf,cdn:XLSX_WORKER_SRC}); return; }
+      if(d.type==='progress'){ onProg&&onProg(d.pct,d.label); return; }
+      if(d.type==='error'){ if(settled)return; settled=true; clearTimeout(hardT); cleanup(); reject(new Error(d.message)); return; }
+      if(d.type==='done'){ if(settled)return; settled=true; clearTimeout(hardT); cleanup(); resolve({sheetNames:d.sheetNames,aoaBySheet:d.aoaBySheet}); }
+    };
+    w.postMessage({type:'ping'});
+  });
+}
+async function parseMainThread(buf, onProg){
+  onProg&&onProg(0.1,'Parsing workbook\u2026'); await yieldUI();
+  const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+  const names=wb.SheetNames.slice(), aoa={};
+  for(let i=0;i<names.length;i++){
+    aoa[names[i]]=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,raw:false,defval:''});
+    onProg&&onProg(0.1+0.9*((i+1)/names.length),'Reading '+names[i]);
+    await yieldUI();
+  }
+  return {sheetNames:names, aoaBySheet:aoa};
+}
+async function parseWorkbook(buf, onProg){
+  if(location.protocol==='file:') return await parseMainThread(buf,onProg);
+  try{ return await parseInWorker(buf,onProg); }
+  catch(e){ return await parseMainThread(buf,onProg); }
+}
+
+/* ---- tabs ---- */
+function activateTab(t){
+  $$('#tabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+  $$('.view').forEach(v=>v.classList.remove('active')); $('#view-'+t.dataset.view).classList.add('active');
+  if(t.dataset.view==='dashboard' && state.model){ renderChart(); renderRisk(); }
+  if(t.dataset.view==='hierarchy' && state.visible){ renderWindow(); }
+}
+$$('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{
+  if(t.disabled) return;
+  if(t.dataset.view==='mapping'){ openMapConfirm(); return; } // confirm first — it's a vetting view
+  activateTab(t);
+}));
+function goto(view){ const t=$(`#tabs .tab[data-view="${view}"]`); t&&t.click(); }
+/* mapping confirm modal */
+function openMapConfirm(){ const m=$('#map-modal'); m.hidden=false; requestAnimationFrame(()=>m.classList.add('show')); }
+function closeMapConfirm(){ const m=$('#map-modal'); m.classList.remove('show'); setTimeout(()=>{m.hidden=true;},200); }
+$('#map-cancel').addEventListener('click',closeMapConfirm);
+$('#map-modal').addEventListener('click',e=>{ if(e.target===$('#map-modal')) closeMapConfirm(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('#map-modal').hidden) closeMapConfirm(); });
+$('#map-open').addEventListener('click',()=>{
+  closeMapConfirm();
+  // open with every section collapsed for a clean, section-by-section review
+  $$('#view-mapping .acc').forEach(a=>{ a.classList.remove('open'); const h=a.querySelector('.acc-head'); if(h) h.setAttribute('aria-expanded','false'); });
+  activateTab($('#tabs .tab[data-view="mapping"]'));
+});
+/* accordion expand/collapse (delegated; only the header toggles, controls inside don't) */
+$('#view-mapping').addEventListener('click',ev=>{
+  const head=ev.target.closest('.acc-head'); if(!head) return;
+  const acc=head.closest('.acc'); const open=acc.classList.toggle('open');
+  head.setAttribute('aria-expanded',open?'true':'false');
+});
+
+/* ---- file input / drag drop ---- */
+const drop=$('#drop'), fileinput=$('#fileinput');
+drop.addEventListener('click',()=>fileinput.click());
+fileinput.addEventListener('change',e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>e.preventDefault());
+
+function matchSheet(names, needles){
+  const flat=s=>lc(s).replace(/[^a-z0-9]/g,'');
+  for(const nd of needles){ const t=flat(nd);
+    const hit=names.find(n=>flat(n)===t); if(hit) return hit; }
+  for(const nd of needles){ const t=flat(nd);
+    const hit=names.find(n=>flat(n).includes(t)); if(hit) return hit; }
+  return null;
+}
+function aoaOf(name){ return state.aoaBySheet[name]||[]; }
+
+async function handleFile(file){
+  if(!window.XLSX){ toast('Spreadsheet library not loaded — check your connection.'); return; }
+  OV.show('Loading workbook');
+  try{
+    // 1) read bytes — real byte-level progress (0→18%)
+    OV.set(2,'Reading '+file.name+'…');
+    const buf=await readFileWithProgress(file, p=>OV.set(2+p*16,'Reading '+file.name+'…'));
+    // 2) parse + AOA conversion off-thread when possible (18→64%)
+    const {sheetNames,aoaBySheet}=await parseWorkbook(buf,(pct,label)=>OV.set(18+pct*46,label));
+    state.fileName=file.name; state.sheetNames=sheetNames; state.aoaBySheet=aoaBySheet;
+    // 3) role match + model (64→86%)
+    OV.set(66,'Matching tabs…'); await yieldUI();
+    state.roleSheet.esr=matchSheet(state.sheetNames,['Equipment Status Report','equipment status']);
+    state.roleSheet.dd =matchSheet(state.sheetNames,['Drop Downs- VF','drop downs vf','dropdowns vf','drop downs']);
+    state.roleSheet.iss=matchSheet(state.sheetNames,['Issue Grid Report','issue grid']);
+    state.roleSheet.fx =matchSheet(state.sheetNames,['Full Export','full export','fullexport']);
+    loadRoleSheets();
+    state.catInit=false; state.catAssign={}; state.colOverride={};
+    OV.set(84,'Building analysis…'); await yieldUI();
+    // 4) recompute + first render (virtualized — instant regardless of size)
+    await recompute(true);
+    OV.set(96,'Rendering…'); await raf();
+    $('#filepill').style.display='flex'; $('#filepillname').textContent=file.name;
+    $$('#tabs .tab').forEach(t=>t.disabled=false);
+    OV.set(100,'Done'); await raf();
+    goto('hierarchy');
+    toast('Loaded '+state.model.totals.equipment+' equipment across '+state.model.totals.systems+' systems');
+  }catch(err){ console.error(err); toast('Could not read this workbook. Is it a valid .xlsx?'); }
+  finally{ OV.hide(); }
+}
+function loadRoleSheets(){
+  state.sheets.esr=state.roleSheet.esr?aoaOf(state.roleSheet.esr):[];
+  state.sheets.dd =state.roleSheet.dd ?aoaOf(state.roleSheet.dd) :[];
+  state.sheets.iss=state.roleSheet.iss?aoaOf(state.roleSheet.iss):[];
+  state.sheets.fx =state.roleSheet.fx ?aoaOf(state.roleSheet.fx) :[];
+}
+
+/* ---- recompute pipeline ---- */
+function recompute(initFilters){
+  const opts={ catAssign:state.catAssign, ignoreStepValues:state.ignoreNA?['n/a']:[], colOverride:state.colOverride };
+  state.esr=parseEquipmentStatus(state.sheets.esr, opts);
+  if(!state.catInit){ // seed catAssign from detected defaults so the mapping UI is editable
+    state.esr.stepCols.forEach(s=>{ state.catAssign[s.header.toLowerCase()]=s.defaultCats.slice(); });
+    state.catInit=true;
+    state.esr=parseEquipmentStatus(state.sheets.esr, {catAssign:state.catAssign, ignoreStepValues:opts.ignoreStepValues, colOverride:state.colOverride});
+  }
+  state.dd=parseDropdowns(state.sheets.dd);
+  state.iss=parseIssues(state.sheets.iss);
+  state.fx=parseFullExport(state.sheets.fx, state.fxOverride);
+  state.model=buildModel(state.esr,state.dd,state.iss,state.fx);
+  precomputeOrder();
+  if(initFilters) buildFilters();
+  renderDashboard(); renderMapping();
+  return renderHierarchy(true);
+}
+
+/* ---- filters ---- */
+function uniq(arr){ return [...new Set(arr.filter(Boolean))].sort(); }
+function buildFilters(){
+  const eq=state.model.equipment;
+  fill($('#h-disc'),uniq(eq.map(e=>e.discipline)));
+  fill($('#h-bld'), uniq(eq.map(e=>e.building)));
+  fill($('#h-ms'),  uniq(eq.map(e=>e.milestone)));
+  fill($('#h-cls'), uniq(eq.map(e=>e.classification)));
+}
+function fill(sel,vals){ const cur=sel.value; sel.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
+function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
+const rerender=()=>{ renderHierarchy(true); }; // filter change resets scroll to top
+// text search is debounced (fires per keystroke); dropdowns apply immediately
+$('#h-search').addEventListener('input',debounce(rerender,130));
+['#h-disc','#h-bld','#h-ms','#h-cls','#h-score','#h-iss'].forEach(s=>$(s).addEventListener('change',rerender));
+$('#h-expand').addEventListener('click',()=>{ state.collapsed.clear(); renderHierarchy(false); });
+$('#h-collapse').addEventListener('click',()=>{ (state.orderedSystems||[]).forEach(s=>state.collapsed.add(s.name)); renderHierarchy(false); });
+$('#h-clear').addEventListener('click',()=>{
+  $('#h-search').value=''; ['#h-disc','#h-bld','#h-ms','#h-cls','#h-score','#h-iss'].forEach(s=>{ $(s).value=''; });
+  renderHierarchy(true);
+});
+// event delegation: one listener handles every system row, across window re-renders
+$('#hbody').addEventListener('click',ev=>{
+  const row=ev.target.closest&&ev.target.closest('.sysrow'); if(!row) return;
+  const s=row.dataset.sys; state.collapsed.has(s)?state.collapsed.delete(s):state.collapsed.add(s); renderHierarchy(false);
+});
+
+/* ---- filtering ---- */
+function readFilters(){ return { q:lc($('#h-search').value), d:$('#h-disc').value, b:$('#h-bld').value,
+  m:$('#h-ms').value, cls:$('#h-cls').value, sc:$('#h-score').value, is:$('#h-iss').value }; }
+function passFilters(e,f){
+  if(f.q && !(lc(e.name).includes(f.q)||lc(e.description).includes(f.q))) return false;
+  if(f.d && e.discipline!==f.d) return false;
+  if(f.b && e.building!==f.b) return false;
+  if(f.m && e.milestone!==f.m) return false;
+  if(f.cls && e.classification!==f.cls) return false;
+  if(f.sc!=='' && e.score!==+f.sc) return false;
+  if(f.is==='has' && !e.hasIssues) return false;
+  if(f.is==='none' && e.hasIssues) return false;
+  return true;
+}
+/* Precompute display order ONCE per recompute: systems in model order, each with its
+   equipment pre-sorted by issue count. Avoids re-sorting on every filter/scroll. */
+function precomputeOrder(){
+  const bySys=new Map();
+  for(const e of state.model.equipment){ let a=bySys.get(e.systemName); if(!a){a=[];bySys.set(e.systemName,a);} a.push(e); }
+  for(const a of bySys.values()) a.sort((x,y)=>y.issueCount-x.issueCount);
+  state.orderedSystems=state.model.systems.filter(s=>bySys.has(s.systemName))
+    .map(s=>({name:s.systemName, items:bySys.get(s.systemName)}));
+}
+/* Build the flat list of VISIBLE rows (filters + collapse). O(equipment). Produces
+   lightweight descriptors — no HTML — so this stays fast even at 40k+ rows. */
+function buildVisible(){
+  const f=readFilters(), vis=[];
+  for(const sys of (state.orderedSystems||[])){
+    const collapsed=state.collapsed.has(sys.name);
+    let count=0, issues=0; const dist={0:0,1:0,2:0,3:0}; let kids=null;
+    for(const e of sys.items){
+      if(!passFilters(e,f)) continue;
+      count++; issues+=e.issueCount; dist[e.score]++;
+      if(!collapsed){ (kids||(kids=[])).push(e); }
+    }
+    if(!count) continue;
+    vis.push({t:0,name:sys.name,count,issues,dist,collapsed});
+    if(kids) for(const e of kids) vis.push({t:1,e});
+  }
+  state.visible=vis;
+}
+
+/* ---- row html ---- */
+function scoreBadge(score){ return `<span class="badge score-${score}">${score}/3</span>`; }
+function catChips(cats){ if(!cats.length) return '<span class="chip muted">none</span>';
+  return cats.map(c=>`<span class="chip ${c.toLowerCase()}">${c}</span>`).join(''); }
+function coverageMixHTML(scoreDist,n){
+  return `<span class="covmix">${[0,1,2,3].map(s=>{
+    const count=(scoreDist&&scoreDist[s])||0, pct=n?Math.round(count/n*100):0;
+    return `<span class="score-${s}">${count}×${s}/3 <small>${pct}%</small></span>`;
+  }).join('')}</span>`;
+}
+function coverageMixText(row){
+  return [0,1,2,3].map(s=>`${(row.scoreDist&&row.scoreDist[s])||0} at ${s}/3 (${row.scorePct?row.scorePct[s]:0}%)`).join(' · ');
+}
+function sysRowHTML(r){
+  const mini=[3,2,1,0].map(s=>r.dist[s]?`<b class="score-${s}">${r.dist[s]}×${s}/3</b>`:'').join('');
+  return `<tr class="datarow sysrow ${r.collapsed?'collapsed':''}" data-sys="${esc(r.name)}">
+    <td><div class="clip"><span class="caret">▾</span>${esc(r.name)}<span class="sysmini">${mini}</span></div></td>
+    <td colspan="4" class="metacell clip">${r.count.toLocaleString()} equipment</td>
+    <td></td><td class="n">—</td>
+    <td class="n"><span class="issue-flag ${r.issues?'has':'none'}">${r.issues}</span></td></tr>`;
+}
+function eqRowHTML(r){ const e=r.e;
+  return `<tr class="datarow eqrow">
+    <td><div class="eqcell"><div class="eqname clip">${esc(e.name)}</div>${e.description?`<div class="desc clip" title="${esc(e.description)}">${esc(e.description)}</div>`:''}</div></td>
+    <td class="metacell clip">${esc(e.discipline)||'—'}</td>
+    <td class="metacell clip">${esc(e.building)||'—'}</td>
+    <td class="metacell clip">${esc(e.milestone)||'—'}</td>
+    <td class="metacell clip" title="${esc(e.classification)}">${esc(e.classification)||'—'}</td>
+    <td><div class="clip">${catChips(e.categories)}</div></td>
+    <td class="n">${scoreBadge(e.score)}</td>
+    <td class="n"><span class="issue-flag ${e.hasIssues?'has':'none'}">${e.issueCount}</span></td></tr>`;
+}
+function rowHTML(r){ return r.t===0?sysRowHTML(r):eqRowHTML(r); }
+
+/* ---- virtualized window renderer ----------------------------------------------
+   Only the rows in (and just around) the viewport are kept in the DOM. A top and
+   bottom spacer row reserve the total scroll height, so a 40k-row tree renders as
+   ~40 <tr> elements and scrolls at native speed with flat memory use. */
+const ROWH=48, OVERSCAN=10;
+function spacer(px){ return px>0?`<tr class="vspacer" aria-hidden="true"><td colspan="8" style="height:${px}px"></td></tr>`:''; }
+function renderWindow(){
+  const vp=$('#hscroll'), body=$('#hbody'), total=state.visible?state.visible.length:0, countEl=$('#hcount');
+  if(!total){ body.innerHTML=`<tr><td colspan="8" class="empty">No equipment matches these filters.</td></tr>`;
+    if(countEl) countEl.textContent = state.model?`0 of ${state.model.totals.equipment.toLocaleString()} equipment shown`:''; return; }
+  const vpH=vp.clientHeight||640, scrollTop=vp.scrollTop;
+  let start=Math.floor(scrollTop/ROWH)-OVERSCAN; if(start<0)start=0;
+  let end=Math.ceil((scrollTop+vpH)/ROWH)+OVERSCAN; if(end>total)end=total;
+  let html=spacer(start*ROWH);
+  for(let i=start;i<end;i++) html+=rowHTML(state.visible[i]);
+  html+=spacer((total-end)*ROWH);
+  body.innerHTML=html;
+  if(countEl){ let eqShown=0; for(const r of state.visible) if(r.t===1) eqShown++;
+    countEl.textContent=`${eqShown.toLocaleString()} of ${state.model.totals.equipment.toLocaleString()} equipment shown · ${total.toLocaleString()} rows`; }
+}
+/* rebuild the visible set, then paint the current window */
+function renderHierarchy(resetScroll){
+  buildVisible();
+  const vp=$('#hscroll');
+  if(vp){
+    if(resetScroll){ vp.scrollTop=0; }
+    else { const maxTop=Math.max(0,state.visible.length*ROWH-(vp.clientHeight||640)); if(vp.scrollTop>maxTop) vp.scrollTop=maxTop; }
+  }
+  renderWindow();
+  return Promise.resolve();
+}
+/* scroll → repaint window (rAF-throttled so we render at most once per frame) */
+let scrollScheduled=false;
+$('#hscroll').addEventListener('scroll',()=>{ if(scrollScheduled) return; scrollScheduled=true;
+  (window.requestAnimationFrame||setTimeout)(()=>{ scrollScheduled=false; renderWindow(); }); },{passive:true});
+window.addEventListener('resize',debounce(()=>{ if(state.visible) renderWindow(); },150));
+
+/* ---- dashboard ---- */
+function renderDashboard(){
+  const t=state.model.totals;
+  // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
+  // counted once (no double-count across multiple step types).
+  const caught=state.model.equipment.reduce((a,e)=>a+(e.score>=1?e.issueCount:0),0);
+  $('#kpis').innerHTML=`
+    ${kpi('Systems',t.systems,'','The number of distinct systems found in the Equipment Status Report (from matching each UPN to its System Name).')}
+    ${kpi('Equipment',t.equipment,'','The total number of equipment items analyzed from the Equipment Status Report.')}
+    ${kpi('Total issues',t.issues,'matched to equipment','Total issues from the Issue Grid Report that were matched to an equipment item. Each issue is counted once.')}
+    ${kpi('Issues caught by steps',caught,'on units with a QAQC/DV/EHS step','Issues logged on equipment that have at least one QAQC, DV, or EHS step — each issue counted once, no duplicates.')}`;
+  renderMatrix();
+  if($('#view-dashboard').classList.contains('active')){ renderChart(); renderRisk(); }
+}
+function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
+
+$$('#dimpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  $$('#dimpills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  state.dim=p.dataset.dim; exitFocus(true); renderChart();
+}));
+function stepSelectionFrom(sel, none, mode){ return {none, categories:[...sel], mode}; }
+function stepSelectionSummary(selection, emptyLabel='no filter'){
+  const sel=normalizeStepSelection(selection);
+  if(sel.none) return 'no QAQC / DV / EHS steps';
+  if(!sel.categories.length) return emptyLabel;
+  return sel.categories.join(sel.mode==='all'?' + ':' / ');
+}
+function updateStepPills(containerSel, matchSel, sel, none){
+  const container=$(containerSel);
+  $$('.pill',container).forEach(p=>{ const c=p.dataset.cat; let on;
+    if(c==='All') on = !none && sel.size===0;
+    else if(c==='None') on = none;
+    else on = sel.has(c);
+    p.classList.toggle('active',on);
+  });
+  const mm=$(matchSel); if(mm){ sel.size>=2 ? mm.removeAttribute('hidden') : mm.setAttribute('hidden',''); }
+}
+function toggleStepSelection(which, c){
+  const sel=which==='risk'?state.riskCatSel:state.catSel;
+  const noneKey=which==='risk'?'riskCatNone':'catNone';
+  if(c==='All'){ sel.clear(); state[noneKey]=false; }
+  else if(c==='None'){ if(state[noneKey]) state[noneKey]=false; else { state[noneKey]=true; sel.clear(); } }
+  else { state[noneKey]=false; sel.has(c)?sel.delete(c):sel.add(c); }
+}
+function updateCatPills(){ updateStepPills('#catpills','#matchmode',state.catSel,state.catNone); }
+function updateRiskCatPills(){ updateStepPills('#riskcatpills','#riskmatchmode',state.riskCatSel,state.riskCatNone); }
+$$('#catpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  toggleStepSelection('chart',p.dataset.cat);
+  updateCatPills(); exitFocus(true); renderChart();
+}));
+$$('#matchmode .mm-btn').forEach(b=>b.addEventListener('click',()=>{
+  $$('#matchmode .mm-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  state.catMode=b.dataset.mode; exitFocus(true); renderChart();
+}));
+$$('#riskcatpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  toggleStepSelection('risk',p.dataset.cat);
+  updateRiskCatPills(); exitRiskFocus(true); renderRisk();
+}));
+$$('#riskmatchmode .mm-btn').forEach(b=>b.addEventListener('click',()=>{
+  $$('#riskmatchmode .mm-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  state.riskCatMode=b.dataset.mode; exitRiskFocus(true); renderRisk();
+}));
+function catSelection(){ return stepSelectionFrom(state.catSel,state.catNone,state.catMode); }
+function riskSelection(){ return stepSelectionFrom(state.riskCatSel,state.riskCatNone,state.riskCatMode); }
+function catMatch(e){ return matchStepSelection(e,catSelection()); }
+function riskMatch(e){ return matchStepSelection(e,riskSelection()); }
+function catActive(){ return state.catNone || state.catSel.size>0; }
+function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
+// click anywhere on a tier row to expand/collapse its step-pairing breakdown (animated)
+$('#matrixbody').addEventListener('click',ev=>{
+  const row=ev.target.closest&&ev.target.closest('.mrow[data-score]'); if(!row) return;
+  const box=$('#mbreak-'+row.dataset.score); if(!box) return;
+  const open=box.classList.toggle('open');
+  const c=row.querySelector('.bcaret'); if(c) c.setAttribute('aria-expanded',open?'true':'false');
+});
+$$('#matrixdim .pill').forEach(p=>p.addEventListener('click',()=>{
+  $$('#matrixdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  state.matrixDim=p.dataset.dim; renderMatrix();
+}));
+const CHART_VP=420, CHART_PERBAR=22, CHART_MAXH=15000;
+function renderChart(){
+  const dim=state.dim;
+  const eqset=catActive()?state.model.equipment.filter(catMatch):state.model.equipment;
+  const rows=rollupBy(eqset,dim); // ALL groups — no cap; the plot scrolls to fit them
+  const summary=stepSelectionSummary(catSelection(),'No filter');
+  const suffix=summary==='No filter'?'':` · ${summary}`;
+  $('#chart-title').textContent=`Issues by ${dim}${suffix}`;
+  // size the plot so every bar is drawn; the viewport scrolls when it overflows
+  const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
+  $('#chartholder').style.height=holderH+'px';
+  $('#charthint').textContent = holderH>CHART_VP
+    ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s — scroll to see them. Chart PNG and Excel export include every one.`
+    : '';
+  const labels=rows.map(r=>r.key), data=rows.map(r=>r.issueCount);
+  const max=Math.max(1,...data);
+  const colors=data.map(v=>riskColor(v/max));
+  if(state.chart) state.chart.destroy();
+  const ctx=$('#mainchart').getContext('2d');
+  state.chart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
+      onClick:(evt,els)=>{ if(els.length) enterFocus(dim,rows[els[0].index],rows); },
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex]; return ` ${r.issueCount} issues · ${r.equipmentCount} equip · ${r.withIssues} with issues`;}}} },
+      scales:{
+        x:{beginAtZero:true,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Total issues'}},
+        y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}} },
+    }
+  });
+}
+const FOCUS_CAP=250;
+let focusGroups=null;
+function rankOf(rows,key){ return rows.findIndex(r=>r.key===key)+1; }
+function enterFocus(dim,row,rows){
+  const max=Math.max(1,...rows.map(r=>r.issueCount));
+  const keyFn={System:e=>e.systemName,Discipline:e=>e.discipline||'(none)',Building:e=>e.building||'(none)',Milestone:e=>e.milestone||'(none)',Classification:e=>e.classification||'(unclassified)'}[dim];
+  const all=state.model.equipment.filter(e=>keyFn(e)===row.key && catMatch(e));
+  const dist={0:0,1:0,2:0,3:0}; all.forEach(e=>dist[e.score]++);
+  const withIssues=all.filter(e=>e.hasIssues).length;
+  const pct=all.length?Math.round(withIssues/all.length*100):0;
+  const col=riskColor(row.issueCount/max);
+  const mix=coverageMixHTML(dist,all.length);
+  // group by Equipment Classification (higher level); individual tags revealed on expand
+  const gmap=new Map();
+  for(const e of all){ const c=e.classification||'(unclassified)'; let g=gmap.get(c);
+    if(!g){g={cls:c,equip:[],issues:0};gmap.set(c,g);} g.equip.push(e); g.issues+=e.issueCount; }
+  focusGroups=[...gmap.values()].sort((a,b)=>b.issues-a.issues);
+  focusGroups.forEach(g=>g.equip.sort((a,b)=>b.issueCount-a.issueCount));
+  const f=$('#chartfocus');
+  f.innerHTML=`
+    <button class="focus-back" id="focus-back">← All ${esc(dim.toLowerCase())}s</button>
+    <div class="focus-head">
+      <div class="focus-name">${esc(row.key)}</div>
+      <div class="focus-sub">${esc(dim)} · ranked #${rankOf(rows,row.key)} of ${rows.length} by issues</div>
+    </div>
+    <div class="focus-bar-wrap" id="focus-bar-wrap"><div class="focus-bar" id="focus-bar" style="background:${col}"><span class="fb-in">${row.issueCount.toLocaleString()} issues</span></div><span class="fb-out">${row.issueCount.toLocaleString()} issues</span></div>
+    <div class="focus-stats">
+      <div class="fstat" data-tip="The total number of issues logged against all equipment in this ${esc(dim.toLowerCase())} group."><div class="l hastip">Total issues</div><div class="v">${row.issueCount.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="How many pieces of equipment are in this ${esc(dim.toLowerCase())} group."><div class="l hastip">Equipment</div><div class="v">${all.length.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="How many distinct Equipment Classifications appear in this group."><div class="l hastip">Classifications</div><div class="v">${focusGroups.length.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="This group's equipment split by QAQC/DV/EHS step coverage. 0/3 = none of the three step types, 3/3 = all three."><div class="l hastip">Coverage mix</div><div class="v" style="font-size:12px;font-weight:700">${mix}</div></div>
+    </div>
+    <div class="focus-list">
+      <div class="fc-head">${focusGroups.length.toLocaleString()} equipment ${focusGroups.length===1?'classification':'classifications'} · click one to see its tags</div>
+      ${focusGroups.map((g,i)=>`
+        <div class="fc-group">
+          <button class="fc-row" data-gi="${i}" aria-expanded="false">
+            <span class="fc-caret">▾</span>
+            <span class="fc-cls">${esc(g.cls)}</span>
+            <span class="fc-gmeta">${g.equip.length.toLocaleString()} equip · <b>${g.issues.toLocaleString()}</b> issues</span>
+          </button>
+          <div class="fc-body" id="fcbody-${i}"><div class="fc-inner"></div></div>
+        </div>`).join('')}
+    </div>`;
+  $('#chartscroll').classList.add('dive'); $('#charthint').classList.add('dive');
+  f.hidden=false; f.scrollTop=0;
+  requestAnimationFrame(()=>{ f.classList.add('in');
+    const bar=$('#focus-bar'), wrap=$('#focus-bar-wrap'), fbIn=wrap&&wrap.querySelector('.fb-in');
+    const pct=Math.max(8,Math.round(row.issueCount/max*100));
+    if(wrap&&fbIn){ const targetPx=wrap.clientWidth*pct/100; wrap.classList.toggle('outside', targetPx < fbIn.scrollWidth+18); }
+    requestAnimationFrame(()=>{ if(bar) bar.style.width=pct+'%'; }); });
+  state.focus={dim,key:row.key};
+}
+// focus panel: back button + lazy expand of each classification's equipment tags
+$('#chartfocus').addEventListener('click',ev=>{
+  if(ev.target.closest('#focus-back')){ exitFocus(); return; }
+  const rowbtn=ev.target.closest('.fc-row'); if(!rowbtn||!focusGroups) return;
+  const gi=+rowbtn.dataset.gi, body=$('#fcbody-'+gi); if(!body) return;
+  if(!body.dataset.rendered){
+    const g=focusGroups[gi], items=g.equip.slice(0,FOCUS_CAP), hidden=g.equip.length-items.length;
+    body.firstElementChild.innerHTML=`<table class="drilltable"><thead><tr><th>Equipment</th><th>Discipline</th><th>Score</th><th class="n">Issues</th></tr></thead>
+      <tbody>${items.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.discipline)||'—'}</td>
+        <td>${scoreBadge(e.score)} ${catChips(e.categories)}</td>
+        <td class="n"><span class="issue-flag ${e.hasIssues?'has':'none'}">${e.issueCount}</span></td></tr>`).join('')}</tbody></table>
+      ${hidden>0?`<p class="drillmore">Showing top ${FOCUS_CAP} by issues · ${hidden.toLocaleString()} more not shown</p>`:''}`;
+    body.dataset.rendered='1';
+  }
+  const open=body.classList.toggle('open');
+  rowbtn.setAttribute('aria-expanded',open?'true':'false');
+});
+function exitFocus(instant){
+  const f=$('#chartfocus'); const cw=$('#chartscroll'), hint=$('#charthint');
+  state.focus=null;
+  if(f.hidden){ return; }
+  cw.classList.remove('dive'); hint.classList.remove('dive'); f.classList.remove('in');
+  if(instant){ f.hidden=true; return; }
+  setTimeout(()=>{ f.hidden=true; },300);
+}
+
+/* risk color ramp 0(green)→1(red) */
+function riskColor(t){ t=Math.max(0,Math.min(1,t));
+  const a=[77,154,114], b=[213,148,51], c=[194,81,57]; // green, amber, red
+  let col; if(t<0.5){ const k=t/0.5; col=a.map((v,i)=>Math.round(v+(b[i]-v)*k)); }
+  else{ const k=(t-0.5)/0.5; col=b.map((v,i)=>Math.round(v+(c[i]-v)*k)); }
+  return `rgb(${col[0]},${col[1]},${col[2]})`; }
+
+/* ---- risk matrix (signature) ----
+   Reframed: QAQC/DV/EHS steps EXIST to surface issues, so catching more is GOOD.
+   Color is inverted vs the risk chart — longer/greener bar = more issues caught. */
+function renderMatrix(){
+  const m=state.model.matrix;
+  const maxAvg=Math.max(0.001,...m.map(x=>x.avgIssues));
+  const goodColor=(avg)=>riskColor(1-(avg/maxAvg)); // high avg → green, low → red
+  // verdict: does more step coverage surface MORE issues (steps doing their job)?
+  const V=stepsVerdict();
+  let verdict={cls:'',text:'Not enough coverage to judge yet.'};
+  if(V.cls==='flat'&&V.n>=2){ verdict={cls:'',text:'Issues caught are roughly flat across step coverage — no clear signal yet.'}; }
+  else if(V.cls==='good'){ verdict={cls:'good',text:`Equipment with more QAQC/DV/EHS coverage is surfacing more issues (${V.lo.toFixed(1)} → ${V.hi.toFixed(1)} per unit). The steps are catching problems.`}; }
+  else if(V.cls==='bad'){ verdict={cls:'bad',text:`Higher-coverage equipment is logging fewer issues (${V.lo.toFixed(1)} → ${V.hi.toFixed(1)} per unit). Worth confirming issues are being surfaced, not missed.`}; }
+  const vic=verdict.cls==='good'
+    ? '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#3c8560" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
+    : verdict.cls==='bad'
+    ? '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
+    : '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#8b97a4" stroke-width="2"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>';
+  const bdim=state.matrixDim||'Steps';
+  let html=`<div class="verdict ${verdict.cls}">${vic}<div><b>${verdict.cls==='good'?'Steps are catching issues':verdict.cls==='bad'?'Coverage is finding fewer issues':'Signal inconclusive'}</b><span>${verdict.text}</span></div></div>`;
+  for(const x of m){
+    const w=Math.round((x.avgIssues/maxAvg)*100);
+    const col=goodColor(x.avgIssues);
+    const hasBreak = x.equipmentCount>0;
+    const caret = hasBreak
+      ? `<button class="bcaret" aria-expanded="false" title="Break down ${x.label} by ${esc(bdim)}">▾</button>`
+      : `<span class="bcaret-sp"></span>`;
+    html+=`<div class="mrow"${hasBreak?` data-score="${x.score}"`:''}>
+      <div class="tier">${caret}<span class="tierdot" style="background:${col}"></span>${x.label}</div>
+      <div><div class="mbar-track"><div class="mbar-fill" style="width:${Math.max(w,x.avgIssues>0?8:0)}%;background:${col}">${x.avgIssues.toFixed(1)}</div></div></div>
+      <div class="mstats">
+        <div class="ms-line" data-tip="How many pieces of equipment fall in this row — units that have this many of the QAQC / DV / EHS step types (${x.label}).">
+          <span class="ms-n">${x.equipmentCount.toLocaleString()}</span><span class="ms-l hastip">equipment</span></div>
+        <div class="ms-line" data-tip="The total number of issues logged against all equipment in this row.">
+          <span class="ms-n">${x.issueCount.toLocaleString()}</span><span class="ms-l hastip">issues</span></div>
+        <div class="ms-pct hastip" data-tip="Of the equipment in this row, the percentage that has at least one issue logged. The rest have zero.">${x.pctWithIssues.toFixed(0)}% have issues</div>
+      </div>
+    </div>`;
+    if(hasBreak){
+      const combos=tierBreakdown(state.model.equipment,x.score,bdim);
+      html+=`<div class="mbreak" id="mbreak-${x.score}"><div class="mbreak-inner">${
+        combos.length?combos.map(c=>{
+          const avg=c.count?c.issueCount/c.count:0, cw=Math.round((avg/maxAvg)*100), ccol=goodColor(avg);
+          const label=bdim==='Steps'
+            ? `<div class="bchips">${catChips(c.cats||[])}</div>`
+            : `<div class="bname" title="${esc(c.key)}">${esc(c.key)}</div>`;
+          return `<div class="bcombo">
+            ${label}
+            <div class="bpct"><b>${c.ratio}%</b> of ${x.label}</div>
+            <div class="bbar"><div class="bbar-track"><div class="bbar-fill" style="width:${Math.max(cw,avg>0?4:0)}%;background:${ccol}"></div></div><span class="bbar-val">${avg.toFixed(1)}</span></div>
+            <div class="bmeta">${c.count.toLocaleString()} equip · ${c.issueCount.toLocaleString()} iss</div></div>`;
+        }).join(''):`<div class="bcombo"><div class="bmeta" style="grid-column:1/-1;text-align:left">No equipment in this tier.</div></div>`
+      }</div></div>`;
+    }
+  }
+  html+=`<div class="axis">Bar = avg issues caught per equipment · <b>longer &amp; greener = steps catching more</b></div>`;
+  $('#matrixbody').innerHTML=html;
+}
+
+/* shared read of the hypothesis: does more step coverage surface MORE issues? */
+function stepsVerdict(){
+  const m=state.model.matrix, present=m.filter(x=>x.equipmentCount>0);
+  if(present.length<2) return {cls:'flat',lo:0,hi:0,diff:0,n:present.length};
+  const lo=present[0].avgIssues, hi=present[present.length-1].avgIssues, diff=hi-lo;
+  const cls=Math.abs(diff)<0.05?'flat':(diff>0?'good':'bad');
+  return {cls,lo,hi,diff,n:present.length};
+}
+/* per-area coverage + issue stats over any equipment subset */
+const DIM_KEYFN={System:e=>e.systemName,Discipline:e=>e.discipline||'(none)',Building:e=>e.building||'(none)',Milestone:e=>e.milestone||'(none)',Classification:e=>e.classification||'(unclassified)'};
+const RISK_DIMS=['System','Discipline','Building','Milestone','Classification'];
+function riskResolved(){ const V=stepsVerdict(); return state.riskMode==='auto' ? (V.cls==='bad'?'hot':'blind') : state.riskMode; }
+function areaRisk(dim){
+  const eq=riskActive()?state.model.equipment.filter(riskMatch):state.model.equipment;
+  return areaStatsFrom(eq, DIM_KEYFN[dim]);
+}
+/* ---- Risk Analysis chart ----
+   Blind-spot model (when steps ARE catching issues): risk = low coverage + few issues
+   found → likely undiscovered problems. Hotspot model (when steps aren't a reliable
+   early warning): risk = where issues are actually concentrated. Auto picks from the
+   hypothesis verdict; the user can override. */
+function renderRisk(){
+  if(!state.model) return;
+  const dim=state.riskDim, V=stepsVerdict();
+  const resolved=riskResolved();
+  const areas=scoreRisk(areaRisk(dim), resolved);
+  const stepSummary=stepSelectionSummary(riskSelection(),'No filter');
+  $('#risk-title').textContent=`Highest Risk Areas${stepSummary==='No filter'?'':' · '+stepSummary}`;
+
+  const modeTag = state.riskMode==='auto' ? `Auto → ${resolved==='blind'?'Blind spots':'Hotspots'}` : (resolved==='blind'?'Blind spots':'Hotspots');
+  const dl=esc(dim.toLowerCase());
+  let why;
+  if(resolved==='blind'){
+    why = V.cls==='good'
+      ? `Because more QAQC/DV/EHS coverage is <b>catching more issues</b>, the biggest risk is where coverage is <b>low</b> and few issues have been found — problems likely exist there but haven't surfaced yet. Ranking ${dl}s by that exposure.`
+      : `Ranking ${dl}s by where step coverage is <b>low</b> and few issues have been found — the likely blind spots where undiscovered issues may be waiting.`;
+  } else {
+    why = V.cls==='bad'
+      ? `More coverage isn't clearly surfacing more issues, so step gaps aren't a reliable early warning here. Risk instead follows where issues are <b>actually concentrated</b> right now.`
+      : `Ranking ${dl}s by where issues are <b>actually concentrated</b> right now — the confirmed hotspots to work down.`;
+  }
+  const ic = resolved==='blind'
+    ? '<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
+    : '<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
+  const filterNote=stepSummary==='No filter' ? '' : ` Filtered to <b>${esc(stepSummary)}</b>.`;
+  $('#riskbanner').innerHTML = `${ic}<div>${why}${filterNote} <span class="rb-mode">${modeTag}</span></div>`;
+
+  const holderH=Math.min(CHART_MAXH,Math.max(300,areas.length*CHART_PERBAR+44));
+  $('#riskholder').style.height=holderH+'px';
+  $('#riskhint').textContent = holderH>CHART_VP ? `All ${areas.length.toLocaleString()} ${dl}s ranked by risk — scroll to see them.` : '';
+
+  const labels=areas.map(a=>a.key), data=areas.map(a=>a.risk), colors=areas.map(a=>riskColor(a.risk/100));
+  if(state.riskChart) state.riskChart.destroy();
+  const ctx=$('#riskchart').getContext('2d');
+  const pctf=v=>Math.round(v*100)+'%';
+  state.riskChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      animation:{duration:areas.length>400?250:600,easing:'easeOutQuart'},
+      onClick:(evt,els)=>{ if(els.length) enterRiskFocus(dim,areas[els[0].index],areas,resolved); },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{const a=areas[c.dataIndex];
+        return resolved==='blind'
+          ? [` Risk index ${a.risk}/100`,` ${a.n.toLocaleString()} equip · avg coverage ${pctf(a.covFrac)}`,` ${a.issues.toLocaleString()} issues found so far (${a.ipe.toFixed(2)}/equip)`,` Coverage mix: ${coverageMixText(a)}`]
+          : [` Risk index ${a.risk}/100`,` ${a.issues.toLocaleString()} issues · ${a.n.toLocaleString()} equip (${a.ipe.toFixed(2)}/equip)`,` avg coverage ${pctf(a.covFrac)}`,` Coverage mix: ${coverageMixText(a)}`]; }}}},
+      scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Risk index (0–100)'}},
+        y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}} } }
+  });
+}
+$$('#riskdim .pill').forEach(p=>p.addEventListener('click',()=>{
+  $$('#riskdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  state.riskDim=p.dataset.dim; exitRiskFocus(true); renderRisk();
+}));
+$$('#riskmode .pill').forEach(p=>p.addEventListener('click',()=>{
+  $$('#riskmode .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  state.riskMode=p.dataset.mode; exitRiskFocus(true); renderRisk();
+}));
+$('#dl-risk').addEventListener('click',()=>{ if(!state.riskChart)return;
+  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${state.riskDim.toLowerCase()}.png`; a.click(); toast('Risk chart PNG saved'); });
+
+/* ---- risk chart drill-down: click a bar → break its area down by another dimension ---- */
+function enterRiskFocus(dim,row,areas,resolved){
+  const all=state.model.equipment.filter(e=>DIM_KEYFN[dim](e)===row.key && riskMatch(e));
+  const bdim = dim==='Classification' ? 'System' : 'Classification'; // default breakdown
+  state.riskFocus={dim,key:row.key,resolved,all,bdim,rank:areas.findIndex(a=>a.key===row.key)+1,n:areas.length,area:row};
+  const others=RISK_DIMS.filter(x=>x!==dim);
+  const f=$('#riskfocus');
+  f.innerHTML=`
+    <button class="focus-back" id="riskfocus-back">← All ${esc(dim.toLowerCase())}s</button>
+    <div class="focus-head">
+      <div class="focus-name">${esc(row.key)}</div>
+      <div class="focus-sub">${esc(dim)} · ranked #${state.riskFocus.rank} of ${state.riskFocus.n} · ${resolved==='blind'?'blind-spot':'hotspot'} risk</div>
+    </div>
+    <div class="focus-stats">
+      <div class="fstat" data-tip="This ${esc(dim.toLowerCase())}'s risk index (0–100), relative to the riskiest ${esc(dim.toLowerCase())}. ${resolved==='blind'?'Higher = low step coverage + few issues found = more likely to be hiding undiscovered problems.':'Higher = more issues concentrated here right now.'}"><div class="l hastip">Risk index</div><div class="v">${row.risk}</div></div>
+      <div class="fstat" data-tip="Equipment in this ${esc(dim.toLowerCase())}."><div class="l hastip">Equipment</div><div class="v">${row.n.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="Average QAQC/DV/EHS step coverage across this group's equipment (0–100%)."><div class="l hastip">Avg coverage</div><div class="v">${Math.round(row.covFrac*100)}%</div></div>
+      <div class="fstat" data-tip="Issues found so far on this group's equipment."><div class="l hastip">Issues found</div><div class="v">${row.issues.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="This group's equipment split by QAQC/DV/EHS step coverage."><div class="l hastip">Coverage mix</div><div class="v" style="font-size:12px;font-weight:700">${coverageMixHTML(row.scoreDist,row.n)}</div></div>
+    </div>
+    <div class="rf-explain">
+      <b>Risk index (0–100)</b> — ${resolved==='blind'
+        ? 'higher means more likely to be <b>hiding undiscovered issues</b>: low QAQC/DV/EHS coverage and few issues found so far. Scaled so the riskiest below = 100.'
+        : 'higher means <b>more issues are concentrated</b> here right now. Scaled so the riskiest below = 100.'}
+    </div>
+    <div class="rf-controls">
+      <span class="subfilter-label">Break down by</span>
+      <select id="riskfocus-dim">${others.map(x=>`<option value="${x}" ${x===bdim?'selected':''}>${x}</option>`).join('')}</select>
+      <span class="rf-hint" id="riskfocus-hint"></span>
+    </div>
+    <div class="rf-list" id="riskfocus-list"></div>`;
+  renderRiskBreakdown();
+  $('#riskscroll').classList.add('dive'); $('#riskhint').classList.add('dive');
+  f.hidden=false; f.scrollTop=0;
+  requestAnimationFrame(()=>f.classList.add('in'));
+}
+function renderRiskBreakdown(){
+  const rf=state.riskFocus; if(!rf) return;
+  const areas=scoreRisk(areaStatsFrom(rf.all, DIM_KEYFN[rf.bdim]), rf.resolved);
+  const CAP=200, shown=areas.slice(0,CAP), hidden=areas.length-shown.length;
+  const hint=$('#riskfocus-hint'); if(hint) hint.textContent=`${areas.length.toLocaleString()} ${rf.bdim.toLowerCase()}${areas.length===1?'':'s'}, riskiest first`;
+  $('#riskfocus-list').innerHTML = areas.length ? shown.map(a=>{
+    const col=riskColor(a.risk/100);
+    return `<div class="rf-row">
+      <div class="rf-name clip" title="${esc(a.key)}">${esc(a.key)}</div>
+      <div class="rf-bar-wrap"><div class="rf-bar" style="width:${Math.max(a.risk,2)}%;background:${col}"></div></div>
+      <div class="rf-val">${a.risk}</div>
+      <div class="rf-meta">${a.n.toLocaleString()} eq · ${coverageMixText(a)} · ${a.issues.toLocaleString()} iss</div>
+    </div>`;
+  }).join('')+(hidden>0?`<p class="drillmore">Showing top ${CAP} · ${hidden.toLocaleString()} more</p>`:'')
+    : `<p class="empty">No equipment in this group.</p>`;
+}
+function exitRiskFocus(instant){
+  const f=$('#riskfocus'); state.riskFocus=null;
+  if(!f || f.hidden) return;
+  $('#riskscroll').classList.remove('dive'); $('#riskhint').classList.remove('dive'); f.classList.remove('in');
+  if(instant){ f.hidden=true; return; }
+  setTimeout(()=>{f.hidden=true;},300);
+}
+$('#riskfocus').addEventListener('click',ev=>{ if(ev.target.closest('#riskfocus-back')) exitRiskFocus(); });
+$('#riskfocus').addEventListener('change',ev=>{
+  const sel=ev.target.closest('#riskfocus-dim'); if(!sel||!state.riskFocus) return;
+  state.riskFocus.bdim=sel.value; renderRiskBreakdown();
+});
+
+/* ---- mapping ---- */
+function roleSelect(role){
+  return `<select data-role="${role}">${state.sheetNames.map(n=>`<option ${n===state.roleSheet[role]?'selected':''}>${esc(n)}</option>`).join('')}<option value="">— none —</option></select>`;
+}
+function colSelect(role){
+  const header=state.esr.header;
+  const cur=state.esr.cols[role];
+  return `<select data-col="${role}"><option value="-1">— not found —</option>${header.map((h,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(h)||('col '+(i+1))}</option>`).join('')}</select>`;
+}
+function fxColSelect(which){
+  const header=(state.fx&&state.fx.header)||[];
+  const cur=which==='id'?state.fx.idCol:state.fx.clsCol;
+  return `<select data-fxcol="${which}"><option value="-1">— not found —</option>${header.map((h,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(h)||('col '+(i+1))}</option>`).join('')}</select>`;
+}
+function renderMapping(){
+  // alerts (Full Export is optional — not part of the required-tab check)
+  const missing=['esr','dd','iss'].filter(k=>!state.roleSheet[k]).map(k=>({esr:'Equipment Status Report',dd:'Drop Downs- VF',iss:'Issue Grid Report'}[k]));
+  const al=$('#map-alerts');
+  const fxNote = state.roleSheet.fx
+    ? ` Equipment Classification loaded from “${esc(state.roleSheet.fx)}”.`
+    : ` No Full Export tab found — Equipment Classification shows as “(unclassified)”.`;
+  al.innerHTML = missing.length
+    ? `<div class="warnbox"><b>Heads up:</b> couldn't auto-match ${missing.join(', ')}. Pick the right tab below.</div>`
+    : `<div class="okbox">All three required tabs matched. ${state.model.totals.unmatchedIssues?`${state.model.totals.unmatchedIssues} issue line(s) reference an Equipment ID not in the status report — see below.`:'Every issue linked to equipment.'}${fxNote}</div>`;
+
+  // sheet + column detection
+  $('#map-sheets').innerHTML=`<table class="maptable"><thead><tr><th>Role</th><th>Matched tab</th></tr></thead><tbody>
+    <tr><td>Equipment Status Report</td><td>${roleSelect('esr')}</td></tr>
+    <tr><td>Drop Downs- VF</td><td>${roleSelect('dd')}</td></tr>
+    <tr><td>Issue Grid Report</td><td>${roleSelect('iss')}</td></tr>
+    <tr><td>Full Export <span style="color:var(--ink-3);font-weight:400">(classification, optional)</span></td><td>${roleSelect('fx')}</td></tr></tbody></table>`;
+  $('#map-cols').innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Equipment Status columns</div>
+    <table class="maptable"><tbody>
+    ${['name','description','building','upn','discipline','milestone'].map(r=>`<tr><td style="text-transform:capitalize">${r}</td><td>${colSelect(r)}</td></tr>`).join('')}
+    </tbody></table>`;
+  $$('#map-sheets select[data-role]').forEach(s=>s.addEventListener('change',()=>{
+    state.roleSheet[s.dataset.role]=s.value||null;
+    if(s.dataset.role==='fx') state.fxOverride={}; // columns differ per tab
+    loadRoleSheets(); state.catInit=false; state.catAssign={}; recompute(true);
+  }));
+  $$('#map-cols select[data-col]').forEach(s=>s.addEventListener('change',()=>{
+    state.colOverride[s.dataset.col]=+s.value; state.catInit=false; state.catAssign={}; recompute(true);
+  }));
+
+  // Full Export → Equipment Classification diagnostics
+  (function(){
+    const el=$('#map-fx'); if(!el) return;
+    if(!state.roleSheet.fx){
+      el.innerHTML=`<p style="color:var(--ink-2);font-size:12.5px;margin:0">No <b>Full Export</b> tab is selected, so every equipment shows as <b>(unclassified)</b>. Pick the tab under “Sheet &amp; column detection”.</p>`;
+      return;
+    }
+    const fx=state.fx, eqAll=state.model.equipment;
+    const matched=eqAll.filter(e=>e.classification!=='(unclassified)').length;
+    const total=eqAll.length, rate=total?Math.round(matched/total*100):0;
+    const colsOk=fx.idCol>=0 && fx.clsCol>=0;
+    const unmatchedNames=eqAll.filter(e=>e.classification==='(unclassified)').slice(0,10).map(e=>e.name);
+    el.innerHTML=`
+      <div class="${rate>=80?'okbox':'warnbox'}" style="margin:0 0 12px">
+        ${colsOk
+          ? `Matched <b>${matched.toLocaleString()}</b> of <b>${total.toLocaleString()}</b> equipment to a classification (<b>${rate}%</b>). Full Export has ${fx.rows.toLocaleString()} ID rows.`
+          : `Couldn't find the Equipment ID and/or Classification column in “${esc(state.roleSheet.fx)}”. Pick them below.`}
+      </div>
+      <table class="maptable"><tbody>
+        <tr><td>Equipment ID column <span style="color:var(--ink-3);font-weight:400">(matches ESR Equipment Name)</span></td><td>${fxColSelect('id')}</td></tr>
+        <tr><td>Equipment Classification column</td><td>${fxColSelect('cls')}</td></tr>
+      </tbody></table>
+      ${(colsOk && rate<100)?`
+        <div class="eyebrow" style="margin:14px 0 6px">Compare the values — why some didn't match</div>
+        <div class="fxcompare">
+          <div><div class="fxc-h">ESR Equipment Names (unmatched)</div>${unmatchedNames.length?unmatchedNames.map(n=>`<code>${esc(n)}</code>`).join(''):'<span class="empty">none — all matched</span>'}</div>
+          <div><div class="fxc-h">Full Export Equipment IDs (sample)</div>${(fx.sampleIds||[]).length?fx.sampleIds.map(n=>`<code>${esc(n)}</code>`).join(''):'<span class="empty">no IDs read from that column</span>'}</div>
+        </div>
+        <p style="color:var(--ink-3);font-size:11.5px;margin:8px 0 0">Matching is exact (case-insensitive, trimmed). If these two lists are the same tags formatted differently (a prefix, suffix, or leading zeros), let me know the pattern and I'll normalize it.</p>
+      `:''}`;
+    $$('#map-fx select[data-fxcol]').forEach(s=>s.addEventListener('change',()=>{
+      state.fxOverride[s.dataset.fxcol==='id'?'idCol':'clsCol']=+s.value; recompute(false);
+    }));
+  })();
+
+  // upn map
+  const entries=Object.entries(state.dd.map).sort((a,b)=>a[0].localeCompare(b[0]));
+  $('#map-upn').innerHTML= entries.length
+    ? `<table class="maptable"><thead><tr><th>UPN</th><th>System Name</th></tr></thead><tbody>
+       ${entries.map(([u,s])=>`<tr><td><code>${esc(u)}</code></td><td>${esc(s)}</td></tr>`).join('')}</tbody></table>`
+    : `<p class="empty">No System Names found in this tab.</p>`;
+
+  // step category map
+  $('#ignoreNA').checked=state.ignoreNA;
+  const rows=state.esr.stepCols.map(s=>{
+    const cats=state.catAssign[s.header.toLowerCase()]||s.cats;
+    const box=(c)=>`<label class="catbox ${c.toLowerCase()} ${cats.includes(c)?'on':''}"><input type="checkbox" data-h="${esc(s.header)}" data-c="${c}" ${cats.includes(c)?'checked':''}/>${c}</label>`;
+    return `<tr><td><code>${esc(s.header)}</code></td><td><div class="cattoggle">${box('QAQC')}${box('DV')}${box('EHS')}</div></td></tr>`;
+  }).join('');
+  $('#stepmap').innerHTML=`<thead><tr><th>Step column</th><th>Counts toward</th></tr></thead><tbody>${rows||'<tr><td colspan="2" class="empty">No step columns detected after Discipline.</td></tr>'}</tbody>`;
+  $$('#stepmap input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{
+    const h=cb.dataset.h.toLowerCase(); const c=cb.dataset.c;
+    const set=new Set(state.catAssign[h]||[]);
+    cb.checked?set.add(c):set.delete(c); state.catAssign[h]=[...set];
+    recompute(false);
+  }));
+
+  // unmatched
+  const um=state.model.unmatched;
+  $('#unmatched-card').style.display=um.length?'':'none';
+  $('#map-unmatched').innerHTML=um.length
+    ? `<table class="maptable"><thead><tr><th>Equipment ID (from Issue Grid)</th><th class="n">Issues</th></tr></thead><tbody>
+       ${um.map(u=>`<tr><td><code>${esc(u.id)}</code></td><td class="n">${u.count}</td></tr>`).join('')}</tbody></table>`
+    : '';
+}
+$('#ignoreNA').addEventListener('change',e=>{ state.ignoreNA=e.target.checked; recompute(false); });
+
+/* ================= EXPORTS ================= */
+function flatRows(){
+  const out=[];
+  for(const s of state.model.systems){
+    for(const e of state.model.equipment.filter(x=>x.systemName===s.systemName).sort((a,b)=>b.issueCount-a.issueCount)){
+      out.push({system:s.systemName,name:e.name,description:e.description,discipline:e.discipline,
+        building:e.building,milestone:e.milestone,classification:e.classification,score:e.score+'/3',categories:e.categories.join('+')||'none',issues:e.issueCount});
+    }
+  }
+  return out;
+}
+/* CSV */
+$('#h-csv').addEventListener('click',()=>{
+  const rows=flatRows();
+  const head=['System','Equipment','Description','Discipline','Building','Milestone','Classification','Score','Categories','Issues'];
+  const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const csv=[head.join(',')].concat(rows.map(r=>[r.system,r.name,r.description,r.discipline,r.building,r.milestone,r.classification,r.score,r.categories,r.issues].map(q).join(','))).join('\n');
+  download(new Blob([csv],{type:'text/csv'}),'cardinal_hierarchy.csv'); toast('CSV exported');
+});
+/* styled Excel with collapsible outline */
+const HEAD_STYLE={font:{bold:true,color:{rgb:'FFFFFF'},sz:11},fill:{fgColor:{rgb:'1F6BB0'}},alignment:{vertical:'center'},border:thin()};
+function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:s,left:s,right:s};}
+function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
+$('#h-xlsx').addEventListener('click',async()=>{
+  OV.show('Building Excel'); OV.set(4,'Assembling rows…'); await yieldUI();
+  const cols=['System','Equipment','Description','Discipline','Building','Milestone','Classification','Score','Categories','Issues'];
+  const aoa=[cols]; const rowMeta=[{}]; // header
+  for(const s of state.model.systems){
+    const items=state.model.equipment.filter(x=>x.systemName===s.systemName).sort((a,b)=>b.issueCount-a.issueCount);
+    aoa.push([s.systemName,'','','','','','','',`${items.length} equip`,s.issueCount]);
+    rowMeta.push({level:0,sys:true});
+    for(const e of items){
+      aoa.push(['',e.name,e.description,e.discipline,e.building,e.milestone,e.classification,e.score+'/3',e.categories.join('+')||'none',e.issueCount]);
+      rowMeta.push({level:1});
+    }
+  }
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let C=range.s.c;C<=range.e.c;C++){ const ad=XLSX.utils.encode_cell({r:0,c:C}); if(ws[ad]) ws[ad].s=HEAD_STYLE; }
+  // shared style objects (assigned by reference) — avoids allocating ~360k style
+  // objects on a 40k-row export; xlsx-js-style dedupes identical styles anyway.
+  const BORDER=thin();
+  const NUM={numFmt:'#,##0'}, RIGHT={vertical:'center',horizontal:'right'};
+  const SYS_STYLE={border:BORDER,font:{bold:true},fill:{fgColor:{rgb:'EAF3FB'}},alignment:{vertical:'center'}};
+  const EQ_STYLE={border:BORDER,font:{bold:false},fill:{fgColor:{rgb:'FFFFFF'}},alignment:{vertical:'center'}};
+  const SYS_STYLE_N={...SYS_STYLE,...NUM,alignment:RIGHT};
+  const EQ_STYLE_N={...EQ_STYLE,...NUM,alignment:RIGHT};
+  const ISSUES_COL=9;
+  // chunk the per-cell assignment (largest loop) so big exports stay responsive
+  await runChunked(range.e.r, 800,
+    R0=>{ const R=R0+1; if(R>range.e.r) return; const sys=!!(rowMeta[R]&&rowMeta[R].sys);
+      for(let C=range.s.c;C<=range.e.c;C++){ const ad=XLSX.utils.encode_cell({r:R,c:C}); if(!ws[ad])continue;
+        ws[ad].s = C===ISSUES_COL ? (sys?SYS_STYLE_N:EQ_STYLE_N) : (sys?SYS_STYLE:EQ_STYLE); } },
+    frac=>OV.set(6+frac*74,'Styling cells…'));
+  ws['!cols']=[{wch:30},{wch:26},{wch:34},{wch:14},{wch:11},{wch:11},{wch:20},{wch:8},{wch:16},{wch:8}];
+  ws['!rows']=rowMeta.map(m=>({level:m.level||0}));
+  ws['!outline']={above:true};
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hierarchy');
+  OV.indet('Writing file…'); await raf();
+  XLSX.writeFile(wb,'cardinal_hierarchy.xlsx'); OV.hide(); toast('Excel exported — rows collapse by system');
+});
+/* full analysis workbook */
+$('#dl-analysis').addEventListener('click',async()=>{
+  OV.show('Building analysis workbook'); await yieldUI();
+  const wb=XLSX.utils.book_new();
+  let built=0; const TOTAL_SHEETS=8;
+  const sheet=(name,aoa,widths)=>{ const ws=XLSX.utils.aoa_to_sheet(aoa);
+    const r=XLSX.utils.decode_range(ws['!ref']);
+    for(let C=r.s.c;C<=r.e.c;C++){const ad=XLSX.utils.encode_cell({r:0,c:C}); if(ws[ad])ws[ad].s=HEAD_STYLE;}
+    for(let R=1;R<=r.e.r;R++)for(let C=r.s.c;C<=r.e.c;C++){const ad=XLSX.utils.encode_cell({r:R,c:C}); const cell=ws[ad]; if(!cell)continue;
+      cell.s = cell.t==='n'
+        ? {border:thin(),numFmt:Number.isInteger(cell.v)?'#,##0':'#,##0.##',alignment:{horizontal:'right'}}
+        : {border:thin()};
+    }
+    if(widths)ws['!cols']=widths.map(w=>({wch:w}));
+    ws['!autofilter']={ref:ws['!ref']}; // filter/sort dropdowns on the header row
+    XLSX.utils.book_append_sheet(wb,ws,name); OV.set(4+(++built/TOTAL_SHEETS)*80,'Sheet: '+name); };
+  // Systems
+  sheet('Systems',[['System','Equipment','Issues','With issues','0/3','1/3','2/3','3/3'],
+    ...state.model.systems.map(s=>[s.systemName,s.equipmentCount,s.issueCount,s.withIssues,s.scoreDist[0],s.scoreDist[1],s.scoreDist[2],s.scoreDist[3]])],[30,11,8,11,6,6,6,6]);
+  // Risk matrix
+  sheet('Risk Matrix',[['Coverage','Equipment','Total issues','Avg issues / equip','% with issues'],
+    ...state.model.matrix.map(m=>[m.label,m.equipmentCount,m.issueCount,+m.avgIssues.toFixed(2),+m.pctWithIssues.toFixed(1)])],[12,11,13,18,14]);
+  // Dimension rollups
+  ['Discipline','Building','Milestone','Classification'].forEach(dim=>{
+    sheet('By '+dim,[[dim,'Equipment','Issues','With issues','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
+      ...rollupBy(state.model.equipment,dim).map(r=>[r.key,r.equipmentCount,r.issueCount,r.withIssues,
+        r.scoreDist[0],r.scoreDist[1],r.scoreDist[2],r.scoreDist[3],
+        r.scorePct[0],r.scorePct[1],r.scorePct[2],r.scorePct[3]])],[28,11,8,11,6,6,6,6,7,7,7,7]);
+  });
+  // Equipment flat
+  sheet('Equipment',[['System','Equipment','Description','Discipline','Building','Milestone','Classification','Score','Categories','Issues'],
+    ...flatRows().map(r=>[r.system,r.name,r.description,r.discipline,r.building,r.milestone,r.classification,r.score,r.categories,r.issues])],[28,24,32,14,11,11,20,8,14,8]);
+  if(state.model.unmatched.length)
+    sheet('Unmatched Issues',[['Equipment ID','Issues'],...state.model.unmatched.map(u=>[u.id,u.count])],[26,8]);
+  OV.indet('Writing file…'); await raf();
+  XLSX.writeFile(wb,'cardinal_analysis.xlsx'); OV.hide(); toast('Analysis workbook exported');
+});
+/* PNG exports */
+// paint white behind chart canvas for clean PNG
+Chart.register({id:'whitebg',beforeDraw:(c)=>{const {ctx}=c; ctx.save(); ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore();}});
+$('#dl-chart').addEventListener('click',()=>{ if(!state.chart)return;
+  const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${state.dim.toLowerCase()}.png`; a.click(); toast('Chart PNG saved'); });
+async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}
+  OV.show('Rendering image'); OV.indet('Capturing '+name.replace('.png','')+'…'); await raf();
+  try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false});
+    c.toBlob(b=>{download(b,name);toast('PNG saved');}); }
+  catch(err){ console.error(err); toast('Could not render PNG'); }
+  finally{ OV.hide(); } }
+$('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),'risk_matrix.png'));
+$('#dl-dash').addEventListener('click',async()=>{
+  // temporarily un-clip both charts so the PNG captures every bar, not just the viewport
+  const scs=[$('#chartscroll'),$('#riskscroll')].filter(Boolean);
+  const prev=scs.map(sc=>({sc,h:sc.style.height,o:sc.style.overflow}));
+  scs.forEach(sc=>{ sc.style.height='auto'; sc.style.overflow='visible'; });
+  try{ await pngOf($('#view-dashboard'),'cardinal_dashboard.png'); }
+  finally{ prev.forEach(p=>{ p.sc.style.height=p.h; p.sc.style.overflow=p.o; }); }
+});
+
+/* library presence check */
+window.addEventListener('load',()=>{ if(!window.XLSX||!window.Chart) toast('Some libraries failed to load — reconnect and reload.'); });
+</script>
+</body>
+</html>
