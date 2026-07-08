@@ -203,10 +203,35 @@ body.chart-fullscreen{overflow:hidden}
 .stack-mini span{height:100%;min-width:2px}
 .rootchips{display:flex;gap:4px;flex-wrap:wrap}
 .rootchip{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;background:var(--surface-2);white-space:nowrap}
+.root-select{position:relative;min-width:190px}
+.multi-select{position:relative;width:100%}
+.ms-button{width:100%;height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:7px;padding:5px 9px;font-size:12.5px;font-family:inherit;cursor:pointer;text-align:left}
+.ms-label{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-caret{color:var(--ink-3);font-size:11px}
+.ms-menu{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:30;width:min(300px,80vw);max-height:260px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:6px}
+.multi-select.open .ms-menu{display:block}
+.ms-option{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--ink);cursor:pointer}
+.ms-option:hover{background:var(--paper)}
+.ms-option input{margin:0;accent-color:var(--accent)}
+.risk-flip-card{padding:0!important;perspective:1400px;overflow:hidden}
+.risk-card-inner{position:relative;min-height:650px;transform-style:preserve-3d;transition:transform .56s cubic-bezier(.2,.7,.2,1)}
+.risk-flip-card.flipped .risk-card-inner{transform:rotateY(180deg)}
+.risk-face{min-height:650px;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface)}
+.risk-face-front{pointer-events:auto}
+.risk-face-back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;pointer-events:none}
+.risk-flip-card.flipped .risk-face-front{pointer-events:none}
+.risk-flip-card.flipped .risk-face-back{pointer-events:auto}
+.risk-flip-card.fullscreen .risk-card-inner,.risk-flip-card.fullscreen .risk-face{min-height:100%}
+.fat-protect{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fat-stat{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:9px 10px}
+.fat-stat .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
+.fat-stat .v{font-family:var(--mono);font-size:18px;font-weight:850;color:var(--ink)}
 @media(max-width:700px){
   .issue-card-inner,.issue-face{min-height:720px}
+  .risk-card-inner,.risk-face{min-height:760px}
   .step-row{grid-template-columns:18px minmax(0,1fr) 64px}
   .stack-mini{grid-column:2/4}
+  .root-select{min-width:100%;width:100%}
 }
 
 /* ---- controls ---- */
@@ -248,7 +273,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .kpi .v{font-size:30px;font-weight:680;letter-spacing:-.02em;font-family:var(--mono)}
 .kpi .s{font-size:12px;color:var(--ink-3);margin-top:2px}
 .kpi.warn .v{color:var(--risk-hi)}
-.dash-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:-4px 0 14px}
+.dash-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:-4px 0 14px;flex-wrap:wrap}
 .toggle-control{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer}
 .toggle-control input{margin:0;accent-color:var(--accent)}
 .toggle-control span{font-size:11px;font-weight:600;color:var(--ink-3)}
@@ -520,7 +545,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.0.5</span>
+      Risk Analysis v<span id="version-label">1.1.0</span>
     </button>
   </header>
 
@@ -592,6 +617,10 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
           <input type="checkbox" id="excludeRooms" />
           Remove rooms <span>RR systems / UPNs</span>
         </label>
+        <label class="toggle-control" data-tip="Shows only these equipment classifications: RIO, SSH, LAT, AFD, DIST-SS, DIST-PVC, TFRM-DRY, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, PCZ, RCTO, SUBMAIN, SYS, VMB.">
+          <input type="checkbox" id="alexCustomView" />
+          Alex M Custom View <span>approved classifications only</span>
+        </label>
       </div>
 
       <div class="grid-2">
@@ -638,7 +667,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
               </div>
               <div class="subfilter root-filter-row">
                 <span class="subfilter-label">Root Cause</span>
-                <select id="rootCauseFilter" class="select-slim"><option value="">All root causes</option></select>
+                <div id="rootCauseFilter" class="root-select"></div>
               </div>
               <div class="plotregion" id="plotregion">
                 <div class="chartwrap" id="chartscroll"><div class="chartholder" id="chartholder"><canvas id="mainchart"></canvas></div></div>
@@ -664,7 +693,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
               </div>
               <div class="subfilter root-filter-row">
                 <span class="subfilter-label">Root Cause</span>
-                <select id="stepRootCauseFilter" class="select-slim"><option value="">All root causes</option></select>
+                <div id="stepRootCauseFilter" class="root-select"></div>
               </div>
               <div class="issue-legend" id="stepCategoryLegend"></div>
               <div class="plotregion" id="stepplotregion">
@@ -706,57 +735,112 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
         </div>
       </div>
 
-      <div class="card riskcard" id="riskcard" style="padding:18px;margin-top:18px">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">Risk analysis</div>
-            <h3 id="risk-title">Highest Risk Areas</h3>
+      <div class="card riskcard risk-flip-card" id="riskcard" style="margin-top:18px">
+        <div class="risk-card-inner">
+          <div class="risk-face risk-face-front">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Risk analysis</div>
+                <h3 id="risk-title">Highest Risk Areas</h3>
+              </div>
+              <div class="section-actions">
+                <label class="sort-select">Sort <select id="sort-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
+                <button class="btn ghost issue-flip-btn" id="risk-flip-fat" title="Show FAT risk exposure">FAT Risk</button>
+                <button class="btn ghost" data-fullscreen-target="riskcard" title="View risk analysis full screen">Full</button>
+                <button class="btn ghost" id="xlsx-risk" title="Export filtered risk analysis XLSX">XLSX</button>
+                <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+                </button>
+              </div>
+            </div>
+            <div class="pills" id="riskdim" style="margin-bottom:10px">
+              <button class="pill active" data-dim="System">System</button>
+              <button class="pill" data-dim="Discipline">Discipline</button>
+              <button class="pill" data-dim="Building">Building</button>
+              <button class="pill" data-dim="Milestone">Milestone</button>
+              <button class="pill" data-dim="Classification">Classification</button>
+            </div>
+            <div class="subfilter">
+              <span class="subfilter-label">Risk model</span>
+              <div class="pills" id="riskmode">
+                <button class="pill active" data-mode="auto" title="Pick the model automatically from the Risk Hypothesis result above">Auto</button>
+                <button class="pill" data-mode="blind" title="Low step coverage + few issues found = likely undiscovered issues">Blind spots</button>
+                <button class="pill" data-mode="hot" title="Where issues are actually concentrated right now">Hotspots</button>
+              </div>
+            </div>
+            <div class="subfilter">
+              <span class="subfilter-label">Step filter</span>
+              <div class="pills" id="riskcatpills">
+                <button class="pill cat active" data-cat="All">No filter</button>
+                <button class="pill cat none" data-cat="None">None</button>
+                <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+                <button class="pill cat dv" data-cat="DV">DV</button>
+                <button class="pill cat ehs" data-cat="EHS">EHS</button>
+              </div>
+              <span class="matchmode" id="riskmatchmode" hidden>
+                <span class="mm-label">match</span>
+                <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+                <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+                <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+              </span>
+            </div>
+            <div class="riskbanner" id="riskbanner"></div>
+            <div class="plotregion" id="riskplot">
+              <div class="chartwrap" id="riskscroll"><div class="chartholder" id="riskholder"><canvas id="riskchart"></canvas></div></div>
+              <div class="charthint" id="riskhint"></div>
+              <div class="chartfocus" id="riskfocus" hidden></div>
+            </div>
           </div>
-          <div class="section-actions">
-            <label class="sort-select">Sort <select id="sort-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
-            <button class="btn ghost" data-fullscreen-target="riskcard" title="View risk analysis full screen">Full</button>
-            <button class="btn ghost" id="xlsx-risk" title="Export filtered risk analysis XLSX">XLSX</button>
-            <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
-            </button>
+          <div class="risk-face risk-face-back">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">FAT risk exposure</div>
+                <h3 id="fat-risk-title">FAT Risk by System</h3>
+              </div>
+              <div class="section-actions">
+                <label class="sort-select">Sort <select id="sort-fat-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
+                <button class="btn ghost issue-flip-btn" id="risk-flip-standard" title="Show standard risk analysis">Standard Risk</button>
+                <button class="btn ghost" data-fullscreen-target="riskcard" title="View FAT risk full screen">Full</button>
+                <button class="btn ghost" id="xlsx-fat-risk" title="Export filtered FAT risk XLSX">XLSX</button>
+                <button class="btn ghost" id="dl-fat-risk" title="Download FAT risk chart PNG">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+                </button>
+              </div>
+            </div>
+            <div class="pills" id="fatriskdim" style="margin-bottom:10px">
+              <button class="pill active" data-dim="System">System</button>
+              <button class="pill" data-dim="Classification">Classification</button>
+              <button class="pill" data-dim="Discipline">Discipline</button>
+              <button class="pill" data-dim="Building">Building</button>
+              <button class="pill" data-dim="Milestone">Milestone</button>
+            </div>
+            <div class="subfilter root-filter-row">
+              <span class="subfilter-label">Root Cause</span>
+              <div id="fatRootCauseFilter" class="root-select"></div>
+            </div>
+            <div class="subfilter">
+              <span class="subfilter-label">Step filter</span>
+              <div class="pills" id="fatcatpills">
+                <button class="pill cat active" data-cat="All">No filter</button>
+                <button class="pill cat none" data-cat="None">None</button>
+                <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+                <button class="pill cat dv" data-cat="DV">DV</button>
+                <button class="pill cat ehs" data-cat="EHS">EHS</button>
+              </div>
+              <span class="matchmode" id="fatmatchmode" hidden>
+                <span class="mm-label">match</span>
+                <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+                <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+                <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+              </span>
+            </div>
+            <div class="riskbanner" id="fat-riskbanner"></div>
+            <div class="plotregion" id="fatriskplot">
+              <div class="chartwrap" id="fatriskscroll"><div class="chartholder" id="fatriskholder"><canvas id="fatriskchart"></canvas></div></div>
+              <div class="charthint" id="fatriskhint"></div>
+              <div class="chartfocus" id="fatriskfocus" hidden></div>
+            </div>
           </div>
-        </div>
-        <div class="pills" id="riskdim" style="margin-bottom:10px">
-          <button class="pill active" data-dim="System">System</button>
-          <button class="pill" data-dim="Discipline">Discipline</button>
-          <button class="pill" data-dim="Building">Building</button>
-          <button class="pill" data-dim="Milestone">Milestone</button>
-          <button class="pill" data-dim="Classification">Classification</button>
-        </div>
-        <div class="subfilter">
-          <span class="subfilter-label">Risk model</span>
-          <div class="pills" id="riskmode">
-            <button class="pill active" data-mode="auto" title="Pick the model automatically from the Risk Hypothesis result above">Auto</button>
-            <button class="pill" data-mode="blind" title="Low step coverage + few issues found = likely undiscovered issues">Blind spots</button>
-            <button class="pill" data-mode="hot" title="Where issues are actually concentrated right now">Hotspots</button>
-          </div>
-        </div>
-        <div class="subfilter">
-          <span class="subfilter-label">Step filter</span>
-          <div class="pills" id="riskcatpills">
-            <button class="pill cat active" data-cat="All">No filter</button>
-            <button class="pill cat none" data-cat="None">None</button>
-            <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
-            <button class="pill cat dv" data-cat="DV">DV</button>
-            <button class="pill cat ehs" data-cat="EHS">EHS</button>
-          </div>
-          <span class="matchmode" id="riskmatchmode" hidden>
-            <span class="mm-label">match</span>
-            <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
-            <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
-            <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
-          </span>
-        </div>
-        <div class="riskbanner" id="riskbanner"></div>
-        <div class="plotregion" id="riskplot">
-          <div class="chartwrap" id="riskscroll"><div class="chartholder" id="riskholder"><canvas id="riskchart"></canvas></div></div>
-          <div class="charthint" id="riskhint"></div>
-          <div class="chartfocus" id="riskfocus" hidden></div>
         </div>
       </div>
 
@@ -878,8 +962,24 @@ function classifyStep(header){
 }
 
 const STEP_CATEGORIES = ['QAQC','DV','EHS'];
+const ALEX_M_CUSTOM_CLASSIFICATIONS = [
+  'RIO','SSH','LAT','AFD','DIST-SS','DIST-PVC','TFRM-DRY','PMP','PUR','SC',
+  'STRATIX ENCLOSURE','STRATIX RING','BAT-SWG','CC','CDM','DIST-PP','EF','PCZ',
+  'RCTO','SUBMAIN','SYS','VMB'
+];
+const ALEX_M_CLASSIFICATION_SET = new Set(ALEX_M_CUSTOM_CLASSIFICATIONS);
 function stepComboLabel(e){
   return STEP_CATEGORIES.filter(c=>e.present&&e.present[c]).join(' + ') || 'None';
+}
+function normalizeClassificationCode(value){
+  return String(value==null?'':value).trim().replace(/\s+/g,' ').toUpperCase();
+}
+function isAlexCustomEquipment(e){
+  return ALEX_M_CLASSIFICATION_SET.has(normalizeClassificationCode(e&&e.classification));
+}
+function filterAlexCustomEquipment(equipment, enabled){
+  const rows=equipment||[];
+  return enabled ? rows.filter(isAlexCustomEquipment) : rows.slice();
 }
 function normalizeStepSelection(selection){
   selection = selection || {};
@@ -908,6 +1008,7 @@ function filterRoomEquipment(equipment, excludeRooms){
 function filterEquipmentForChart(equipment, opts){
   opts=opts||{};
   let rows=filterRoomEquipment(equipment, !!opts.excludeRooms);
+  rows=filterAlexCustomEquipment(rows, !!opts.alexCustomView);
   if(opts.stepSelection) rows=rows.filter(e=>matchStepSelection(e, opts.stepSelection));
   return rows;
 }
@@ -1004,13 +1105,19 @@ function issueEquipmentAllowed(equipment, opts){
   for(const e of filterEquipmentForChart(equipment, opts||{})) allowed.set(String(e.name||'').toLowerCase(), e);
   return allowed;
 }
+function selectedRootCauseSet(opts){
+  opts=opts||{};
+  const vals=Array.isArray(opts.rootCauses) ? opts.rootCauses : (opts.rootCause?[opts.rootCause]:[]);
+  return new Set(vals.map(v=>String(v||'').trim()).filter(Boolean));
+}
 function issueRowsForChart(equipment, issueRows, opts){
   opts=opts||{};
   const allowed=issueEquipmentAllowed(equipment, opts);
+  const rootSet=selectedRootCauseSet(opts);
   return (issueRows||[]).filter(row=>{
     const e=allowed.get(row.equipmentKey);
     if(!e) return false;
-    if(opts.rootCause && row.rootCause!==opts.rootCause) return false;
+    if(rootSet.size && !rootSet.has(row.rootCause)) return false;
     if(opts.excludeRooms && (isRoomEquipment(e)||roomCodeMatch(row.systemName)||roomCodeMatch(row.upnRaw)||roomCodeMatch(row.upn))) return false;
     return true;
   });
@@ -1118,6 +1225,71 @@ function stepCaughtBreakdown(issueRows, equipment, step, dim, opts){
     categoryCounts:group.categoryCounts,
     segments:categorySegments(group.categoryCounts,group.issueCount)
   })).sort((a,b)=>b.issueCount-a.issueCount || String(a.key).localeCompare(String(b.key)));
+}
+function isFatIssue(row){
+  return /fat|factory\s+acceptance/i.test(String(row&&row.cxStep||''));
+}
+function fatRiskExposure(row){
+  return (row.unprotectedIssueCount*100) + (row.unprotectedEquipmentCount*35) + (row.fatIssueCount*3) + Math.max(0,3-row.avgScore)*row.equipmentCount;
+}
+function fatRiskRows(issueRows, equipment, dim, opts){
+  opts=opts||{};
+  const rows=issueRowsForChart(equipment, issueRows, opts).filter(isFatIssue);
+  const map=new Map();
+  for(const issue of rows){
+    const key=issueDimKey(issue,dim);
+    let group=map.get(key);
+    if(!group){
+      group={key, fatIssueCount:0, equipment:new Map(), categoryCounts:{}, rootCauseCounts:{}, unprotectedIssueCount:0, protectedIssueCount:0};
+      map.set(key,group);
+    }
+    group.fatIssueCount++;
+    group.categoryCounts[issue.category]=(group.categoryCounts[issue.category]||0)+1;
+    group.rootCauseCounts[issue.rootCause]=(group.rootCauseCounts[issue.rootCause]||0)+1;
+    if((issue.score||0)===0) group.unprotectedIssueCount++; else group.protectedIssueCount++;
+    let eq=group.equipment.get(issue.equipmentKey);
+    if(!eq){
+      eq={name:issue.equipmentName, systemName:issue.systemName, discipline:issue.discipline, building:issue.building, milestone:issue.milestone, classification:issue.classification, score:issue.score, categories:issue.categories||[], fatIssueCount:0, categoryCounts:{}, rootCauseCounts:{}, cxStepCounts:{}};
+      group.equipment.set(issue.equipmentKey,eq);
+    }
+    eq.fatIssueCount++;
+    eq.categoryCounts[issue.category]=(eq.categoryCounts[issue.category]||0)+1;
+    eq.rootCauseCounts[issue.rootCause]=(eq.rootCauseCounts[issue.rootCause]||0)+1;
+    eq.cxStepCounts[issue.cxStep||'(blank Cx Step)']=(eq.cxStepCounts[issue.cxStep||'(blank Cx Step)']||0)+1;
+  }
+  const out=[...map.values()].map(group=>{
+    const equipmentRows=[...group.equipment.values()];
+    const equipmentCount=equipmentRows.length;
+    const unprotectedEquipmentCount=equipmentRows.filter(e=>(e.score||0)===0).length;
+    const protectedEquipmentCount=equipmentCount-unprotectedEquipmentCount;
+    const scoreSum=equipmentRows.reduce((sum,e)=>sum+(Number(e.score)||0),0);
+    const avgScore=equipmentCount?scoreSum/equipmentCount:0;
+    const avgCoverage=equipmentCount?avgScore/3:0;
+    const row={
+      key:group.key,
+      fatIssueCount:group.fatIssueCount,
+      equipmentCount,
+      unprotectedEquipmentCount,
+      protectedEquipmentCount,
+      unprotectedIssueCount:group.unprotectedIssueCount,
+      protectedIssueCount:group.protectedIssueCount,
+      avgScore,
+      avgCoverage,
+      categoryCounts:group.categoryCounts,
+      rootCauseCounts:group.rootCauseCounts,
+      segments:categorySegments(group.categoryCounts,group.fatIssueCount),
+      equipment:equipmentRows.sort((a,b)=>b.fatIssueCount-a.fatIssueCount || (a.score||0)-(b.score||0) || String(a.name).localeCompare(String(b.name)))
+    };
+    row.exposure=fatRiskExposure(row);
+    return row;
+  });
+  const maxExposure=Math.max(1e-9,...out.map(r=>r.exposure));
+  out.forEach(row=>{ row.risk=Math.round(row.exposure/maxExposure*100); });
+  return sortRowsByMetric(out,'risk',opts.sortDirection||'desc');
+}
+function fatRiskBreakdown(issueRows, equipment, dim, key, breakdownDim, opts){
+  const rows=issueRowsForChart(equipment, issueRows, opts||{}).filter(issue=>isFatIssue(issue) && issueDimKey(issue,dim)===key);
+  return fatRiskRows(rows, equipment, breakdownDim, {...(opts||{}), stepSelection:null});
 }
 function stepIssueContributions(equipment){
   const rows=STEP_CATEGORIES.map(step=>{
@@ -1377,7 +1549,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.0.5';
+const APP_VERSION='1.1.0';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1386,19 +1558,30 @@ const state = {
   esr:null, dd:null, iss:null, model:null,
   dim:'System', focus:null, matrixDim:'Steps',
   riskDim:'System', riskMode:'auto', riskChart:null, riskFocus:null,
+  riskCardSide:'standard', fatRiskDim:'System', fatRiskChart:null, fatRiskFocus:null, fatRiskSort:'desc',
   catSel:new Set(), catNone:false, catMode:'any',
   riskCatSel:new Set(), riskCatNone:false, riskCatMode:'any',
+  fatCatSel:new Set(), fatCatNone:false, fatCatMode:'any',
   catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{},
   collapsed:new Set(), catInit:false, chart:null,
-  excludeRooms:false, matrixExpanded:new Set(), fullscreenCard:null,
+  excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
-  issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCause:'',
+  issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCauses:new Set(), rootPickerOpen:null,
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
 };
 
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.0',
+    date:'2026-07-08T16:15:00Z',
+    type:'feature',
+    stats:'Dashboard update',
+    notes:`### Updates
+- Minor dashboard refinements
+- Small chart and export improvements`
+  },
   {
     version:'1.0.5',
     date:'2026-07-08T13:45:00Z',
@@ -1811,19 +1994,72 @@ function buildFilters(){
   fillRootCauseFilters();
 }
 function fill(sel,vals){ const cur=sel.value; sel.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
+const ROOT_PICKER_IDS=['rootCauseFilter','stepRootCauseFilter','fatRootCauseFilter'];
+function rootCauseValues(){ return (state.model&&state.model.rootCauses)||[]; }
+function rootCauseList(){ return [...(state.rootCauses||new Set())]; }
+function rootCauseSummary(){
+  const vals=rootCauseList();
+  if(!vals.length) return 'All root causes';
+  if(vals.length===1) return vals[0];
+  return `${vals.length} root causes`;
+}
+function rootCauseExportLabel(){ const vals=rootCauseList(); return vals.length?vals.join(' / '):'All root causes'; }
+function shouldShowRootCauseDetail(){ return rootCauseList().length!==1; }
 function fillRootCauseFilters(){
   const vals=(state.model&&state.model.rootCauses)||[];
-  ['#rootCauseFilter','#stepRootCauseFilter'].forEach(sel=>{
-    const el=$(sel); if(!el) return;
-    const cur=state.rootCause;
-    el.innerHTML='<option value="">All root causes</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join('');
-    el.value=vals.includes(cur)?cur:'';
-  });
-  if(state.rootCause&&!vals.includes(state.rootCause)) state.rootCause='';
+  state.rootCauses=new Set(rootCauseList().filter(v=>vals.includes(v)));
+  syncRootCauseFilters();
 }
 function syncRootCauseFilters(){
-  ['#rootCauseFilter','#stepRootCauseFilter'].forEach(sel=>{ const el=$(sel); if(el) el.value=state.rootCause||''; });
+  const vals=rootCauseValues(), selected=new Set(rootCauseList()), summary=rootCauseSummary();
+  ROOT_PICKER_IDS.forEach(id=>{
+    const el=$('#'+id); if(!el) return;
+    const open=state.rootPickerOpen===id;
+    el.innerHTML=`<div class="multi-select ${open?'open':''}" data-root-picker="${id}">
+      <button type="button" class="ms-button" data-root-toggle="${id}" title="${esc(summary)}"><span class="ms-label">${esc(summary)}</span><span class="ms-caret">▾</span></button>
+      <div class="ms-menu">
+        <label class="ms-option"><input type="checkbox" data-root-all="1" ${selected.size?'':'checked'} />All root causes</label>
+        ${vals.map(v=>`<label class="ms-option"><input type="checkbox" data-root-value="${esc(v)}" ${selected.has(v)?'checked':''} />${esc(v)}</label>`).join('')}
+      </div>
+    </div>`;
+  });
 }
+function applyRootCauseChange(){
+  syncRootCauseFilters();
+  exitFocus(true); exitStepFocus(true); exitFatRiskFocus(true);
+  renderChart();
+  if(state.issueCardSide==='step') renderStepChart();
+  if(state.riskCardSide==='fat') renderFatRisk();
+}
+document.addEventListener('click',ev=>{
+  const toggle=ev.target.closest('[data-root-toggle]');
+  if(toggle){
+    const id=toggle.dataset.rootToggle;
+    state.rootPickerOpen=state.rootPickerOpen===id?null:id;
+    syncRootCauseFilters();
+    ev.preventDefault();
+    return;
+  }
+  const all=ev.target.closest('[data-root-all]');
+  if(all){
+    state.rootCauses.clear();
+    applyRootCauseChange();
+    ev.stopPropagation();
+    return;
+  }
+  const item=ev.target.closest('[data-root-value]');
+  if(item){
+    const val=item.dataset.rootValue;
+    state.rootCauses.has(val)?state.rootCauses.delete(val):state.rootCauses.add(val);
+    applyRootCauseChange();
+    ev.stopPropagation();
+    return;
+  }
+  if(state.rootPickerOpen && !ev.target.closest('.multi-select')){
+    state.rootPickerOpen=null;
+    syncRootCauseFilters();
+  }
+});
 function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
 const rerender=()=>{ renderHierarchy(true); }; // filter change resets scroll to top
 // text search is debounced (fires per keystroke); dropdowns apply immediately
@@ -1961,12 +2197,16 @@ window.addEventListener('resize',debounce(()=>{ if(state.visible) renderWindow()
 function renderDashboard(){
   const t=state.model.totals;
   const roomToggle=$('#excludeRooms'); if(roomToggle) roomToggle.checked=state.excludeRooms;
+  const alexToggle=$('#alexCustomView'); if(alexToggle) alexToggle.checked=state.alexCustomView;
   const chartSort=$('#sort-chart'); if(chartSort) chartSort.value=state.chartSort;
   const stepChartSort=$('#sort-step-chart'); if(stepChartSort) stepChartSort.value=state.chartSort;
   const matrixSort=$('#sort-matrix'); if(matrixSort) matrixSort.value=state.matrixSort;
   const riskSort=$('#sort-risk'); if(riskSort) riskSort.value=state.riskSort;
+  const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
   syncRootCauseFilters();
+  updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
+  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
   // counted once (no double-count across multiple step types).
   const caught=state.model.equipment.reduce((a,e)=>a+(e.score>=1?e.issueCount:0),0);
@@ -1976,11 +2216,14 @@ function renderDashboard(){
     ${kpi('Total issues',t.issues,'matched to equipment','Total issues from the Issue Grid Report that were matched to an equipment item. Each issue is counted once.')}
     ${kpi('Issues caught by steps',caught,'on units with a QAQC/DV/EHS step','Issues logged on equipment that have at least one QAQC, DV, or EHS step — each issue counted once, no duplicates.')}`;
   renderMatrix();
-  if($('#view-dashboard').classList.contains('active')){ renderChart(); if(state.issueCardSide==='step') renderStepChart(); renderRisk(); }
+  if($('#view-dashboard').classList.contains('active')){ renderChart(); if(state.issueCardSide==='step') renderStepChart(); renderRisk(); if(state.riskCardSide==='fat') renderFatRisk(); }
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
-function baseChartEquipment(){ return filterRoomEquipment(state.model.equipment,state.excludeRooms); }
+function alexCustomViewText(){ return state.alexCustomView ? 'Alex M Custom View enabled' : 'Alex M Custom View off'; }
+function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,...(extra||{})}; }
+function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_alex_m':''}`; }
+function baseChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions()); }
 function matrixEquipment(){ return baseChartEquipment(); }
 
 $$('#dimpills .pill').forEach(p=>p.addEventListener('click',()=>{
@@ -2005,14 +2248,15 @@ function updateStepPills(containerSel, matchSel, sel, none){
   const mm=$(matchSel); if(mm){ sel.size>=2 ? mm.removeAttribute('hidden') : mm.setAttribute('hidden',''); }
 }
 function toggleStepSelection(which, c){
-  const sel=which==='risk'?state.riskCatSel:state.catSel;
-  const noneKey=which==='risk'?'riskCatNone':'catNone';
+  const sel=which==='risk'?state.riskCatSel:(which==='fat'?state.fatCatSel:state.catSel);
+  const noneKey=which==='risk'?'riskCatNone':(which==='fat'?'fatCatNone':'catNone');
   if(c==='All'){ sel.clear(); state[noneKey]=false; }
   else if(c==='None'){ if(state[noneKey]) state[noneKey]=false; else { state[noneKey]=true; sel.clear(); } }
   else { state[noneKey]=false; sel.has(c)?sel.delete(c):sel.add(c); }
 }
 function updateCatPills(){ updateStepPills('#catpills','#matchmode',state.catSel,state.catNone); }
 function updateRiskCatPills(){ updateStepPills('#riskcatpills','#riskmatchmode',state.riskCatSel,state.riskCatNone); }
+function updateFatCatPills(){ updateStepPills('#fatcatpills','#fatmatchmode',state.fatCatSel,state.fatCatNone); }
 $$('#catpills .pill').forEach(p=>p.addEventListener('click',()=>{
   toggleStepSelection('chart',p.dataset.cat);
   updateCatPills(); exitFocus(true); renderChart();
@@ -2029,17 +2273,26 @@ $$('#riskmatchmode .mm-btn').forEach(b=>b.addEventListener('click',()=>{
   $$('#riskmatchmode .mm-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
   state.riskCatMode=b.dataset.mode; exitRiskFocus(true); renderRisk();
 }));
+$$('#fatcatpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  toggleStepSelection('fat',p.dataset.cat);
+  updateFatCatPills(); exitFatRiskFocus(true); renderFatRisk();
+}));
+$$('#fatmatchmode .mm-btn').forEach(b=>b.addEventListener('click',()=>{
+  $$('#fatmatchmode .mm-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  state.fatCatMode=b.dataset.mode; exitFatRiskFocus(true); renderFatRisk();
+}));
 function catSelection(){ return stepSelectionFrom(state.catSel,state.catNone,state.catMode); }
 function riskSelection(){ return stepSelectionFrom(state.riskCatSel,state.riskCatNone,state.riskCatMode); }
+function fatSelection(){ return stepSelectionFrom(state.fatCatSel,state.fatCatNone,state.fatCatMode); }
 function catMatch(e){ return matchStepSelection(e,catSelection()); }
 function riskMatch(e){ return matchStepSelection(e,riskSelection()); }
 function catActive(){ return state.catNone || state.catSel.size>0; }
 function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
-function issueChartOptions(){ return {excludeRooms:state.excludeRooms,stepSelection:catSelection(),rootCause:state.rootCause,sortDirection:state.chartSort}; }
+function issueChartOptions(){ return chartFilterOptions({stepSelection:catSelection(),rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
 function issueChartEquipment(){
   const opts=issueChartOptions();
   const base=filterEquipmentForChart(state.model.equipment,opts);
-  if(!state.rootCause) return base;
+  if(!rootCauseList().length) return base;
   const counts=new Map();
   for(const row of issueRowsForChart(state.model.equipment,state.model.issueRows,opts)){
     counts.set(row.equipmentKey,(counts.get(row.equipmentKey)||0)+1);
@@ -2049,22 +2302,29 @@ function issueChartEquipment(){
     return {...e, issueCount, hasIssues:issueCount>0};
   });
 }
-function riskChartEquipment(){ return filterEquipmentForChart(state.model.equipment,{excludeRooms:state.excludeRooms,stepSelection:riskSelection()}); }
+function riskChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions({stepSelection:riskSelection()})); }
+function fatRiskOptions(){ return chartFilterOptions({stepSelection:fatSelection(),rootCauses:rootCauseList(),sortDirection:state.fatRiskSort}); }
 function currentIssueRows(){
   const opts=issueChartOptions();
-  return state.rootCause
+  return rootCauseList().length
     ? issueDistributionRowsFromIssues(state.model.equipment,state.model.issueRows,state.dim,opts)
     : issueDistributionRows(state.model.equipment,state.dim,opts);
 }
 $('#excludeRooms').addEventListener('change',e=>{
   state.excludeRooms=e.target.checked;
-  exitFocus(true); exitRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  renderDashboard();
+});
+$('#alexCustomView').addEventListener('change',e=>{
+  state.alexCustomView=e.target.checked;
+  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
   renderDashboard();
 });
 $('#sort-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; exitFocus(true); renderChart(); });
 $('#sort-step-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; $('#sort-chart').value=state.chartSort; exitStepFocus(true); renderStepChart(); });
 $('#sort-matrix').addEventListener('change',e=>{ state.matrixSort=e.target.value; renderMatrix(); });
 $('#sort-risk').addEventListener('change',e=>{ state.riskSort=e.target.value; exitRiskFocus(true); renderRisk(); });
+$('#sort-fat-risk').addEventListener('change',e=>{ state.fatRiskSort=e.target.value; exitFatRiskFocus(true); renderFatRisk(); });
 function setIssueCardSide(side){
   state.issueCardSide=side==='step'?'step':'distribution';
   exitFocus(true); exitStepFocus(true);
@@ -2073,17 +2333,16 @@ function setIssueCardSide(side){
 }
 $('#issue-flip-step').addEventListener('click',()=>setIssueCardSide('step'));
 $('#issue-flip-distribution').addEventListener('click',()=>setIssueCardSide('distribution'));
-function onRootCauseChange(value){
-  state.rootCause=value||'';
-  syncRootCauseFilters();
-  exitFocus(true); exitStepFocus(true);
-  renderChart();
-  if(state.issueCardSide==='step') renderStepChart();
+function setRiskCardSide(side){
+  state.riskCardSide=side==='fat'?'fat':'standard';
+  exitRiskFocus(true); exitFatRiskFocus(true);
+  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
+  requestAnimationFrame(()=>{ state.riskCardSide==='fat' ? renderFatRisk() : renderRisk(); resizeChartsSoon(); });
 }
-$('#rootCauseFilter').addEventListener('change',e=>onRootCauseChange(e.target.value));
-$('#stepRootCauseFilter').addEventListener('change',e=>onRootCauseChange(e.target.value));
+$('#risk-flip-fat').addEventListener('click',()=>setRiskCardSide('fat'));
+$('#risk-flip-standard').addEventListener('click',()=>setRiskCardSide('standard'));
 function resizeChartsSoon(){
-  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.riskChart) state.riskChart.resize(); };
+  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
   requestAnimationFrame(resize);
   [80,360,680].forEach(ms=>setTimeout(resize,ms));
 }
@@ -2147,7 +2406,7 @@ function renderChart(){
   const dim=state.dim;
   const rows=currentIssueRows(); // ALL groups — no cap; the plot scrolls to fit them
   const summary=stepSelectionSummary(catSelection(),'No filter');
-  const root=state.rootCause?` · ${state.rootCause}`:'';
+  const root=rootCauseList().length?` · ${rootCauseSummary()}`:'';
   const suffix=(summary==='No filter'?'':` · ${summary}`)+root;
   $('#chart-title').textContent=`Issues by ${dim}${suffix}`;
   // size the plot so every bar is drawn; the viewport scrolls when it overflows
@@ -2190,7 +2449,7 @@ function issueCategoryColor(category){
   if(c==='WI') return '#2f83cc';
   return hashColor(category);
 }
-function stepChartOptions(){ return {excludeRooms:state.excludeRooms,rootCause:state.rootCause,sortDirection:state.chartSort}; }
+function stepChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
 function currentStepRows(){ return stepCaughtRows(state.model.issueRows,state.model.equipment,stepChartOptions()); }
 function renderStepLegend(categories){
   $('#stepCategoryLegend').innerHTML = categories.length
@@ -2202,7 +2461,7 @@ function renderStepChart(){
   const rows=currentStepRows();
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   renderStepLegend(categories);
-  $('#step-chart-title').textContent=`Issues by Cx Step${state.rootCause?' · '+state.rootCause:''}`;
+  $('#step-chart-title').textContent=`Issues by Cx Step${rootCauseList().length?' · '+rootCauseSummary():''}`;
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
   $('#stepchartholder').style.height=holderH+'px';
   $('#stepcharthint').textContent = holderH>CHART_VP
@@ -2238,6 +2497,7 @@ function renderStepChart(){
 const FOCUS_CAP=250;
 let focusGroups=null;
 let stepFocusGroups=null;
+let fatRiskFocusGroups=null;
 function rankOf(rows,key){ return rows.findIndex(r=>r.key===key)+1; }
 function enterFocus(dim,row,rows){
   const max=Math.max(1,...rows.map(r=>r.issueCount));
@@ -2296,7 +2556,7 @@ $('#chartfocus').addEventListener('click',ev=>{
   const gi=+rowbtn.dataset.gi, body=$('#fcbody-'+gi); if(!body) return;
   if(!body.dataset.rendered){
     const g=focusGroups[gi], items=g.equip.slice(0,FOCUS_CAP), hidden=g.equip.length-items.length;
-    const showRoot=!state.rootCause;
+    const showRoot=shouldShowRootCauseDetail();
     const issueContext=(e)=>{
       const key=String(e.name||'').toLowerCase();
       const rows=issueRowsForChart(state.model.equipment,state.model.issueRows,issueChartOptions()).filter(row=>row.equipmentKey===key);
@@ -2346,7 +2606,7 @@ function enterStepFocus(row){
       <div class="fstat"><div class="l">Issues caught</div><div class="v">${row.issueCount.toLocaleString()}</div></div>
       <div class="fstat"><div class="l">Equipment</div><div class="v">${row.equipmentCount.toLocaleString()}</div></div>
       <div class="fstat"><div class="l">Categories</div><div class="v" style="font-size:12px;font-weight:700">${countChips(row.categoryCounts)}</div></div>
-      <div class="fstat"><div class="l">Root Cause</div><div class="v" style="font-size:12px;font-weight:700">${state.rootCause?esc(state.rootCause):'All'}</div></div>
+      <div class="fstat"><div class="l">Root Cause</div><div class="v" style="font-size:12px;font-weight:700">${esc(rootCauseSummary())}</div></div>
     </div>
     <div class="step-focus-controls">
       <span class="subfilter-label">Break down by</span>
@@ -2377,7 +2637,7 @@ function renderStepBreakdown(){
 }
 function stepEquipmentTable(group){
   const items=(group.equipment||[]).slice(0,FOCUS_CAP), hidden=(group.equipment||[]).length-items.length;
-  const showRoot=!state.rootCause;
+  const showRoot=shouldShowRootCauseDetail();
   return `<table class="drilltable"><thead><tr><th>Equipment</th><th>System</th><th>Discipline</th><th>Categories</th>${showRoot?'<th>Root Cause</th>':''}<th class="n">Issues</th></tr></thead>
     <tbody>${items.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.systemName)||'—'}</td><td>${esc(e.discipline)||'—'}</td>
       <td>${countChips(e.categoryCounts)}</td>${showRoot?`<td>${countChips(e.rootCauseCounts)}</td>`:''}
@@ -2558,16 +2818,133 @@ function renderRisk(){
         y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}} } }
   });
 }
+function currentFatRiskRows(){
+  return fatRiskRows(state.model.issueRows,state.model.equipment,state.fatRiskDim,fatRiskOptions());
+}
+function renderFatRisk(){
+  if(!state.model) return;
+  const dim=state.fatRiskDim;
+  const rows=currentFatRiskRows();
+  const stepSummary=stepSelectionSummary(fatSelection(),'No filter');
+  const rootSummary=rootCauseList().length?` · ${rootCauseSummary()}`:'';
+  $('#fat-risk-title').textContent=`FAT Risk by ${dim}${stepSummary==='No filter'?'':' · '+stepSummary}${rootSummary}`;
+  $('#fat-riskbanner').innerHTML = `<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>Ranking ${esc(dim.toLowerCase())}s by FAT issue exposure. FAT issues on equipment with <b>no QAQC/DV/EHS coverage</b> rank highest, then remaining FAT issue volume and coverage depth. <span class="rb-mode">FAT exposure</span></div>`;
+  const holderH=Math.min(CHART_MAXH,Math.max(300,rows.length*CHART_PERBAR+44));
+  $('#fatriskholder').style.height=holderH+'px';
+  $('#fatriskhint').textContent = holderH>CHART_VP ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s ranked by FAT risk — scroll to see them.` : '';
+  const labels=rows.map(r=>r.key), data=rows.map(r=>r.risk), colors=rows.map(r=>riskColor(r.risk/100));
+  if(state.fatRiskChart) state.fatRiskChart.destroy();
+  const ctx=$('#fatriskchart').getContext('2d');
+  state.fatRiskChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
+      onClick:(evt,els)=>{ if(els.length) enterFatRiskFocus(dim,rows[els[0].index],rows); },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex];
+        return [` FAT risk ${r.risk}/100`,` ${r.fatIssueCount.toLocaleString()} FAT issues · ${r.equipmentCount.toLocaleString()} equipment`,` ${r.unprotectedIssueCount.toLocaleString()} FAT issues on ${r.unprotectedEquipmentCount.toLocaleString()} no-step equipment`,` Categories: ${categorySegments(r.categoryCounts,r.fatIssueCount).map(s=>`${s.category} ${s.count}`).join(' · ')||'none'}`]; }}}},
+      scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'FAT risk index (0–100)'}},
+        y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} } }
+  });
+}
+function enterFatRiskFocus(dim,row,rows){
+  const bdim = dim==='Classification' ? 'System' : 'Classification';
+  state.fatRiskFocus={dim,key:row.key,bdim,row,rank:rows.findIndex(r=>r.key===row.key)+1,n:rows.length};
+  const others=RISK_DIMS.filter(x=>x!==dim);
+  const f=$('#fatriskfocus');
+  f.innerHTML=`
+    <button class="focus-back" id="fatriskfocus-back">← All ${esc(dim.toLowerCase())}s</button>
+    <div class="focus-head">
+      <div class="focus-name">${esc(row.key)}</div>
+      <div class="focus-sub">${esc(dim)} · ranked #${state.fatRiskFocus.rank} of ${state.fatRiskFocus.n} · FAT exposure</div>
+    </div>
+    <div class="focus-stats">
+      <div class="fstat"><div class="l">FAT risk</div><div class="v">${row.risk}/100</div></div>
+      <div class="fstat"><div class="l">FAT issues</div><div class="v">${row.fatIssueCount.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">No-step FAT issues</div><div class="v">${row.unprotectedIssueCount.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">Equipment</div><div class="v">${row.equipmentCount.toLocaleString()}</div></div>
+    </div>
+    <div class="fat-protect">
+      <div class="fat-stat"><div class="l">No QAQC / DV / EHS</div><div class="v">${row.unprotectedEquipmentCount.toLocaleString()} eq</div></div>
+      <div class="fat-stat"><div class="l">Has QAQC / DV / EHS</div><div class="v">${row.protectedEquipmentCount.toLocaleString()} eq</div></div>
+    </div>
+    <div class="focus-stats" style="margin-top:10px">
+      <div class="fstat"><div class="l">Categories</div><div class="v" style="font-size:12px;font-weight:700">${countChips(row.categoryCounts)}</div></div>
+      <div class="fstat"><div class="l">Root Cause</div><div class="v" style="font-size:12px;font-weight:700">${countChips(row.rootCauseCounts)}</div></div>
+    </div>
+    <div class="step-focus-controls">
+      <span class="subfilter-label">Break down by</span>
+      <select id="fatriskfocus-dim">${others.map(x=>`<option value="${x}" ${x===bdim?'selected':''}>${x}</option>`).join('')}</select>
+      <span class="rf-hint" id="fatriskfocus-hint"></span>
+    </div>
+    <div class="focus-list" id="fatriskfocus-list"></div>`;
+  renderFatRiskBreakdown();
+  $('#fatriskscroll').classList.add('dive'); $('#fatriskhint').classList.add('dive');
+  f.hidden=false; f.scrollTop=0;
+  requestAnimationFrame(()=>f.classList.add('in'));
+}
+function renderFatRiskBreakdown(){
+  if(!state.fatRiskFocus) return;
+  const ff=state.fatRiskFocus;
+  const groups=fatRiskBreakdown(state.model.issueRows,state.model.equipment,ff.dim,ff.key,ff.bdim,fatRiskOptions());
+  fatRiskFocusGroups=groups;
+  const hint=$('#fatriskfocus-hint'); if(hint) hint.textContent=`${groups.length.toLocaleString()} ${ff.bdim.toLowerCase()}${groups.length===1?'':'s'}`;
+  $('#fatriskfocus-list').innerHTML = groups.length ? groups.map((g,i)=>`
+    <div class="step-group">
+      <button class="step-row" data-fri="${i}" aria-expanded="false">
+        <span class="step-caret">▾</span>
+        <span class="step-name" title="${esc(g.key)}">${esc(g.key)}</span>
+        <span class="step-count">${g.risk}/100</span>
+        ${stackMiniHTML(g.categoryCounts,g.fatIssueCount)}
+      </button>
+      <div class="fc-body" id="fatriskbody-${i}"><div class="fc-inner"></div></div>
+    </div>`).join('') : '<p class="empty">No matching FAT issues.</p>';
+}
+function fatRiskEquipmentTable(group){
+  const items=(group.equipment||[]).slice(0,FOCUS_CAP), hidden=(group.equipment||[]).length-items.length;
+  const showRoot=shouldShowRootCauseDetail();
+  return `<table class="drilltable"><thead><tr><th>Equipment</th><th>System</th><th>Discipline</th><th>Score</th><th>FAT Categories</th>${showRoot?'<th>Root Cause</th>':''}<th>FAT Steps</th><th class="n">FAT Issues</th></tr></thead>
+    <tbody>${items.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.systemName)||'—'}</td><td>${esc(e.discipline)||'—'}</td><td>${scoreBadge(e.score)} ${catChips(e.categories)}</td>
+      <td>${countChips(e.categoryCounts)}</td>${showRoot?`<td>${countChips(e.rootCauseCounts)}</td>`:''}<td>${countChips(e.cxStepCounts)}</td>
+      <td class="n"><span class="issue-flag has">${e.fatIssueCount}</span></td></tr>`).join('')}</tbody></table>
+    ${hidden>0?`<p class="drillmore">Showing top ${FOCUS_CAP} by FAT issues · ${hidden.toLocaleString()} more not shown</p>`:''}`;
+}
+function exitFatRiskFocus(instant){
+  const f=$('#fatriskfocus'); const cw=$('#fatriskscroll'), hint=$('#fatriskhint');
+  state.fatRiskFocus=null;
+  if(!f||f.hidden){ return; }
+  cw.classList.remove('dive'); hint.classList.remove('dive'); f.classList.remove('in');
+  if(instant){ f.hidden=true; return; }
+  setTimeout(()=>{ f.hidden=true; },300);
+}
+$('#fatriskfocus').addEventListener('click',ev=>{
+  if(ev.target.closest('#fatriskfocus-back')){ exitFatRiskFocus(); return; }
+  const row=ev.target.closest('.step-row'); if(!row||!fatRiskFocusGroups) return;
+  const idx=+row.dataset.fri, body=$('#fatriskbody-'+idx), group=fatRiskFocusGroups[idx];
+  if(!body||!group) return;
+  if(!body.dataset.rendered){ body.firstElementChild.innerHTML=fatRiskEquipmentTable(group); body.dataset.rendered='1'; }
+  const open=body.classList.toggle('open');
+  row.setAttribute('aria-expanded',open?'true':'false');
+});
+$('#fatriskfocus').addEventListener('change',ev=>{
+  const sel=ev.target.closest('#fatriskfocus-dim'); if(!sel||!state.fatRiskFocus) return;
+  state.fatRiskFocus.bdim=sel.value; renderFatRiskBreakdown();
+});
 $$('#riskdim .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#riskdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
   state.riskDim=p.dataset.dim; exitRiskFocus(true); renderRisk();
+}));
+$$('#fatriskdim .pill').forEach(p=>p.addEventListener('click',()=>{
+  $$('#fatriskdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  state.fatRiskDim=p.dataset.dim; exitFatRiskFocus(true); renderFatRisk();
 }));
 $$('#riskmode .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#riskmode .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
   state.riskMode=p.dataset.mode; exitRiskFocus(true); renderRisk();
 }));
 $('#dl-risk').addEventListener('click',()=>{ if(!state.riskChart)return;
-  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${safeFilePart(state.riskDim)}${state.excludeRooms?'_no_rooms':''}.png`; a.click(); toast('Risk chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Risk chart PNG saved'); });
 $('#xlsx-risk').addEventListener('click',exportRiskXlsx);
 
 /* ---- risk chart drill-down: click a bar → break its area down by another dimension ---- */
@@ -2795,7 +3172,7 @@ function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:
 function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
 function safeFilePart(v){ return String(v||'data').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'data'; }
 function filterSummaryRows(kind, extra){
-  const rows=[['Export',kind],['Room filter',roomFilterText()]];
+  const rows=[['Export',kind],['Room filter',roomFilterText()],['Alex M Custom View',alexCustomViewText()]];
   if(extra) Object.entries(extra).forEach(([k,v])=>rows.push([k,v]));
   rows.push([]);
   return rows;
@@ -2828,17 +3205,17 @@ function exportIssueDistributionXlsx(){
   const rows=currentIssueRows();
   const filter=stepSelectionSummary(catSelection(),'No filter');
   const aoa=[
-    ...filterSummaryRows('Issue Distribution',{Dimension:state.dim,'Step filter':filter,'Root cause':state.rootCause||'All root causes'}),
+    ...filterSummaryRows('Issue Distribution',{Dimension:state.dim,'Step filter':filter,'Root cause':rootCauseExportLabel()}),
     [state.dim,'Issues','Issue share %','Equipment','With issues','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
     ...rows.map(r=>[r.key,r.issueCount,r.issueShare,r.equipmentCount,r.withIssues,...scoreColumns(r)])
   ];
-  writeFilteredWorkbook(`issue_distribution_${safeFilePart(state.dim)}.xlsx`,[{name:'Issue Distribution',aoa,widths:[28,10,12,11,11,7,7,7,7,8,8,8,8]}]);
+  writeFilteredWorkbook(`issue_distribution_${safeFilePart(state.dim)}${chartFilterFileSuffix()}.xlsx`,[{name:'Issue Distribution',aoa,widths:[28,10,12,11,11,7,7,7,7,8,8,8,8]}]);
 }
 function exportStepCaughtXlsx(){
   const rows=currentStepRows();
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   const aoa=[
-    ...filterSummaryRows('Issues Caught by Step',{'Root cause':state.rootCause||'All root causes'}),
+    ...filterSummaryRows('Issues Caught by Step',{'Root cause':rootCauseExportLabel()}),
     ['Cx Step','Issues','Equipment',...categories.map(c=>`${c} issues`),...categories.map(c=>`${c} %`)],
     ...rows.map(r=>[
       r.key,r.issueCount,r.equipmentCount,
@@ -2846,7 +3223,7 @@ function exportStepCaughtXlsx(){
       ...categories.map(c=>r.issueCount?Math.round(((r.categoryCounts[c]||0)/r.issueCount)*100):0)
     ])
   ];
-  writeFilteredWorkbook('issues_caught_by_step.xlsx',[{name:'Issues by Step',aoa,widths:[28,10,11,...categories.map(()=>12),...categories.map(()=>9)]}]);
+  writeFilteredWorkbook(`issues_caught_by_step${chartFilterFileSuffix()}.xlsx`,[{name:'Issues by Step',aoa,widths:[28,10,11,...categories.map(()=>12),...categories.map(()=>9)]}]);
 }
 function exportRiskXlsx(){
   const resolved=riskResolved(), rows=sortRowsByMetric(scoreRisk(areaStatsFrom(riskChartEquipment(),DIM_KEYFN[state.riskDim]),resolved),'risk',state.riskSort);
@@ -2856,7 +3233,23 @@ function exportRiskXlsx(){
     [state.riskDim,'Risk index','Equipment','Issues','Issues / equipment','Avg coverage %','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
     ...rows.map(r=>[r.key,r.risk,r.n,r.issues,+r.ipe.toFixed(2),Math.round(r.covFrac*100),...scoreColumns(r)])
   ];
-  writeFilteredWorkbook(`risk_analysis_${safeFilePart(state.riskDim)}.xlsx`,[{name:'Risk Analysis',aoa,widths:[28,10,11,10,18,14,7,7,7,7,8,8,8,8]}]);
+  writeFilteredWorkbook(`risk_analysis_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.xlsx`,[{name:'Risk Analysis',aoa,widths:[28,10,11,10,18,14,7,7,7,7,8,8,8,8]}]);
+}
+function exportFatRiskXlsx(){
+  const rows=currentFatRiskRows();
+  const filter=stepSelectionSummary(fatSelection(),'No filter');
+  const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
+  const roots=[...new Set(rows.flatMap(r=>Object.keys(r.rootCauseCounts||{})))].sort();
+  const aoa=[
+    ...filterSummaryRows('FAT Risk Exposure',{Dimension:state.fatRiskDim,'Step filter':filter,'Root cause':rootCauseExportLabel()}),
+    [state.fatRiskDim,'FAT risk','FAT issues','Equipment','No-step equipment','No-step FAT issues','With-step equipment','With-step FAT issues','Avg coverage %',...categories.map(c=>`${c} FAT issues`),...roots.map(r=>`${r} root cause`)],
+    ...rows.map(r=>[
+      r.key,r.risk,r.fatIssueCount,r.equipmentCount,r.unprotectedEquipmentCount,r.unprotectedIssueCount,r.protectedEquipmentCount,r.protectedIssueCount,Math.round((r.avgCoverage||0)*100),
+      ...categories.map(c=>r.categoryCounts[c]||0),
+      ...roots.map(root=>r.rootCauseCounts[root]||0)
+    ])
+  ];
+  writeFilteredWorkbook(`fat_risk_${safeFilePart(state.fatRiskDim)}${chartFilterFileSuffix()}.xlsx`,[{name:'FAT Risk',aoa,widths:[28,10,10,11,17,18,18,18,14,...categories.map(()=>14),...roots.map(()=>16)]}]);
 }
 function exportMatrixXlsx(){
   const equipment=matrixEquipment(), matrix=sortRowsByMetric(scoreMatrix(equipment),'avgIssues',state.matrixSort), bdim=state.matrixDim||'Steps';
@@ -2876,7 +3269,7 @@ function exportMatrixXlsx(){
     ['Step','Issue share %','Issues','Equipment','Avg issues / equipment'],
     ...stepIssueContributions(equipment).map(r=>[r.step,r.ratio,r.issueCount,r.equipmentCount,+r.avgIssues.toFixed(2)])
   ];
-  writeFilteredWorkbook('risk_hypothesis.xlsx',[
+  writeFilteredWorkbook(`risk_hypothesis${chartFilterFileSuffix()}.xlsx`,[
     {name:'Risk Hypothesis',aoa:matrixAoa,widths:[14,11,10,22,14]},
     {name:'Breakdown',aoa:breakdown,widths:[14,30,22,11,10,22]},
     {name:'Step Contribution',aoa:contributions,widths:[12,13,10,11,22]},
@@ -3008,22 +3401,25 @@ Chart.register(
   }}
 );
 $('#dl-chart').addEventListener('click',()=>{ if(!state.chart)return;
-  const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${safeFilePart(state.dim)}${state.excludeRooms?'_no_rooms':''}.png`; a.click(); toast('Chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${safeFilePart(state.dim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-chart').addEventListener('click',exportIssueDistributionXlsx);
 $('#dl-step-chart').addEventListener('click',()=>{ if(!state.stepChart)return;
-  const a=document.createElement('a'); a.href=state.stepChart.toBase64Image('image/png',1); a.download=`issues_caught_by_step${state.excludeRooms?'_no_rooms':''}.png`; a.click(); toast('Chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.stepChart.toBase64Image('image/png',1); a.download=`issues_caught_by_step${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-step-chart').addEventListener('click',exportStepCaughtXlsx);
+$('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
+  const a=document.createElement('a'); a.href=state.fatRiskChart.toBase64Image('image/png',1); a.download=`fat_risk_by_${safeFilePart(state.fatRiskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
+$('#xlsx-fat-risk').addEventListener('click',exportFatRiskXlsx);
 async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}
   OV.show('Rendering image'); OV.indet('Capturing '+name.replace('.png','')+'…'); await raf();
   try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false});
     c.toBlob(b=>{download(b,name);toast('PNG saved');}); }
   catch(err){ console.error(err); toast('Could not render PNG'); }
   finally{ OV.hide(); } }
-$('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypothesis${state.excludeRooms?'_no_rooms':''}.png`));
+$('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypothesis${chartFilterFileSuffix()}.png`));
 $('#xlsx-matrix').addEventListener('click',exportMatrixXlsx);
 $('#dl-dash').addEventListener('click',async()=>{
   // temporarily un-clip both charts so the PNG captures every bar, not just the viewport
-  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#riskscroll')].filter(Boolean);
+  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#riskscroll'),$('#fatriskscroll')].filter(Boolean);
   const prev=scs.map(sc=>({sc,h:sc.style.height,o:sc.style.overflow}));
   scs.forEach(sc=>{ sc.style.height='auto'; sc.style.overflow='visible'; });
   try{ await pngOf($('#view-dashboard'),'cardinal_dashboard.png'); }

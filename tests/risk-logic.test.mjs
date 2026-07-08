@@ -166,6 +166,22 @@ test('room filtering removes equipment whose system or UPN is RR', () => {
   assert.equal(ctx.filterRoomEquipment(rows, false).length, 4)
 })
 
+test('alex custom view keeps only the approved equipment classifications', () => {
+  const ctx = loadPipeline()
+  const rows = [
+    { name: 'pump', systemName: 'Alpha', classification: 'PMP', score: 1, present: { QAQC: true } },
+    { name: 'panel', systemName: 'Alpha', classification: 'dist-pvc', score: 2, present: { QAQC: true, DV: true } },
+    { name: 'unknown', systemName: 'Beta', classification: 'Valve', score: 0, present: {} },
+    { name: 'unclassified', systemName: 'Beta', classification: '(unclassified)', score: 0, present: {} },
+  ]
+
+  const filtered = ctx.filterEquipmentForChart(rows, { alexCustomView: true })
+
+  assert.deepEqual(filtered.map((row) => row.name), ['pump', 'panel'])
+  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'Classification', { alexCustomView: true }).map((row) => row.key)), JSON.stringify(['dist-pvc', 'PMP']))
+  assert.equal(ctx.filterEquipmentForChart(rows, { alexCustomView: false }).length, 4)
+})
+
 test('issue distribution rows honor room and step filters', () => {
   const ctx = loadPipeline()
   const rows = ctx.issueDistributionRows([
@@ -259,6 +275,66 @@ test('issues caught by Cx Step roll up stacked category shares', () => {
   assert.equal(functional.categoryCounts.COR, 1)
   assert.equal(functional.categoryCounts['NCR-D'], 1)
   assert.equal(JSON.stringify(functional.segments.map((segment) => [segment.category, segment.count, segment.ratio])), JSON.stringify([['COR', 1, 50], ['NCR-D', 1, 50]]))
+})
+
+test('issue rows filter by multiple selected root causes', () => {
+  const ctx = loadPipeline()
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', score: 1, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+      { name: 'Panel B', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Electrical', building: 'B2', milestone: 'M2', classification: 'Panel', score: 2, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+    ],
+  }, { map: { 1001: '1001 - Water System', 2002: '2002 - Power System' } }, ctx.parseIssues([
+    ['Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Pump A', '1001', 'Functional Test', 'COR', 'Design'],
+    ['Pump A', '1001', 'Functional Test', 'NCR-D', 'Install'],
+    ['Panel B', '2002', 'Startup', 'WI', 'Materials'],
+    ['Panel B', '2002', 'Startup', 'NGI', 'Owner'],
+  ]), { byId: new Map([['pump a', 'Pump'], ['panel b', 'Panel']]) })
+
+  const rows = ctx.issueRowsForChart(model.equipment, model.issueRows, { rootCauses: ['Design', 'Install'] })
+
+  assert.equal(JSON.stringify(rows.map((row) => row.rootCause)), JSON.stringify(['Design', 'Install']))
+  assert.equal(JSON.stringify(rows.map((row) => row.equipmentName)), JSON.stringify(['Pump A', 'Pump A']))
+})
+
+test('fat risk rows count every FAT issue category and rank missing step coverage highest', () => {
+  const ctx = loadPipeline()
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', score: 0, present: { QAQC: false, DV: false, EHS: false }, categories: [] },
+      { name: 'Valve B', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Valve', score: 1, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+      { name: 'Panel C', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Electrical', building: 'B2', milestone: 'M2', classification: 'Panel', score: 2, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+      { name: 'Sensor D', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Controls', building: 'B2', milestone: 'M2', classification: 'Sensor', score: 0, present: { QAQC: false, DV: false, EHS: false }, categories: [] },
+    ],
+  }, { map: { 1001: '1001 - Water System', 2002: '2002 - Power System' } }, ctx.parseIssues([
+    ['Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Pump A', '1001', 'FAT', 'DWN', 'Design'],
+    ['Pump A', '1001', 'FAT', 'NGI', 'Install'],
+    ['Valve B', '1001', 'FAT Punch', 'COR', 'Design'],
+    ['Panel C', '2002', 'FAT', 'NCR-D', 'Materials'],
+    ['Panel C', '2002', 'Functional Test', 'DWN', 'Design'],
+    ['Sensor D', '2002', 'Startup', 'DWN', 'Design'],
+  ]), { byId: new Map([['pump a', 'Pump'], ['valve b', 'Valve'], ['panel c', 'Panel'], ['sensor d', 'Sensor']]) })
+
+  const rows = ctx.fatRiskRows(model.issueRows, model.equipment, 'System', { rootCauses: [], stepSelection: { none: false, categories: [], mode: 'any' } })
+  const water = rows.find((row) => row.key === '1001 - Water System')
+  const power = rows.find((row) => row.key === '2002 - Power System')
+  const noneRows = ctx.fatRiskRows(model.issueRows, model.equipment, 'System', { stepSelection: { none: true, categories: [], mode: 'any' } })
+  const designRows = ctx.fatRiskRows(model.issueRows, model.equipment, 'System', { rootCauses: ['Design'], stepSelection: { none: false, categories: [], mode: 'any' } })
+
+  assert.equal(rows[0].key, '1001 - Water System')
+  assert.equal(water.fatIssueCount, 3)
+  assert.equal(water.unprotectedIssueCount, 2)
+  assert.equal(water.unprotectedEquipmentCount, 1)
+  assert.equal(water.categoryCounts.DWN, 1)
+  assert.equal(water.categoryCounts.NGI, 1)
+  assert.equal(water.categoryCounts.COR, 1)
+  assert.equal(power.fatIssueCount, 1)
+  assert.equal(power.unprotectedIssueCount, 0)
+  assert.ok(water.risk > power.risk)
+  assert.equal(JSON.stringify(noneRows.map((row) => [row.key, row.fatIssueCount])), JSON.stringify([['1001 - Water System', 2]]))
+  assert.equal(JSON.stringify(designRows.map((row) => [row.key, row.fatIssueCount])), JSON.stringify([['1001 - Water System', 2]]))
 })
 
 test('matrix expanded score set toggles without losing other expanded sections', () => {
