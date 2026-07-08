@@ -192,6 +192,75 @@ test('issue distribution rows honor room and step filters', () => {
   assert.equal(JSON.stringify(rows.map((row) => row.issueCount)), JSON.stringify([6, 1]))
 })
 
+test('issue parsing keeps Cx Step, Category, Root Cause, and UPN per issue row', () => {
+  const ctx = loadPipeline()
+  const parsed = ctx.parseIssues([
+    ['Issue ID', 'Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['ISS-1', 'Pump A', '1001', 'Functional Test', 'COR', 'Design'],
+    ['ISS-2', 'Pump A', '1001', 'Functional Test', 'NCR-D', 'Install'],
+    ['ISS-3', 'Panel B', '2002', 'Startup', 'WI', 'Design'],
+  ])
+
+  assert.equal(parsed.rows.length, 3)
+  assert.equal(parsed.cxStepCol, 3)
+  assert.equal(parsed.categoryCol, 4)
+  assert.equal(parsed.rootCauseCol, 5)
+  assert.equal(JSON.stringify(parsed.rows[0]), JSON.stringify({
+    equipmentName: 'Pump A',
+    equipmentKey: 'pump a',
+    upn: '1001',
+    upnRaw: '1001',
+    cxStep: 'Functional Test',
+    category: 'COR',
+    rootCause: 'Design',
+  }))
+})
+
+test('issue distribution can count issues by root cause from matched issue rows', () => {
+  const ctx = loadPipeline()
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', score: 1, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+      { name: 'Panel B', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Electrical', building: 'B2', milestone: 'M2', classification: 'Panel', score: 2, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+    ],
+  }, { map: { 1001: '1001 - Water System', 2002: '2002 - Power System' } }, ctx.parseIssues([
+    ['Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Pump A', '1001', 'Functional Test', 'COR', 'Design'],
+    ['Pump A', '1001', 'Functional Test', 'NCR-D', 'Install'],
+    ['Panel B', '2002', 'Startup', 'WI', 'Design'],
+  ]), { byId: new Map([['pump a', 'Pump'], ['panel b', 'Panel']]) })
+
+  const rows = ctx.issueDistributionRowsFromIssues(model.equipment, model.issueRows, 'System', { rootCause: 'Design' })
+
+  assert.equal(JSON.stringify(rows.map((row) => row.key)), JSON.stringify(['1001 - Water System', '2002 - Power System']))
+  assert.equal(JSON.stringify(rows.map((row) => row.issueCount)), JSON.stringify([1, 1]))
+  assert.equal(JSON.stringify(rows.map((row) => row.equipmentCount)), JSON.stringify([1, 1]))
+})
+
+test('issues caught by Cx Step roll up stacked category shares', () => {
+  const ctx = loadPipeline()
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', score: 1, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+      { name: 'Panel B', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Electrical', building: 'B2', milestone: 'M2', classification: 'Panel', score: 2, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+    ],
+  }, { map: { 1001: '1001 - Water System', 2002: '2002 - Power System' } }, ctx.parseIssues([
+    ['Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Pump A', '1001', 'Functional Test', 'COR', 'Design'],
+    ['Pump A', '1001', 'Functional Test', 'NCR-D', 'Install'],
+    ['Panel B', '2002', 'Startup', 'WI', 'Design'],
+  ]), { byId: new Map([['pump a', 'Pump'], ['panel b', 'Panel']]) })
+
+  const rows = ctx.stepCaughtRows(model.issueRows, model.equipment)
+  const functional = rows.find((row) => row.key === 'Functional Test')
+
+  assert.equal(JSON.stringify(rows.map((row) => row.key)), JSON.stringify(['Functional Test', 'Startup']))
+  assert.equal(functional.issueCount, 2)
+  assert.equal(functional.categoryCounts.COR, 1)
+  assert.equal(functional.categoryCounts['NCR-D'], 1)
+  assert.equal(JSON.stringify(functional.segments.map((segment) => [segment.category, segment.count, segment.ratio])), JSON.stringify([['COR', 1, 50], ['NCR-D', 1, 50]]))
+})
+
 test('matrix expanded score set toggles without losing other expanded sections', () => {
   const ctx = loadPipeline()
 
