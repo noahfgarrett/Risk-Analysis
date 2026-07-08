@@ -277,6 +277,58 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .toggle-control{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer}
 .toggle-control input{margin:0;accent-color:var(--accent)}
 .toggle-control span{font-size:11px;font-weight:600;color:var(--ink-3)}
+.custom-view-btn{height:35px}
+.custom-view-btn .cv-current{font-size:11px;color:var(--ink-3);font-weight:700;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.custom-view-btn.active{border-color:#cfe4f5;background:var(--accent-wash);color:var(--accent)}
+.custom-view-card{width:min(1040px,94vw);max-height:86vh;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.custom-view-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
+.custom-view-title{font-size:18px;font-weight:760;letter-spacing:-.01em}
+.custom-view-sub{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.custom-view-close{appearance:none;border:0;background:transparent;color:var(--ink-3);font-size:22px;line-height:1;cursor:pointer;padding:0 2px}
+.custom-view-close:hover{color:var(--ink)}
+.custom-view-layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:0;overflow:hidden}
+.custom-view-side{border-right:1px solid var(--line);background:var(--surface-2);padding:16px;overflow:auto}
+.custom-view-main{padding:16px 18px 18px;overflow:auto}
+.cv-side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cv-side-head .eyebrow{margin:0}
+.cv-list{display:flex;flex-direction:column;gap:7px}
+.cv-list-row{display:grid;grid-template-columns:minmax(0,1fr) 28px;gap:6px;align-items:center}
+.cv-view{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;text-align:left;cursor:pointer;color:var(--ink);min-width:0}
+.cv-view:hover{border-color:var(--accent)}
+.cv-view.active{background:var(--accent-wash);border-color:#cfe4f5;color:var(--accent)}
+.cv-view b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-view span{display:block;font-size:11px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-delete{appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-3);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:18px;line-height:1}
+.cv-delete:hover{background:var(--bad-wash);border-color:#eccabf;color:#8b3929}
+.cv-empty{font-size:12px;color:var(--ink-3);border:1px dashed var(--line-2);border-radius:8px;padding:10px;line-height:1.45;background:var(--surface)}
+.custom-view-form{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:12px;align-items:end;margin-bottom:14px}
+.custom-view-form input{width:100%;min-width:0}
+.cv-editor-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.cv-groups{display:flex;flex-direction:column;gap:8px}
+.cv-group{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.cv-group-head{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;border:0;background:transparent;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.cv-group-head:hover{background:var(--paper)}
+.cv-caret{font-size:11px;color:var(--ink-3);transition:transform .15s}
+.cv-group.closed .cv-caret{transform:rotate(-90deg)}
+.cv-group-title{font-weight:750;font-size:13px}
+.cv-group-count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+.cv-group-body{display:block;border-top:1px solid var(--line);padding:10px 12px 12px}
+.cv-group.closed .cv-group-body{display:none}
+.cv-group-tools{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap}
+.cv-mini-actions{display:flex;gap:6px}
+.cv-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;max-height:210px;overflow:auto;padding-right:2px}
+.cv-option{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:7px;padding:7px 8px;font-size:12.5px;min-width:0;background:var(--surface-2);cursor:pointer}
+.cv-option:hover{border-color:var(--accent)}
+.cv-option input{margin:0;accent-color:var(--accent)}
+.cv-option-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-option-count{margin-left:auto;color:var(--ink-3);font-family:var(--mono);font-size:10.5px;white-space:nowrap}
+@media(max-width:780px){
+  .custom-view-layout{grid-template-columns:1fr}
+  .custom-view-side{border-right:0;border-bottom:1px solid var(--line);max-height:220px}
+  .custom-view-form{grid-template-columns:1fr}
+  .cv-editor-actions{justify-content:flex-start}
+  .cv-options{grid-template-columns:1fr;max-height:260px}
+}
 
 /* ---- hierarchy table ---- */
 .htable{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
@@ -545,7 +597,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.0</span>
+      Risk Analysis v<span id="version-label">1.1.1</span>
     </button>
   </header>
 
@@ -621,6 +673,9 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
           <input type="checkbox" id="alexCustomView" />
           Alex M Custom View <span>approved classifications only</span>
         </label>
+        <button class="btn custom-view-btn" id="customViewBtn" title="Create and manage locally saved custom chart views">
+          Custom view <span class="cv-current" id="customViewCurrent">No saved view</span>
+        </button>
       </div>
 
       <div class="grid-2">
@@ -903,6 +958,40 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </div>
   </div>
 </div>
+<div class="modal" id="custom-view-modal" hidden>
+  <div class="modal-card custom-view-card">
+    <div class="custom-view-head">
+      <div>
+        <div class="eyebrow">Local saved views</div>
+        <div class="custom-view-title">Custom view</div>
+        <div class="custom-view-sub">Saved views stay in this browser and filter dashboard charts and chart exports.</div>
+      </div>
+      <button class="custom-view-close" id="custom-view-close" aria-label="Close custom view modal">×</button>
+    </div>
+    <div class="custom-view-layout">
+      <aside class="custom-view-side">
+        <div class="cv-side-head">
+          <div class="eyebrow">Saved views</div>
+          <button class="btn ghost" id="custom-view-new">New</button>
+        </div>
+        <div class="cv-list" id="custom-view-list"></div>
+      </aside>
+      <section class="custom-view-main">
+        <div class="custom-view-form">
+          <div class="field">
+            <label for="custom-view-name">View name</label>
+            <input type="text" id="custom-view-name" placeholder="Name this view" />
+          </div>
+          <div class="cv-editor-actions">
+            <button class="btn ghost" id="custom-view-clear">Clear selections</button>
+            <button class="btn primary" id="custom-view-save">Save view</button>
+          </div>
+        </div>
+        <div class="cv-groups" id="custom-view-groups"></div>
+      </section>
+    </div>
+  </div>
+</div>
 <div class="modal" id="update-modal" hidden>
   <div class="modal-card update-card">
     <div class="up-head">
@@ -968,6 +1057,7 @@ const ALEX_M_CUSTOM_CLASSIFICATIONS = [
   'RCTO','SUBMAIN','SYS','VMB'
 ];
 const ALEX_M_CLASSIFICATION_SET = new Set(ALEX_M_CUSTOM_CLASSIFICATIONS);
+const CUSTOM_VIEW_DIMENSIONS = ['System','Discipline','Milestone','Classification','Building'];
 function stepComboLabel(e){
   return STEP_CATEGORIES.filter(c=>e.present&&e.present[c]).join(' + ') || 'None';
 }
@@ -980,6 +1070,35 @@ function isAlexCustomEquipment(e){
 function filterAlexCustomEquipment(equipment, enabled){
   const rows=equipment||[];
   return enabled ? rows.filter(isAlexCustomEquipment) : rows.slice();
+}
+function customViewValue(e, dim){
+  return dimensionKey(e,dim);
+}
+function normalizeSavedViewFilters(view){
+  const input=(view&&view.filters)||{};
+  const filters={};
+  CUSTOM_VIEW_DIMENSIONS.forEach(dim=>{
+    const values=Array.isArray(input[dim]) ? input[dim] : [];
+    filters[dim]=[...new Set(values.map(v=>String(v||'').trim()).filter(Boolean))];
+  });
+  return filters;
+}
+function savedViewHasFilters(view){
+  const filters=normalizeSavedViewFilters(view);
+  return CUSTOM_VIEW_DIMENSIONS.some(dim=>filters[dim].length>0);
+}
+function matchSavedView(e, view){
+  if(!view || !savedViewHasFilters(view)) return true;
+  const filters=normalizeSavedViewFilters(view);
+  return CUSTOM_VIEW_DIMENSIONS.every(dim=>{
+    const selected=filters[dim];
+    if(!selected.length) return true;
+    return selected.includes(customViewValue(e,dim));
+  });
+}
+function filterSavedViewEquipment(equipment, view){
+  const rows=equipment||[];
+  return savedViewHasFilters(view) ? rows.filter(e=>matchSavedView(e,view)) : rows.slice();
 }
 function normalizeStepSelection(selection){
   selection = selection || {};
@@ -1009,6 +1128,7 @@ function filterEquipmentForChart(equipment, opts){
   opts=opts||{};
   let rows=filterRoomEquipment(equipment, !!opts.excludeRooms);
   rows=filterAlexCustomEquipment(rows, !!opts.alexCustomView);
+  rows=filterSavedViewEquipment(rows, opts.savedView);
   if(opts.stepSelection) rows=rows.filter(e=>matchStepSelection(e, opts.stepSelection));
   return rows;
 }
@@ -1549,7 +1669,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.1.1';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1567,12 +1687,22 @@ const state = {
   excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCauses:new Set(), rootPickerOpen:null,
+  customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS),
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
 };
 
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.1',
+    date:'2026-07-08T16:30:00Z',
+    type:'feature',
+    stats:'Small update',
+    notes:`### Updates
+- Minor dashboard refinements
+- Small chart and export improvements`
+  },
   {
     version:'1.1.0',
     date:'2026-07-08T16:15:00Z',
@@ -1906,6 +2036,255 @@ $('#view-mapping').addEventListener('click',ev=>{
   head.setAttribute('aria-expanded',open?'true':'false');
 });
 
+/* custom saved views */
+const CUSTOM_VIEW_STORAGE_KEY='riskAnalysis.customViews.v1';
+const CUSTOM_VIEW_ACTIVE_KEY='riskAnalysis.activeCustomView.v1';
+function emptyCustomViewFilters(){
+  const filters={};
+  CUSTOM_VIEW_DIMENSIONS.forEach(dim=>{ filters[dim]=[]; });
+  return filters;
+}
+function normalizeStoredCustomView(view){
+  const id=String(view&&view.id||'').trim() || customViewId();
+  const name=String(view&&view.name||'').trim() || 'Untitled view';
+  return {
+    id,
+    name,
+    filters:normalizeSavedViewFilters(view),
+    createdAt:view&&view.createdAt || new Date().toISOString(),
+    updatedAt:view&&view.updatedAt || new Date().toISOString()
+  };
+}
+function customViewId(){
+  return (window.crypto&&crypto.randomUUID) ? crypto.randomUUID() : 'view-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+}
+function cloneCustomView(view){
+  const base=normalizeStoredCustomView(view||{id:'',name:'',filters:emptyCustomViewFilters()});
+  return {id:base.id,name:base.name,filters:normalizeSavedViewFilters(base),createdAt:base.createdAt,updatedAt:base.updatedAt};
+}
+function newCustomViewDraft(){
+  return {id:'',name:'',filters:emptyCustomViewFilters(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+}
+function loadCustomViews(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(CUSTOM_VIEW_STORAGE_KEY)||'[]');
+    state.customViews=Array.isArray(raw) ? raw.map(normalizeStoredCustomView) : [];
+    state.activeCustomViewId=localStorage.getItem(CUSTOM_VIEW_ACTIVE_KEY)||'';
+    if(!state.customViews.some(v=>v.id===state.activeCustomViewId)) state.activeCustomViewId='';
+  }catch(_){
+    state.customViews=[]; state.activeCustomViewId='';
+  }
+  state.customViewDraft=activeSavedView() ? cloneCustomView(activeSavedView()) : newCustomViewDraft();
+}
+function persistCustomViews(){
+  try{
+    localStorage.setItem(CUSTOM_VIEW_STORAGE_KEY,JSON.stringify(state.customViews));
+    if(state.activeCustomViewId) localStorage.setItem(CUSTOM_VIEW_ACTIVE_KEY,state.activeCustomViewId);
+    else localStorage.removeItem(CUSTOM_VIEW_ACTIVE_KEY);
+  }catch(_){}
+}
+function activeSavedView(){
+  return state.customViews.find(v=>v.id===state.activeCustomViewId) || null;
+}
+function customViewSelectionCount(view){
+  const filters=normalizeSavedViewFilters(view);
+  return CUSTOM_VIEW_DIMENSIONS.reduce((sum,dim)=>sum+filters[dim].length,0);
+}
+function customViewSummary(view){
+  const filters=normalizeSavedViewFilters(view);
+  const parts=CUSTOM_VIEW_DIMENSIONS.map(dim=>filters[dim].length?`${filters[dim].length} ${dim.toLowerCase()}`:'').filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'No filters selected';
+}
+function customViewExportLabel(){
+  const view=activeSavedView();
+  return view ? view.name : 'No saved custom view';
+}
+function activeCustomViewFileSuffix(){
+  const view=activeSavedView();
+  return view ? `_view_${safeFilePart(view.name).slice(0,40)}` : '';
+}
+function updateCustomViewButton(){
+  const btn=$('#customViewBtn'), label=$('#customViewCurrent');
+  if(!btn||!label) return;
+  const view=activeSavedView();
+  btn.classList.toggle('active',!!view);
+  label.textContent=view ? view.name : 'No saved view';
+  btn.title=view ? `Active custom view: ${view.name}` : 'Create and manage locally saved custom chart views';
+}
+function customViewDimensionValues(dim){
+  const counts=new Map();
+  for(const e of (state.model&&state.model.equipment)||[]){
+    const key=customViewValue(e,dim);
+    counts.set(key,(counts.get(key)||0)+1);
+  }
+  const draftFilters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
+  (draftFilters[dim]||[]).forEach(v=>{ if(!counts.has(v)) counts.set(v,0); });
+  return [...counts.entries()].map(([value,count])=>({value,count})).sort((a,b)=>String(a.value).localeCompare(String(b.value)));
+}
+function openCustomViewModal(){
+  if(!state.customViewDraft) state.customViewDraft=activeSavedView() ? cloneCustomView(activeSavedView()) : newCustomViewDraft();
+  renderCustomViewModal();
+  const m=$('#custom-view-modal'); m.hidden=false; requestAnimationFrame(()=>m.classList.add('show'));
+}
+function closeCustomViewModal(){
+  const m=$('#custom-view-modal'); m.classList.remove('show'); setTimeout(()=>{m.hidden=true;},180);
+}
+function renderCustomViewList(){
+  const active=state.activeCustomViewId;
+  const rows=[`
+    <div class="cv-list-row">
+      <button class="cv-view ${!active?'active':''}" data-cv-activate="">
+        <b>No custom view</b><span>Show all dashboard chart data</span>
+      </button><span></span>
+    </div>`];
+  if(!state.customViews.length){
+    rows.push('<div class="cv-empty">Saved views will appear here after you name and save one.</div>');
+  }else{
+    rows.push(...state.customViews.map(view=>`
+      <div class="cv-list-row">
+        <button class="cv-view ${view.id===active?'active':''}" data-cv-activate="${esc(view.id)}">
+          <b>${esc(view.name)}</b><span>${esc(customViewSummary(view))}</span>
+        </button>
+        <button class="cv-delete" data-cv-delete="${esc(view.id)}" title="Delete ${esc(view.name)}">×</button>
+      </div>`));
+  }
+  $('#custom-view-list').innerHTML=rows.join('');
+}
+function renderCustomViewGroups(){
+  const draft=state.customViewDraft||newCustomViewDraft();
+  const filters=normalizeSavedViewFilters(draft);
+  $('#custom-view-groups').innerHTML=CUSTOM_VIEW_DIMENSIONS.map(dim=>{
+    const values=customViewDimensionValues(dim), selected=new Set(filters[dim]||[]);
+    const open=state.customViewOpen.has(dim);
+    return `<div class="cv-group ${open?'':'closed'}" data-cv-group="${esc(dim)}">
+      <button class="cv-group-head" data-cv-toggle="${esc(dim)}" aria-expanded="${open?'true':'false'}">
+        <span class="cv-caret">▾</span><span class="cv-group-title">${esc(dim)}</span>
+        <span class="cv-group-count">${selected.size.toLocaleString()} selected · ${values.length.toLocaleString()} available</span>
+      </button>
+      <div class="cv-group-body">
+        <div class="cv-group-tools">
+          <span class="subfilter-label">${esc(dim)} values</span>
+          <span class="cv-mini-actions">
+            <button class="btn ghost" data-cv-all="${esc(dim)}">Select all</button>
+            <button class="btn ghost" data-cv-clear="${esc(dim)}">Clear</button>
+          </span>
+        </div>
+        <div class="cv-options">
+          ${values.length ? values.map(item=>`
+            <label class="cv-option" title="${esc(item.value)}">
+              <input type="checkbox" data-cv-check="${esc(dim)}" value="${esc(item.value)}" ${selected.has(item.value)?'checked':''} />
+              <span class="cv-option-name">${esc(item.value)}</span>
+              <span class="cv-option-count">${item.count.toLocaleString()}</span>
+            </label>`).join('') : '<div class="cv-empty">No values available in the current workbook.</div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderCustomViewModal(){
+  const draft=state.customViewDraft||newCustomViewDraft();
+  $('#custom-view-name').value=draft.name||'';
+  renderCustomViewList();
+  renderCustomViewGroups();
+}
+function setDraftFilters(filters){
+  if(!state.customViewDraft) state.customViewDraft=newCustomViewDraft();
+  state.customViewDraft.filters=normalizeSavedViewFilters({filters});
+}
+function toggleDraftValue(dim,value,checked){
+  const filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
+  const set=new Set(filters[dim]||[]);
+  checked ? set.add(value) : set.delete(value);
+  filters[dim]=[...set].sort((a,b)=>String(a).localeCompare(String(b)));
+  setDraftFilters(filters);
+}
+function applyCustomViewChange(){
+  updateCustomViewButton();
+  if(!state.model) return;
+  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  renderDashboard();
+}
+function saveCustomViewDraft(){
+  const name=$('#custom-view-name').value.trim();
+  if(!name){ toast('Name this custom view first'); $('#custom-view-name').focus(); return; }
+  const draft=state.customViewDraft||newCustomViewDraft();
+  const filters=normalizeSavedViewFilters(draft);
+  if(!savedViewHasFilters({filters})){ toast('Select at least one value for this view'); return; }
+  const now=new Date().toISOString();
+  const existing=draft.id ? state.customViews.find(v=>v.id===draft.id) : null;
+  const saved={id:existing?existing.id:customViewId(),name,filters,createdAt:existing?existing.createdAt:now,updatedAt:now};
+  const next=state.customViews.filter(v=>v.id!==saved.id);
+  next.push(saved);
+  next.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  state.customViews=next;
+  state.activeCustomViewId=saved.id;
+  state.customViewDraft=cloneCustomView(saved);
+  persistCustomViews();
+  renderCustomViewModal();
+  applyCustomViewChange();
+  toast('Custom view saved');
+}
+function activateCustomView(id){
+  state.activeCustomViewId=id||'';
+  const view=activeSavedView();
+  state.customViewDraft=view ? cloneCustomView(view) : newCustomViewDraft();
+  persistCustomViews();
+  renderCustomViewModal();
+  applyCustomViewChange();
+}
+function deleteCustomView(id){
+  const view=state.customViews.find(v=>v.id===id);
+  if(!view) return;
+  if(!confirm(`Delete “${view.name}”?`)) return;
+  state.customViews=state.customViews.filter(v=>v.id!==id);
+  if(state.activeCustomViewId===id) state.activeCustomViewId='';
+  state.customViewDraft=activeSavedView() ? cloneCustomView(activeSavedView()) : newCustomViewDraft();
+  persistCustomViews();
+  renderCustomViewModal();
+  applyCustomViewChange();
+  toast('Custom view deleted');
+}
+loadCustomViews();
+$('#customViewBtn').addEventListener('click',openCustomViewModal);
+$('#custom-view-close').addEventListener('click',closeCustomViewModal);
+$('#custom-view-modal').addEventListener('click',e=>{ if(e.target===$('#custom-view-modal')) closeCustomViewModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('#custom-view-modal').hidden) closeCustomViewModal(); });
+$('#custom-view-new').addEventListener('click',()=>{ state.customViewDraft=newCustomViewDraft(); renderCustomViewModal(); $('#custom-view-name').focus(); });
+$('#custom-view-save').addEventListener('click',saveCustomViewDraft);
+$('#custom-view-clear').addEventListener('click',()=>{ setDraftFilters(emptyCustomViewFilters()); renderCustomViewGroups(); });
+$('#custom-view-list').addEventListener('click',e=>{
+  const del=e.target.closest('[data-cv-delete]');
+  if(del){ deleteCustomView(del.dataset.cvDelete); return; }
+  const activate=e.target.closest('[data-cv-activate]');
+  if(activate){ activateCustomView(activate.dataset.cvActivate); }
+});
+$('#custom-view-groups').addEventListener('click',e=>{
+  const toggle=e.target.closest('[data-cv-toggle]');
+  if(toggle){
+    const dim=toggle.dataset.cvToggle;
+    state.customViewOpen.has(dim) ? state.customViewOpen.delete(dim) : state.customViewOpen.add(dim);
+    renderCustomViewGroups();
+    return;
+  }
+  const selectAll=e.target.closest('[data-cv-all]');
+  if(selectAll){
+    const dim=selectAll.dataset.cvAll, filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
+    filters[dim]=customViewDimensionValues(dim).map(v=>v.value);
+    setDraftFilters(filters); renderCustomViewGroups(); return;
+  }
+  const clear=e.target.closest('[data-cv-clear]');
+  if(clear){
+    const dim=clear.dataset.cvClear, filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
+    filters[dim]=[]; setDraftFilters(filters); renderCustomViewGroups();
+  }
+});
+$('#custom-view-groups').addEventListener('change',e=>{
+  const input=e.target.closest('input[data-cv-check]');
+  if(!input) return;
+  toggleDraftValue(input.dataset.cvCheck,input.value,input.checked);
+  renderCustomViewGroups();
+});
+
 /* ---- file input / drag drop ---- */
 const drop=$('#drop'), fileinput=$('#fileinput');
 drop.addEventListener('click',()=>fileinput.click());
@@ -2203,6 +2582,7 @@ function renderDashboard(){
   const matrixSort=$('#sort-matrix'); if(matrixSort) matrixSort.value=state.matrixSort;
   const riskSort=$('#sort-risk'); if(riskSort) riskSort.value=state.riskSort;
   const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
+  updateCustomViewButton();
   syncRootCauseFilters();
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
@@ -2221,8 +2601,8 @@ function renderDashboard(){
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
 function alexCustomViewText(){ return state.alexCustomView ? 'Alex M Custom View enabled' : 'Alex M Custom View off'; }
-function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,...(extra||{})}; }
-function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_alex_m':''}`; }
+function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,savedView:activeSavedView(),...(extra||{})}; }
+function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_alex_m':''}${activeCustomViewFileSuffix()}`; }
 function baseChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions()); }
 function matrixEquipment(){ return baseChartEquipment(); }
 
@@ -3172,7 +3552,7 @@ function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:
 function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
 function safeFilePart(v){ return String(v||'data').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'data'; }
 function filterSummaryRows(kind, extra){
-  const rows=[['Export',kind],['Room filter',roomFilterText()],['Alex M Custom View',alexCustomViewText()]];
+  const rows=[['Export',kind],['Room filter',roomFilterText()],['Alex M Custom View',alexCustomViewText()],['Saved custom view',customViewExportLabel()]];
   if(extra) Object.entries(extra).forEach(([k,v])=>rows.push([k,v]));
   rows.push([]);
   return rows;

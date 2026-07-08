@@ -182,6 +182,30 @@ test('alex custom view keeps only the approved equipment classifications', () =>
   assert.equal(ctx.filterEquipmentForChart(rows, { alexCustomView: false }).length, 4)
 })
 
+test('saved custom views match selected values within each dimension', () => {
+  const ctx = loadPipeline()
+  const rows = [
+    { name: 'pump', systemName: 'Alpha', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'PMP', score: 1, issueCount: 2, present: { QAQC: true } },
+    { name: 'panel', systemName: 'Alpha', discipline: 'Electrical', building: 'B1', milestone: 'M1', classification: 'PANEL', score: 2, issueCount: 4, present: { QAQC: true, DV: true } },
+    { name: 'fan', systemName: 'Beta', discipline: 'Mechanical', building: 'B2', milestone: 'M2', classification: 'EF', score: 0, issueCount: 7, present: {} },
+    { name: 'rack', systemName: 'Gamma', discipline: 'Controls', building: 'B2', milestone: 'M1', classification: 'STRATIX RING', score: 3, issueCount: 1, present: { QAQC: true, DV: true, EHS: true } },
+  ]
+  const view = {
+    filters: {
+      System: ['Alpha', 'Gamma'],
+      Discipline: ['Mechanical', 'Controls'],
+      Building: [],
+      Milestone: ['M1'],
+      Classification: [],
+    },
+  }
+
+  const filtered = ctx.filterEquipmentForChart(rows, { savedView: view })
+
+  assert.deepEqual(filtered.map((row) => row.name), ['pump', 'rack'])
+  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'System', { savedView: view }).map((row) => row.key)), JSON.stringify(['Alpha', 'Gamma']))
+})
+
 test('issue distribution rows honor room and step filters', () => {
   const ctx = loadPipeline()
   const rows = ctx.issueDistributionRows([
