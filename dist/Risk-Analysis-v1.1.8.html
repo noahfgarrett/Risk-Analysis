@@ -166,12 +166,14 @@ button{font-family:inherit}
 .overlay-card{width:min(420px,90vw);background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;box-shadow:var(--shadow);padding:20px 22px}
 .ov-title{font-size:14px;font-weight:650;letter-spacing:-.01em;margin-bottom:12px}
 .ov-track{height:8px;background:var(--paper);border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.ov-bar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .18s ease}
+.ov-bar{position:relative;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .18s ease;overflow:hidden}
+.overlay.loading:not(.indet):not(.done) .ov-bar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.62),transparent);transform:translateX(-110%);animation:barshimmer 1.05s linear infinite}
 .ov-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;font-size:12px;color:var(--ink-2)}
 .ov-meta #ov-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-meta .num{color:var(--ink);font-weight:650;font-family:var(--mono)}
 .overlay.indet .ov-bar{width:36% !important;animation:indet 1.05s ease-in-out infinite;transition:none}
 @keyframes indet{0%{margin-left:-38%}100%{margin-left:102%}}
+@keyframes barshimmer{100%{transform:translateX(110%)}}
 .tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 .tab:disabled{opacity:.4;cursor:not-allowed}
 .versionbtn{
@@ -205,8 +207,9 @@ button{font-family:inherit}
 /* ---- cards / sections ---- */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:12px;flex-wrap:wrap}
-.section-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
-.section-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.section-head>div:first-child{min-width:0;flex:1 1 auto}
+.section-head h3{margin:0;font-size:15px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.section-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;flex-wrap:wrap}
 .risk-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .riskmetric-control{display:inline-flex;align-items:center;gap:6px;margin-top:1px}
 .riskmetric-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
@@ -237,12 +240,12 @@ body.chart-fullscreen{overflow:hidden}
 .filter-group.compact{flex:0 1 auto}
 .filter-group.grow{flex:1 1 260px}
 .filter-title{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
-.filter-shelf .pills{gap:4px}
+.filter-shelf .pills{gap:4px;flex-wrap:nowrap}
 .filter-shelf .pill{padding:5px 9px;border-radius:7px;font-size:12px;line-height:1.2}
-.filter-shelf .matchmode{height:28px}
+.filter-shelf .matchmode{height:28px;inline-size:132px;flex:0 0 132px}
 .filter-shelf .mm-help{display:none}
-.filter-shelf .root-select{min-width:168px}
-.filter-search{margin-left:auto;display:inline-flex;align-items:center;gap:7px;min-height:34px;min-width:min(260px,100%);flex:0 1 260px}
+.filter-shelf .root-select{width:190px;min-width:190px;flex:0 0 190px}
+.filter-search{margin-left:auto;display:inline-flex;align-items:center;gap:7px;min-height:34px;width:260px;max-width:100%;flex:0 0 260px}
 .filter-search span{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
 .filter-search input{width:100%;min-width:0;height:32px;padding:6px 10px;border-radius:7px;font-size:12.5px;line-height:16px;background:var(--surface)}
 .filter-search input::placeholder{color:var(--ink-3)}
@@ -578,8 +581,8 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .subfilter-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
 .matrix-filter{margin:-2px 0 10px}
 .select-slim{min-width:150px;padding:6px 10px;font-size:13px;border-radius:7px}
-.matchmode{display:inline-flex;align-items:center;gap:4px;margin-left:2px}
-.matchmode[hidden]{display:none}
+.matchmode{display:inline-flex;align-items:center;gap:4px;margin-left:2px;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.matchmode.is-visible{visibility:visible;opacity:1;pointer-events:auto}
 .matchmode .mm-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-right:2px}
 .mm-btn{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:650;cursor:pointer}
 .mm-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -670,7 +673,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.6</span>
+      Risk Analysis v<span id="version-label">1.1.8</span>
     </button>
   </header>
 
@@ -790,7 +793,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                     <button class="pill cat dv" data-cat="DV">DV</button>
                     <button class="pill cat ehs" data-cat="EHS">EHS</button>
                   </div>
-                  <span class="matchmode" id="matchmode" hidden>
+                  <span class="matchmode" id="matchmode" aria-hidden="true">
                     <span class="mm-label">match</span>
                     <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
                     <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
@@ -939,7 +942,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                   <button class="pill cat dv" data-cat="DV">DV</button>
                   <button class="pill cat ehs" data-cat="EHS">EHS</button>
                 </div>
-                <span class="matchmode" id="riskmatchmode" hidden>
+                <span class="matchmode" id="riskmatchmode" aria-hidden="true">
                   <span class="mm-label">match</span>
                   <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
                   <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
@@ -998,7 +1001,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                   <button class="pill cat dv" data-cat="DV">DV</button>
                   <button class="pill cat ehs" data-cat="EHS">EHS</button>
                 </div>
-                <span class="matchmode" id="fatmatchmode" hidden>
+                <span class="matchmode" id="fatmatchmode" aria-hidden="true">
                   <span class="mm-label">match</span>
                   <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
                   <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
@@ -1804,7 +1807,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.6';
+const APP_VERSION='1.1.8';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1830,6 +1833,17 @@ const state = {
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.8',
+    date:'2026-07-08T21:25:00Z',
+    type:'fix',
+    stats:'Dashboard stability',
+    notes:`### Updates
+- Stabilized chart layout while filters change
+- Improved custom view editing
+- Smoothed workbook import progress
+- Added clearer loading feedback`
+  },
   {
     version:'1.1.6',
     date:'2026-07-08T20:05:00Z',
@@ -2110,15 +2124,36 @@ function download(blob, name){ const u=URL.createObjectURL(blob); const a=docume
    phases that yield to the event loop so the UI can paint the bar and stay
    responsive — no long tasks that freeze the tab. */
 const OV={
-  el:$('#overlay'), bar:$('#ov-bar'), pct:$('#ov-pct'), title:$('#ov-title'), sub:$('#ov-sub'),
-  show(t){ this.title.textContent=t||'Working…'; this.el.classList.remove('indet'); this.set(0,''); this.el.classList.add('show'); this.el.setAttribute('aria-hidden','false'); },
-  set(p,sub){ p=Math.max(0,Math.min(100,p)); this.el.classList.remove('indet'); this.bar.style.width=p+'%'; this.pct.textContent=Math.round(p)+'%'; if(sub!=null) this.sub.textContent=sub||'\u00a0'; },
-  indet(sub){ this.el.classList.add('indet'); this.pct.textContent=''; if(sub!=null) this.sub.textContent=sub||'\u00a0'; },
-  hide(){ this.el.classList.remove('show'); this.el.classList.remove('indet'); this.el.setAttribute('aria-hidden','true'); }
+  el:$('#overlay'), bar:$('#ov-bar'), pct:$('#ov-pct'), title:$('#ov-title'), sub:$('#ov-sub'), value:0,
+  show(t){ this.title.textContent=t||'Working…'; this.el.classList.remove('indet','done'); this.el.classList.add('loading'); this.set(0,''); this.el.classList.add('show'); this.el.setAttribute('aria-hidden','false'); },
+  set(p,sub){
+    const clamped=Math.max(0,Math.min(100,Number(p)||0));
+    const display=Math.round(clamped);
+    this.value=display;
+    this.el.classList.remove('indet');
+    this.el.classList.toggle('done',display>=100);
+    this.bar.style.width=display+'%';
+    this.pct.textContent=display+'%';
+    if(sub!=null) this.sub.textContent=sub||'\u00a0';
+  },
+  indet(sub){ this.el.classList.add('indet'); this.el.classList.remove('done'); this.pct.textContent=''; if(sub!=null) this.sub.textContent=sub||'\u00a0'; },
+  hide(){ this.el.classList.remove('show','indet','loading','done'); this.el.setAttribute('aria-hidden','true'); }
 };
 /* let the browser paint before continuing a heavy phase */
 const yieldUI=()=>new Promise(r=>setTimeout(r,0));
 const raf=()=>new Promise(r=>(window.requestAnimationFrame||setTimeout)(r));
+async function progressTo(target, sub, steps=4){
+  const start=Number.isFinite(OV.value)?OV.value:0;
+  const end=Math.max(0,Math.min(100,Number(target)||0));
+  const count=Math.max(1,Math.min(12,Math.round(steps)));
+  for(let i=1;i<=count;i++){ OV.set(start+(end-start)*(i/count),sub); await raf(); }
+}
+function progressRange(start, end, fallbackLabel){
+  return (pct,label)=>{
+    const frac=Math.max(0,Math.min(1,Number(pct)||0));
+    OV.set(start+frac*(end-start),label||fallbackLabel);
+  };
+}
 /* run work in rAF-batched chunks so long lists never block the main thread */
 function runChunked(total, chunkSize, onChunk, onProgress){
   return new Promise(resolve=>{
@@ -2355,7 +2390,30 @@ function renderCustomViewList(){
   }
   $('#custom-view-list').innerHTML=rows.join('');
 }
+function snapshotCustomViewScrolls(){
+  const main=$('#custom-view-modal .custom-view-main');
+  const side=$('#custom-view-modal .custom-view-side');
+  const options={};
+  $$('[data-cv-options]').forEach(el=>{ options[el.dataset.cvOptions]=el.scrollTop; });
+  return { main:main?main.scrollTop:0, side:side?side.scrollTop:0, options };
+}
+function restoreCustomViewScrolls(snap){
+  if(!snap) return;
+  const apply=()=>{
+    const main=$('#custom-view-modal .custom-view-main');
+    const side=$('#custom-view-modal .custom-view-side');
+    if(main) main.scrollTop=snap.main||0;
+    if(side) side.scrollTop=snap.side||0;
+    $$('[data-cv-options]').forEach(el=>{
+      const top=snap.options&&snap.options[el.dataset.cvOptions];
+      if(top!=null) el.scrollTop=top;
+    });
+  };
+  apply();
+  requestAnimationFrame(apply);
+}
 function renderCustomViewGroups(){
+  const scrolls=snapshotCustomViewScrolls();
   const draft=state.customViewDraft||newCustomViewDraft();
   const filters=normalizeSavedViewFilters(draft);
   $('#custom-view-groups').innerHTML=CUSTOM_VIEW_DIMENSIONS.map(dim=>{
@@ -2375,7 +2433,7 @@ function renderCustomViewGroups(){
             <button class="btn ghost" data-cv-clear="${esc(dim)}">Clear</button>
           </span>
         </div>
-        <div class="cv-options">
+        <div class="cv-options" data-cv-options="${esc(dim)}">
           ${values.length ? values.map(item=>`
             <label class="cv-option" title="${esc(item.value)}">
               <input type="checkbox" data-cv-check="${esc(dim)}" value="${esc(item.value)}" ${selected.has(item.value)?'checked':''} />
@@ -2386,6 +2444,7 @@ function renderCustomViewGroups(){
       </div>
     </div>`;
   }).join('');
+  restoreCustomViewScrolls(scrolls);
 }
 function renderCustomViewModal(){
   const draft=state.customViewDraft||newCustomViewDraft();
@@ -2522,27 +2581,28 @@ async function handleFile(file){
   if(!window.XLSX){ toast('Spreadsheet library not loaded — check your connection.'); return; }
   OV.show('Loading workbook');
   try{
-    // 1) read bytes — real byte-level progress (0→18%)
-    OV.set(2,'Reading '+file.name+'…');
-    const buf=await readFileWithProgress(file, p=>OV.set(2+p*16,'Reading '+file.name+'…'));
-    // 2) parse + AOA conversion off-thread when possible (18→64%)
-    const {sheetNames,aoaBySheet}=await parseWorkbook(buf,(pct,label)=>OV.set(18+pct*46,label));
+    // 1) read bytes — real byte-level progress (3→20%)
+    await progressTo(3,'Preparing '+file.name+'…',3);
+    const buf=await readFileWithProgress(file, progressRange(3,20,'Reading '+file.name+'…'));
+    await progressTo(20,'Read '+file.name,3);
+    // 2) parse + AOA conversion off-thread when possible (20→70%)
+    const {sheetNames,aoaBySheet}=await parseWorkbook(buf,progressRange(20,70,'Parsing workbook…'));
     state.fileName=file.name; state.sheetNames=sheetNames; state.aoaBySheet=aoaBySheet;
-    // 3) role match + model (64→86%)
-    OV.set(66,'Matching tabs…'); await yieldUI();
+    // 3) role match + model (70→96%)
+    await progressTo(72,'Matching tabs…',4);
     state.roleSheet.esr=matchSheet(state.sheetNames,['Equipment Status Report','equipment status']);
     state.roleSheet.dd =matchSheet(state.sheetNames,['Drop Downs- VF','drop downs vf','dropdowns vf','drop downs']);
     state.roleSheet.iss=matchSheet(state.sheetNames,['Issue Grid Report','issue grid']);
     state.roleSheet.fx =matchSheet(state.sheetNames,['Full Export','full export','fullexport']);
     loadRoleSheets();
     state.catInit=false; state.catAssign={}; state.colOverride={};
-    OV.set(84,'Building analysis…'); await yieldUI();
+    await progressTo(84,'Building analysis…',6);
     // 4) recompute + first render (virtualized — instant regardless of size)
     await recompute(true);
-    OV.set(96,'Rendering…'); await raf();
+    await progressTo(96,'Rendering…',5);
     $('#filepill').style.display='flex'; $('#filepillname').textContent=file.name;
     $$('#tabs .tab').forEach(t=>t.disabled=false);
-    OV.set(100,'Done'); await raf();
+    await progressTo(100,'Done',2);
     goto('hierarchy');
     toast('Loaded '+state.model.totals.equipment+' equipment across '+state.model.totals.systems+' systems');
   }catch(err){ console.error(err); toast('Could not read this workbook. Is it a valid .xlsx?'); }
@@ -2871,7 +2931,12 @@ function updateStepPills(containerSel, matchSel, sel, none){
     else on = sel.has(c);
     p.classList.toggle('active',on);
   });
-  const mm=$(matchSel); if(mm){ sel.size>=2 ? mm.removeAttribute('hidden') : mm.setAttribute('hidden',''); }
+  const mm=$(matchSel);
+  if(mm){
+    const visible=sel.size>=2 && !none;
+    mm.classList.toggle('is-visible',visible);
+    mm.setAttribute('aria-hidden',visible?'false':'true');
+  }
 }
 function updateRiskMetricPills(){
   const total=riskMetricIsEquipment();
@@ -3051,9 +3116,14 @@ function categoryAxisTicks(desktopChars=28,mobileChars=18){
 function categoryAxisFit(desktopMin=130,desktopMax=210,mobileMin=92,mobileMax=132){
   return function(scale){
     const mobile=window.innerWidth<700;
-    const min=mobile?mobileMin:desktopMin, max=mobile?mobileMax:desktopMax;
-    scale.width=Math.min(max,Math.max(scale.width,min));
+    scale.width=mobile?mobileMax:desktopMax;
   };
+}
+function setLabelText(selector, text){
+  const el=$(selector);
+  if(!el) return;
+  el.textContent=text;
+  el.title=text;
 }
 function renderChart(){
   const dim=state.dim;
@@ -3064,7 +3134,7 @@ function renderChart(){
   const summary=stepSelectionSummary(catSelection(),'No filter');
   const root=rootCauseList().length?` · ${rootCauseSummary()}`:'';
   const suffix=(summary==='No filter'?'':` · ${summary}`)+root;
-  $('#chart-title').textContent=`Issues by ${dim}${suffix}`;
+  setLabelText('#chart-title',`Issues by ${dim}${suffix}`);
   // size the plot so every bar is drawn; the viewport scrolls when it overflows
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
   $('#chartholder').style.height=holderH+'px';
@@ -3118,7 +3188,7 @@ function renderStepChart(){
   const rows=currentStepRows();
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   renderStepLegend(categories);
-  $('#step-chart-title').textContent=`Issues by Cx Step${rootCauseList().length?' · '+rootCauseSummary():''}`;
+  setLabelText('#step-chart-title',`Issues by Cx Step${rootCauseList().length?' · '+rootCauseSummary():''}`);
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
   $('#stepchartholder').style.height=holderH+'px';
   const searchHint=searchQuery(state.stepChartSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} Cx steps.`:'';
@@ -3425,7 +3495,7 @@ function renderRisk(){
   const allAreas=riskAreaRows(state.model.equipment,state.riskDim,riskChartOptions());
   const areas=currentRiskRows();
   const stepSummary=stepSelectionSummary(riskSelection(),'No filter');
-  $('#risk-title').textContent=totalMode ? `Total Equipment by ${dim}` : 'Highest Risk Areas';
+  setLabelText('#risk-title',totalMode ? `Total Equipment by ${dim}` : 'Highest Risk Areas');
 
   const modeTag = state.riskMode==='auto' ? `Auto → ${resolved==='blind'?'Blind spots':'Hotspots'}` : (resolved==='blind'?'Blind spots':'Hotspots');
   const dl=esc(dim.toLowerCase());
@@ -3482,7 +3552,7 @@ function renderRisk(){
           ? [` Risk index ${a.risk}/100`,` ${a.n.toLocaleString()} equip · avg coverage ${pctf(a.covFrac)}`,` ${a.issues.toLocaleString()} issues found so far (${a.ipe.toFixed(2)}/equip)`,` Coverage mix: ${coverageMixText(a)}`]
           : [` Risk index ${a.risk}/100`,` ${a.issues.toLocaleString()} issues · ${a.n.toLocaleString()} equip (${a.ipe.toFixed(2)}/equip)`,` avg coverage ${pctf(a.covFrac)}`,` Coverage mix: ${coverageMixText(a)}`]; }}}},
       scales:{ x:xScale,
-        y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}} } }
+        y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} } }
   });
 }
 function currentFatRiskRows(){
@@ -3495,7 +3565,7 @@ function renderFatRisk(){
   const rows=currentFatRiskRows();
   const stepSummary=stepSelectionSummary(fatSelection(),'No filter');
   const rootSummary=rootCauseList().length?` · ${rootCauseSummary()}`:'';
-  $('#fat-risk-title').textContent=`FAT Risk by ${dim}${stepSummary==='No filter'?'':' · '+stepSummary}${rootSummary}`;
+  setLabelText('#fat-risk-title',`FAT Risk by ${dim}${stepSummary==='No filter'?'':' · '+stepSummary}${rootSummary}`);
   $('#fat-riskbanner').innerHTML = `<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
     <div>Ranking ${esc(dim.toLowerCase())}s by FAT issue exposure. FAT issues on equipment with <b>no QAQC/DV/EHS coverage</b> rank highest, then remaining FAT issue volume and coverage depth. <span class="rb-mode">FAT exposure</span></div>`;
   const holderH=Math.min(CHART_MAXH,Math.max(300,rows.length*CHART_PERBAR+44));
