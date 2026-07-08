@@ -122,24 +122,35 @@ test('blind-spot risk scoring produces finite bars from coverage rows', () => {
   assert.equal(alpha.scoreDist[1], 1)
 })
 
-test('risk total equipment mode ignores step filters and includes fully covered equipment', () => {
+test('risk total equipment mode keeps no filter broad and applies selected step filters', () => {
   const ctx = loadPipeline()
+  const noFilter = { none: false, categories: [], mode: 'any' }
   const none = { none: true, categories: [], mode: 'any' }
+  const qaqcOrEhs = { none: false, categories: ['QAQC', 'EHS'], mode: 'any' }
+  const qaqcAndEhs = { none: false, categories: ['QAQC', 'EHS'], mode: 'all' }
   const assessmentRows = ctx.riskAreaRows(equipment, 'System', {
     metric: 'risk',
     resolved: 'blind',
     stepSelection: none,
   })
-  const totalRows = ctx.riskAreaRows(equipment, 'System', {
+  const totalAllRows = ctx.riskAreaRows(equipment, 'System', {
     metric: 'equipment',
-    stepSelection: none,
+    stepSelection: noFilter,
   })
+  const totalNoneRows = ctx.riskAreaRows(equipment, 'System', { metric: 'equipment', stepSelection: none })
+  const totalAnyRows = ctx.riskAreaRows(equipment, 'System', { metric: 'equipment', stepSelection: qaqcOrEhs })
+  const totalAllStepRows = ctx.riskAreaRows(equipment, 'System', { metric: 'equipment', stepSelection: qaqcAndEhs })
 
   assert.equal(assessmentRows.find((row) => row.key === 'Alpha').n, 1)
   assert.equal(assessmentRows.find((row) => row.key === 'Beta'), undefined)
-  assert.equal(totalRows.find((row) => row.key === 'Alpha').n, 2)
-  assert.equal(totalRows.find((row) => row.key === 'Beta').n, 2)
-  assert.equal(totalRows.find((row) => row.key === 'Beta').scoreDist[3], 1)
+  assert.equal(totalAllRows.find((row) => row.key === 'Alpha').n, 2)
+  assert.equal(totalAllRows.find((row) => row.key === 'Beta').n, 2)
+  assert.equal(totalAllRows.find((row) => row.key === 'Beta').scoreDist[3], 1)
+  assert.deepEqual(Array.from(totalNoneRows.map((row) => row.key)), ['Alpha'])
+  assert.equal(totalAnyRows.find((row) => row.key === 'Alpha').n, 1)
+  assert.equal(totalAnyRows.find((row) => row.key === 'Beta').n, 2)
+  assert.deepEqual(Array.from(totalAllStepRows.map((row) => row.key)), ['Beta'])
+  assert.equal(totalAllStepRows[0].scoreDist[3], 1)
 })
 
 test('risk metric selector sits in the title header instead of a subfilter pill row', () => {
@@ -150,6 +161,16 @@ test('risk metric selector sits in the title header instead of a subfilter pill 
   assert.match(riskFace[1], /<div class="risk-title-row">[\s\S]*<h3 id="risk-title">Highest Risk Areas<\/h3>[\s\S]*<select id="riskmetric"/)
   assert.doesNotMatch(riskFace[1], /<span class="subfilter-label">View<\/span>[\s\S]*id="riskmetric"/)
   assert.doesNotMatch(riskFace[1], /<div class="pills" id="riskmetric"/)
+})
+
+test('total equipment keeps the risk step subfilter available', () => {
+  const html = loadHtml()
+  const riskMetricFn = html.match(/function updateRiskMetricPills\(\)\{([\s\S]*?)\n\}/)
+
+  assert.ok(riskMetricFn, 'risk metric update function is present')
+  assert.match(html, /<span class="subfilter-label">Step filter<\/span>[\s\S]*id="riskcatpills"/)
+  assert.match(riskMetricFn[1], /if\(stepRow\) stepRow\.hidden=false;/)
+  assert.doesNotMatch(riskMetricFn[1], /if\(stepRow\) stepRow\.hidden=total;/)
 })
 
 test('issue distribution rows include share labels for chart bars', () => {
