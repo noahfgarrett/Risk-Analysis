@@ -168,7 +168,7 @@ test('total equipment keeps the risk step subfilter available', () => {
   const riskMetricFn = html.match(/function updateRiskMetricPills\(\)\{([\s\S]*?)\n\}/)
 
   assert.ok(riskMetricFn, 'risk metric update function is present')
-  assert.match(html, /<span class="subfilter-label">Step filter<\/span>[\s\S]*id="riskcatpills"/)
+  assert.match(html, /<span class="filter-title">Steps<\/span>[\s\S]*id="riskcatpills"/)
   assert.match(riskMetricFn[1], /if\(stepRow\) stepRow\.hidden=false;/)
   assert.doesNotMatch(riskMetricFn[1], /if\(stepRow\) stepRow\.hidden=total;/)
 })
@@ -186,13 +186,20 @@ test('issue distribution rows include share labels for chart bars', () => {
   assert.equal(rows[1].issueShareLabel, '75%')
 })
 
-test('step issue contribution ranks QAQC DV and EHS by caught issues', () => {
-  const ctx = loadPipeline()
-  const rows = ctx.stepIssueContributions(equipment)
+test('risk hypothesis does not render the removed step contribution panel', () => {
+  const html = loadHtml()
 
-  assert.equal(JSON.stringify(rows.map((row) => row.step)), JSON.stringify(['QAQC', 'DV', 'EHS']))
-  assert.equal(JSON.stringify(rows.map((row) => row.issueCount)), JSON.stringify([7, 6, 4]))
-  assert.equal(JSON.stringify(rows.map((row) => row.ratio)), JSON.stringify([41, 35, 24]))
+  assert.doesNotMatch(html, /Step issue contribution/i)
+  assert.doesNotMatch(html, /Step Contribution/i)
+  assert.doesNotMatch(html, /stepIssueContributions/)
+})
+
+test('risk hypothesis keeps breakdown pills separate from the search row', () => {
+  const html = loadHtml()
+  const matrixShelf = html.match(/<div class="filter-shelf matrix-filter">([\s\S]*?)<div id="matrixbody">/)
+
+  assert.ok(matrixShelf, 'risk hypothesis filter shelf is present')
+  assert.match(matrixShelf[1], /<div class="filter-group grow">[\s\S]*id="matrixdim"[\s\S]*<\/div>\s*<\/div>\s*<label class="filter-search">/)
 })
 
 test('update asset selection prefers the versioned plain HTML asset for simple downloads', () => {

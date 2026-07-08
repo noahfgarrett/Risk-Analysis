@@ -232,6 +232,27 @@ body.chart-fullscreen{overflow:hidden}
 .issue-card.fullscreen .issue-face-back{min-height:auto}
 .issue-flip-btn{font-weight:750;color:var(--accent)}
 .root-filter-row{margin-top:-2px}
+.filter-shelf{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
+.filter-group{display:inline-flex;align-items:center;gap:7px;min-height:34px;min-width:0}
+.filter-group.compact{flex:0 1 auto}
+.filter-group.grow{flex:1 1 260px}
+.filter-title{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
+.filter-shelf .pills{gap:4px}
+.filter-shelf .pill{padding:5px 9px;border-radius:7px;font-size:12px;line-height:1.2}
+.filter-shelf .matchmode{height:28px}
+.filter-shelf .mm-help{display:none}
+.filter-shelf .root-select{min-width:168px}
+.filter-search{margin-left:auto;display:inline-flex;align-items:center;gap:7px;min-height:34px;min-width:min(260px,100%);flex:0 1 260px}
+.filter-search span{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
+.filter-search input{width:100%;min-width:0;height:32px;padding:6px 10px;border-radius:7px;font-size:12.5px;line-height:16px;background:var(--surface)}
+.filter-search input::placeholder{color:var(--ink-3)}
+.search-note{font-size:11.5px;color:var(--ink-3);margin:-5px 2px 8px}
+.search-note b{color:var(--ink-2)}
+.matrix-filter{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
+.matrix-filter .filter-group.grow{width:100%;flex-wrap:nowrap}
+.matrix-filter .pills{flex-wrap:nowrap}
+.matrix-filter .pill{white-space:nowrap}
+.matrix-filter .filter-search{margin-left:0;justify-self:end;width:min(360px,100%);flex:none}
 .issue-legend{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px;min-height:24px}
 .issue-legend .lg{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);font-family:var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:var(--surface-2)}
 .issue-legend .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
@@ -268,6 +289,20 @@ body.chart-fullscreen{overflow:hidden}
 .risk-flip-card.flipped .risk-face-front{pointer-events:none}
 .risk-flip-card.flipped .risk-face-back{pointer-events:auto}
 .risk-flip-card.fullscreen .risk-card-inner,.risk-flip-card.fullscreen .risk-face{min-height:100%}
+body.export-capture .issue-card.flipped .issue-card-inner,
+body.export-capture .risk-flip-card.flipped .risk-card-inner{transform:none!important}
+body.export-capture .issue-card.flipped .issue-face-front,
+body.export-capture .risk-flip-card.flipped .risk-face-front{display:none!important}
+body.export-capture .issue-card.flipped .issue-face-back,
+body.export-capture .risk-flip-card.flipped .risk-face-back{position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
+body.export-capture .issue-card,
+body.export-capture .risk-flip-card{perspective:none!important}
+body.export-capture #overlay,
+body.export-capture #toast,
+body.export-capture #app-tooltip{display:none!important}
+body.export-capture *,
+body.export-freeze *{animation:none!important;transition:none!important}
+body.export-capture .view.active{opacity:1!important;transform:none!important}
 .fat-protect{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fat-stat{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:9px 10px}
 .fat-stat .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
@@ -284,11 +319,11 @@ body.chart-fullscreen{overflow:hidden}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .field{display:flex;flex-direction:column;gap:3px}
 .field label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:650;padding-left:2px}
-input[type=text],select{
+input[type=text],input[type=search],select{
   appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
   border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;min-width:150px;
 }
-input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-color:var(--accent)}
+input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid var(--accent-wash);border-color:var(--accent)}
 .search{min-width:220px}
 .btn{
   appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);
@@ -362,6 +397,9 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .cv-group.closed .cv-group-body{display:none}
 .cv-group-tools{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap}
 .cv-mini-actions{display:flex;gap:6px}
+.cv-search{display:inline-flex;align-items:center;gap:7px;min-width:min(280px,100%);flex:1 1 260px}
+.cv-search span{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
+.cv-search input{width:100%;min-width:0;height:32px;padding:6px 10px;font-size:12.5px;line-height:16px;border-radius:7px;background:var(--surface)}
 .cv-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;max-height:210px;overflow:auto;padding-right:2px}
 .cv-option{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:7px;padding:7px 8px;font-size:12.5px;min-width:0;background:var(--surface-2);cursor:pointer}
 .cv-option:hover{border-color:var(--accent)}
@@ -564,16 +602,6 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .mbreak.open{grid-template-rows:1fr}
 .mbreak-inner{overflow:hidden;min-height:0}
 .mbreak.open .mbreak-inner{padding:4px 6px 14px 28px}
-.stepcatch{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin:0 0 14px}
-.stepcatch-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
-.stepcatch-title{font-size:12px;font-weight:750;color:var(--ink)}
-.stepcatch-note{font-size:11px;color:var(--ink-3)}
-.stepcatch-row{display:grid;grid-template-columns:56px 1fr 92px;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
-.stepcatch-row:first-of-type{border-top:0}
-.stepcatch-step{font-size:12px;font-weight:800}
-.stepcatch-track{height:20px;background:var(--paper);border:1px solid var(--line);border-radius:5px;overflow:hidden}
-.stepcatch-fill{height:100%;border-radius:4px 0 0 4px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-family:var(--mono);font-size:11px;font-weight:800;min-width:30px}
-.stepcatch-meta{font-size:11.5px;color:var(--ink-2);font-family:var(--mono);text-align:right}
 .bcombo{display:grid;grid-template-columns:minmax(130px,1fr) 82px minmax(200px,2fr) 96px;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
 .bcombo:first-child{border-top:0}
 .bchips{display:flex;gap:3px;flex-wrap:wrap}
@@ -585,8 +613,6 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .bbar-fill{height:100%;border-radius:4px 0 0 4px;background:var(--accent);transition:width .4s ease}
 .bmeta{font-size:11.5px;color:var(--ink-2);text-align:right;font-family:var(--mono)}
 @media(max-width:720px){
-  .stepcatch-row{grid-template-columns:48px 1fr}
-  .stepcatch-meta{grid-column:2;text-align:left}
   .bcombo{grid-template-columns:minmax(100px,1fr) 80px}
   .bbar{grid-column:1/-1}
   .bmeta{grid-column:1/-1;text-align:left}
@@ -644,7 +670,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.4</span>
+      Risk Analysis v<span id="version-label">1.1.5</span>
     </button>
   </header>
 
@@ -744,32 +770,41 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
                   </button>
                 </div>
               </div>
-              <div class="pills" id="dimpills" style="margin-bottom:10px">
-                <button class="pill active" data-dim="System">System</button>
-                <button class="pill" data-dim="Discipline">Discipline</button>
-                <button class="pill" data-dim="Building">Building</button>
-                <button class="pill" data-dim="Milestone">Milestone</button>
-                <button class="pill" data-dim="Classification">Classification</button>
-              </div>
-              <div class="subfilter">
-                <span class="subfilter-label">Step filter</span>
-                <div class="pills" id="catpills">
-                  <button class="pill cat active" data-cat="All">No filter</button>
-                  <button class="pill cat none" data-cat="None">None</button>
-                  <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
-                  <button class="pill cat dv" data-cat="DV">DV</button>
-                  <button class="pill cat ehs" data-cat="EHS">EHS</button>
+              <div class="filter-shelf">
+                <div class="filter-group grow">
+                  <span class="filter-title">Breakdown</span>
+                  <div class="pills" id="dimpills">
+                    <button class="pill active" data-dim="System">System</button>
+                    <button class="pill" data-dim="Discipline">Discipline</button>
+                    <button class="pill" data-dim="Building">Building</button>
+                    <button class="pill" data-dim="Milestone">Milestone</button>
+                    <button class="pill" data-dim="Classification">Classification</button>
+                  </div>
                 </div>
-                <span class="matchmode" id="matchmode" hidden>
-                  <span class="mm-label">match</span>
-                  <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
-                  <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
-                  <span class="mm-help" id="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
-                </span>
-              </div>
-              <div class="subfilter root-filter-row">
-                <span class="subfilter-label">Root Cause</span>
-                <div id="rootCauseFilter" class="root-select"></div>
+                <div class="filter-group compact">
+                  <span class="filter-title">Steps</span>
+                  <div class="pills" id="catpills">
+                    <button class="pill cat active" data-cat="All">No filter</button>
+                    <button class="pill cat none" data-cat="None">None</button>
+                    <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+                    <button class="pill cat dv" data-cat="DV">DV</button>
+                    <button class="pill cat ehs" data-cat="EHS">EHS</button>
+                  </div>
+                  <span class="matchmode" id="matchmode" hidden>
+                    <span class="mm-label">match</span>
+                    <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+                    <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+                    <span class="mm-help" id="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+                  </span>
+                </div>
+                <div class="filter-group compact">
+                  <span class="filter-title">Root cause</span>
+                  <div id="rootCauseFilter" class="root-select"></div>
+                </div>
+                <label class="filter-search">
+                  <span>Search</span>
+                  <input type="search" id="chart-search" placeholder="Search bars..." autocomplete="off" />
+                </label>
               </div>
               <div class="plotregion" id="plotregion">
                 <div class="chartwrap" id="chartscroll"><div class="chartholder" id="chartholder"><canvas id="mainchart"></canvas></div></div>
@@ -793,9 +828,15 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
                   </button>
                 </div>
               </div>
-              <div class="subfilter root-filter-row">
-                <span class="subfilter-label">Root Cause</span>
-                <div id="stepRootCauseFilter" class="root-select"></div>
+              <div class="filter-shelf">
+                <div class="filter-group compact">
+                  <span class="filter-title">Root cause</span>
+                  <div id="stepRootCauseFilter" class="root-select"></div>
+                </div>
+                <label class="filter-search">
+                  <span>Search</span>
+                  <input type="search" id="step-chart-search" placeholder="Search steps..." autocomplete="off" />
+                </label>
               </div>
               <div class="issue-legend" id="stepCategoryLegend"></div>
               <div class="plotregion" id="stepplotregion">
@@ -822,16 +863,22 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
               </button>
             </div>
           </div>
-          <div class="subfilter matrix-filter">
-            <span class="subfilter-label">Breakdown</span>
-            <div class="pills" id="matrixdim">
-              <button class="pill active" data-dim="Steps">Steps</button>
-              <button class="pill" data-dim="System">System</button>
-              <button class="pill" data-dim="Discipline">Discipline</button>
-              <button class="pill" data-dim="Building">Building</button>
-              <button class="pill" data-dim="Milestone">Milestone</button>
-              <button class="pill" data-dim="Classification">Classification</button>
+          <div class="filter-shelf matrix-filter">
+            <div class="filter-group grow">
+              <span class="filter-title">Breakdown</span>
+              <div class="pills" id="matrixdim">
+                <button class="pill active" data-dim="Steps">Steps</button>
+                <button class="pill" data-dim="System">System</button>
+                <button class="pill" data-dim="Discipline">Discipline</button>
+                <button class="pill" data-dim="Building">Building</button>
+                <button class="pill" data-dim="Milestone">Milestone</button>
+                <button class="pill" data-dim="Classification">Classification</button>
+              </div>
             </div>
+            <label class="filter-search">
+              <span>Search</span>
+              <input type="search" id="matrix-search" placeholder="Search tiers or breakdown..." autocomplete="off" />
+            </label>
           </div>
           <div id="matrixbody"></div>
         </div>
@@ -864,36 +911,45 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
                 </button>
               </div>
             </div>
-            <div class="pills" id="riskdim" style="margin-bottom:10px">
-              <button class="pill active" data-dim="System">System</button>
-              <button class="pill" data-dim="Discipline">Discipline</button>
-              <button class="pill" data-dim="Building">Building</button>
-              <button class="pill" data-dim="Milestone">Milestone</button>
-              <button class="pill" data-dim="Classification">Classification</button>
-            </div>
-            <div class="subfilter">
-              <span class="subfilter-label">Risk model</span>
-              <div class="pills" id="riskmode">
-                <button class="pill active" data-mode="auto" title="Pick the model automatically from the Risk Hypothesis result above">Auto</button>
-                <button class="pill" data-mode="blind" title="Low step coverage + few issues found = likely undiscovered issues">Blind spots</button>
-                <button class="pill" data-mode="hot" title="Where issues are actually concentrated right now">Hotspots</button>
+            <div class="filter-shelf">
+              <div class="filter-group grow">
+                <span class="filter-title">Breakdown</span>
+                <div class="pills" id="riskdim">
+                  <button class="pill active" data-dim="System">System</button>
+                  <button class="pill" data-dim="Discipline">Discipline</button>
+                  <button class="pill" data-dim="Building">Building</button>
+                  <button class="pill" data-dim="Milestone">Milestone</button>
+                  <button class="pill" data-dim="Classification">Classification</button>
+                </div>
               </div>
-            </div>
-            <div class="subfilter">
-              <span class="subfilter-label">Step filter</span>
-              <div class="pills" id="riskcatpills">
-                <button class="pill cat active" data-cat="All">No filter</button>
-                <button class="pill cat none" data-cat="None">None</button>
-                <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
-                <button class="pill cat dv" data-cat="DV">DV</button>
-                <button class="pill cat ehs" data-cat="EHS">EHS</button>
+              <div class="filter-group compact">
+                <span class="filter-title">Model</span>
+                <div class="pills" id="riskmode">
+                  <button class="pill active" data-mode="auto" title="Pick the model automatically from the Risk Hypothesis result above">Auto</button>
+                  <button class="pill" data-mode="blind" title="Low step coverage + few issues found = likely undiscovered issues">Blind spots</button>
+                  <button class="pill" data-mode="hot" title="Where issues are actually concentrated right now">Hotspots</button>
+                </div>
               </div>
-              <span class="matchmode" id="riskmatchmode" hidden>
-                <span class="mm-label">match</span>
-                <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
-                <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
-                <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
-              </span>
+              <div class="filter-group compact">
+                <span class="filter-title">Steps</span>
+                <div class="pills" id="riskcatpills">
+                  <button class="pill cat active" data-cat="All">No filter</button>
+                  <button class="pill cat none" data-cat="None">None</button>
+                  <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+                  <button class="pill cat dv" data-cat="DV">DV</button>
+                  <button class="pill cat ehs" data-cat="EHS">EHS</button>
+                </div>
+                <span class="matchmode" id="riskmatchmode" hidden>
+                  <span class="mm-label">match</span>
+                  <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+                  <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+                  <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+                </span>
+              </div>
+              <label class="filter-search">
+                <span>Search</span>
+                <input type="search" id="risk-search" placeholder="Search risk areas..." autocomplete="off" />
+              </label>
             </div>
             <div class="riskbanner" id="riskbanner"></div>
             <div class="plotregion" id="riskplot">
@@ -918,32 +974,41 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
                 </button>
               </div>
             </div>
-            <div class="pills" id="fatriskdim" style="margin-bottom:10px">
-              <button class="pill active" data-dim="System">System</button>
-              <button class="pill" data-dim="Classification">Classification</button>
-              <button class="pill" data-dim="Discipline">Discipline</button>
-              <button class="pill" data-dim="Building">Building</button>
-              <button class="pill" data-dim="Milestone">Milestone</button>
-            </div>
-            <div class="subfilter root-filter-row">
-              <span class="subfilter-label">Root Cause</span>
-              <div id="fatRootCauseFilter" class="root-select"></div>
-            </div>
-            <div class="subfilter">
-              <span class="subfilter-label">Step filter</span>
-              <div class="pills" id="fatcatpills">
-                <button class="pill cat active" data-cat="All">No filter</button>
-                <button class="pill cat none" data-cat="None">None</button>
-                <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
-                <button class="pill cat dv" data-cat="DV">DV</button>
-                <button class="pill cat ehs" data-cat="EHS">EHS</button>
+            <div class="filter-shelf">
+              <div class="filter-group grow">
+                <span class="filter-title">Breakdown</span>
+                <div class="pills" id="fatriskdim">
+                  <button class="pill active" data-dim="System">System</button>
+                  <button class="pill" data-dim="Classification">Classification</button>
+                  <button class="pill" data-dim="Discipline">Discipline</button>
+                  <button class="pill" data-dim="Building">Building</button>
+                  <button class="pill" data-dim="Milestone">Milestone</button>
+                </div>
               </div>
-              <span class="matchmode" id="fatmatchmode" hidden>
-                <span class="mm-label">match</span>
-                <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
-                <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
-                <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
-              </span>
+              <div class="filter-group compact">
+                <span class="filter-title">Root cause</span>
+                <div id="fatRootCauseFilter" class="root-select"></div>
+              </div>
+              <div class="filter-group compact">
+                <span class="filter-title">Steps</span>
+                <div class="pills" id="fatcatpills">
+                  <button class="pill cat active" data-cat="All">No filter</button>
+                  <button class="pill cat none" data-cat="None">None</button>
+                  <button class="pill cat qaqc" data-cat="QAQC">QAQC</button>
+                  <button class="pill cat dv" data-cat="DV">DV</button>
+                  <button class="pill cat ehs" data-cat="EHS">EHS</button>
+                </div>
+                <span class="matchmode" id="fatmatchmode" hidden>
+                  <span class="mm-label">match</span>
+                  <button class="mm-btn active" data-mode="any" title="OR — equipment that has any one of the selected steps">Or</button>
+                  <button class="mm-btn" data-mode="all" title="AND — equipment that has every selected step">And</button>
+                  <span class="mm-help"><b>Or</b> = has any selected step · <b>And</b> = has all of them</span>
+                </span>
+              </div>
+              <label class="filter-search">
+                <span>Search</span>
+                <input type="search" id="fat-risk-search" placeholder="Search FAT areas..." autocomplete="off" />
+              </label>
             </div>
             <div class="riskbanner" id="fat-riskbanner"></div>
             <div class="plotregion" id="fatriskplot">
@@ -1468,18 +1533,6 @@ function fatRiskBreakdown(issueRows, equipment, dim, key, breakdownDim, opts){
   const rows=issueRowsForChart(equipment, issueRows, opts||{}).filter(issue=>isFatIssue(issue) && issueDimKey(issue,dim)===key);
   return fatRiskRows(rows, equipment, breakdownDim, {...(opts||{}), stepSelection:null});
 }
-function stepIssueContributions(equipment){
-  const rows=STEP_CATEGORIES.map(step=>{
-    const items=equipment.filter(e=>e.present&&e.present[step]);
-    const issueCount=items.reduce((sum,e)=>sum+(e.issueCount||0),0);
-    const equipmentCount=items.length;
-    return {step, issueCount, equipmentCount, avgIssues:equipmentCount?issueCount/equipmentCount:0, ratio:0};
-  });
-  const total=rows.reduce((sum,row)=>sum+row.issueCount,0);
-  rows.forEach(row=>{ row.ratio=total?Math.round((row.issueCount/total)*100):0; });
-  rows.sort((a,b)=>b.issueCount-a.issueCount || STEP_CATEGORIES.indexOf(a.step)-STEP_CATEGORIES.indexOf(b.step));
-  return rows;
-}
 function toggleExpandedScore(scores, score){
   const set=new Set((scores||[]).map(Number));
   score=Number(score);
@@ -1751,7 +1804,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.4';
+const APP_VERSION='1.1.5';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1768,8 +1821,9 @@ const state = {
   collapsed:new Set(), catInit:false, chart:null,
   excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
+  chartSearch:'', stepChartSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCauses:new Set(), rootPickerOpen:null,
-  customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS),
+  customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
 };
 
@@ -1777,94 +1831,104 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
   {
+    version:'1.1.5',
+    date:'2026-07-08T19:45:00Z',
+    type:'feature',
+    stats:'Dashboard polish',
+    notes:`### Updates
+- Refined dashboard filter layout and search placement
+- Simplified the Risk Hypothesis view
+- Improved filtered chart exports`
+  },
+  {
     version:'1.1.4',
     date:'2026-07-08T17:20:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Chart controls',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Added chart sort controls
+- Refined Risk Analysis drill-down display`
   },
   {
     version:'1.1.3',
     date:'2026-07-08T17:05:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Risk Analysis view',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Added Total Equipment view
+- Added step filters for that view`
   },
   {
     version:'1.1.2',
     date:'2026-07-08T16:45:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Device filter update',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Updated device filtering label
+- Expanded the included classification list`
   },
   {
     version:'1.1.1',
     date:'2026-07-08T16:30:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Saved views',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Added locally saved custom views
+- Added selectable filters for key dashboard dimensions`
   },
   {
     version:'1.1.0',
     date:'2026-07-08T16:15:00Z',
     type:'feature',
-    stats:'Dashboard update',
+    stats:'Risk view update',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Added FAT risk view
+- Added broader root-cause and classification filtering`
   },
   {
     version:'1.0.5',
     date:'2026-07-08T13:45:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Issue view update',
     notes:`### Updates
-- Minor dashboard refinements
-- Small chart and export improvements`
+- Added issues-by-step view
+- Added category stacks and drill-downs`
   },
   {
     version:'1.0.4',
     date:'2026-07-07T18:00:00Z',
     type:'fix',
-    stats:'Small update',
+    stats:'Chart controls',
     notes:`### Updates
-- Minor dashboard refinements
-- Small drill-down improvements`
+- Added chart sort controls
+- Refined Risk Analysis tier labeling`
   },
   {
     version:'1.0.3',
     date:'2026-07-07T13:30:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Risk drill-downs',
     notes:`### Updates
-- Minor chart refinements
-- Small drill-down improvements`
+- Added deeper Risk Analysis drill-downs
+- Added equipment lists beneath selected groups`
   },
   {
     version:'1.0.2',
     date:'2026-07-07T13:00:00Z',
     type:'feature',
-    stats:'Small update',
+    stats:'Export update',
     notes:`### Updates
-- Minor chart workflow refinements
-- Small export improvements`
+- Added fullscreen chart views
+- Added filtered chart exports and room filtering`
   },
   {
     version:'1.0.1',
     date:'2026-07-07T12:30:00Z',
     type:'fix',
-    stats:'Small update',
+    stats:'Chart polish',
     notes:`### Updates
-- Minor dashboard refinements
-- Small update flow improvements`
+- Added issue ratio labels
+- Refined update download flow`
   },
   {
     version:'1.0.0',
@@ -2230,6 +2294,17 @@ function customViewDimensionValues(dim){
   (draftFilters[dim]||[]).forEach(v=>{ if(!counts.has(v)) counts.set(v,0); });
   return [...counts.entries()].map(([value,count])=>({value,count})).sort((a,b)=>String(a.value).localeCompare(String(b.value)));
 }
+function customViewSearchQuery(dim){ return searchQuery((state.customViewSearch&&state.customViewSearch[dim])||''); }
+function customViewVisibleDimensionValues(dim){
+  const values=customViewDimensionValues(dim), query=customViewSearchQuery(dim);
+  return query ? values.filter(item=>lc(item.value).includes(query)) : values;
+}
+function focusCustomViewSearch(dim){
+  requestAnimationFrame(()=>{
+    const input=$$('[data-cv-search]').find(el=>el.dataset.cvSearch===dim);
+    if(input){ input.focus(); const len=input.value.length; input.setSelectionRange(len,len); }
+  });
+}
 function openCustomViewModal(){
   if(!state.customViewDraft) state.customViewDraft=activeSavedView() ? cloneCustomView(activeSavedView()) : newCustomViewDraft();
   renderCustomViewModal();
@@ -2263,18 +2338,19 @@ function renderCustomViewGroups(){
   const draft=state.customViewDraft||newCustomViewDraft();
   const filters=normalizeSavedViewFilters(draft);
   $('#custom-view-groups').innerHTML=CUSTOM_VIEW_DIMENSIONS.map(dim=>{
-    const values=customViewDimensionValues(dim), selected=new Set(filters[dim]||[]);
+    const allValues=customViewDimensionValues(dim), values=customViewVisibleDimensionValues(dim), selected=new Set(filters[dim]||[]);
     const open=state.customViewOpen.has(dim);
+    const q=(state.customViewSearch&&state.customViewSearch[dim])||'';
     return `<div class="cv-group ${open?'':'closed'}" data-cv-group="${esc(dim)}">
       <button class="cv-group-head" data-cv-toggle="${esc(dim)}" aria-expanded="${open?'true':'false'}">
         <span class="cv-caret">▾</span><span class="cv-group-title">${esc(dim)}</span>
-        <span class="cv-group-count">${selected.size.toLocaleString()} selected · ${values.length.toLocaleString()} available</span>
+        <span class="cv-group-count">${selected.size.toLocaleString()} selected · ${values.length.toLocaleString()} shown · ${allValues.length.toLocaleString()} available</span>
       </button>
       <div class="cv-group-body">
         <div class="cv-group-tools">
-          <span class="subfilter-label">${esc(dim)} values</span>
+          <label class="cv-search"><span>Search</span><input type="search" data-cv-search="${esc(dim)}" value="${esc(q)}" placeholder="Search ${esc(dim.toLowerCase())} values..." autocomplete="off" /></label>
           <span class="cv-mini-actions">
-            <button class="btn ghost" data-cv-all="${esc(dim)}">Select all</button>
+            <button class="btn ghost" data-cv-all="${esc(dim)}">${q?'Select shown':'Select all'}</button>
             <button class="btn ghost" data-cv-clear="${esc(dim)}">Clear</button>
           </span>
         </div>
@@ -2375,12 +2451,12 @@ $('#custom-view-groups').addEventListener('click',e=>{
     renderCustomViewGroups();
     return;
   }
-  const selectAll=e.target.closest('[data-cv-all]');
-  if(selectAll){
-    const dim=selectAll.dataset.cvAll, filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
-    filters[dim]=customViewDimensionValues(dim).map(v=>v.value);
-    setDraftFilters(filters); renderCustomViewGroups(); return;
-  }
+	  const selectAll=e.target.closest('[data-cv-all]');
+	  if(selectAll){
+	    const dim=selectAll.dataset.cvAll, filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
+	    filters[dim]=customViewVisibleDimensionValues(dim).map(v=>v.value);
+	    setDraftFilters(filters); renderCustomViewGroups(); return;
+	  }
   const clear=e.target.closest('[data-cv-clear]');
   if(clear){
     const dim=clear.dataset.cvClear, filters=normalizeSavedViewFilters(state.customViewDraft||newCustomViewDraft());
@@ -2392,6 +2468,13 @@ $('#custom-view-groups').addEventListener('change',e=>{
   if(!input) return;
   toggleDraftValue(input.dataset.cvCheck,input.value,input.checked);
   renderCustomViewGroups();
+});
+$('#custom-view-groups').addEventListener('input',e=>{
+  const input=e.target.closest('input[data-cv-search]');
+  if(!input) return;
+  state.customViewSearch={...(state.customViewSearch||{}),[input.dataset.cvSearch]:input.value};
+  renderCustomViewGroups();
+  focusCustomViewSearch(input.dataset.cvSearch);
 });
 
 /* ---- file input / drag drop ---- */
@@ -2548,7 +2631,7 @@ document.addEventListener('click',ev=>{
     syncRootCauseFilters();
   }
 });
-function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
+function debounce(fn,ms){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args),ms); }; }
 const rerender=()=>{ renderHierarchy(true); }; // filter change resets scroll to top
 // text search is debounced (fires per keystroke); dropdowns apply immediately
 $('#h-search').addEventListener('input',debounce(rerender,130));
@@ -2693,6 +2776,7 @@ function renderDashboard(){
   const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
   updateCustomViewButton();
   syncRootCauseFilters();
+  syncChartSearchInputs();
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
@@ -2715,6 +2799,37 @@ function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alex
 function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_remove_devices':''}${activeCustomViewFileSuffix()}`; }
 function baseChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions()); }
 function matrixEquipment(){ return baseChartEquipment(); }
+function searchQuery(value){ return lc(value).replace(/\s+/g,' ').trim(); }
+function objectKeysText(obj){ return Object.keys(obj||{}).join(' '); }
+function arrayValue(value){ return Array.isArray(value) ? value : []; }
+function chartRowSearchText(row){
+  const parts=[row&&row.key,row&&row.label,row&&row.score,row&&row.risk,row&&row.issueCount,row&&row.equipmentCount,row&&row.n];
+  parts.push(objectKeysText(row&&row.categoryCounts),objectKeysText(row&&row.rootCauseCounts),objectKeysText(row&&row.cxStepCounts));
+  arrayValue(row&&row.segments).forEach(s=>parts.push(s.category,s.count));
+  arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause));
+  arrayValue(row&&row.equipment).slice(0,80).forEach(e=>parts.push(e.name,e.systemName,e.discipline,e.building,e.milestone,e.classification,(e.categories||[]).join(' '),objectKeysText(e.categoryCounts),objectKeysText(e.rootCauseCounts)));
+  return lc(parts.filter(v=>v!=null&&v!=='').join(' '));
+}
+function filterRowsBySearch(rows, q){
+  const query=searchQuery(q);
+  if(!query) return rows||[];
+  return (rows||[]).filter(row=>chartRowSearchText(row).includes(query));
+}
+function searchStatusHTML(q, shown, total, noun){
+  const query=searchQuery(q);
+  if(!query) return '';
+  return `<div class="search-note">Showing <b>${shown.toLocaleString()}</b> of ${total.toLocaleString()} ${esc(noun)} matching “${esc(q)}”.</div>`;
+}
+function syncChartSearchInputs(){
+  const pairs=[
+    ['#chart-search','chartSearch'],
+    ['#step-chart-search','stepChartSearch'],
+    ['#matrix-search','matrixSearch'],
+    ['#risk-search','riskSearch'],
+    ['#fat-risk-search','fatRiskSearch'],
+  ];
+  pairs.forEach(([sel,key])=>{ const el=$(sel); if(el&&el.value!==state[key]) el.value=state[key]; });
+}
 
 $$('#dimpills .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#dimpills .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
@@ -2740,8 +2855,8 @@ function updateStepPills(containerSel, matchSel, sel, none){
 function updateRiskMetricPills(){
   const total=riskMetricIsEquipment();
   const metric=$('#riskmetric'); if(metric) metric.value=state.riskMetric;
-  const modelRow=$('#riskmode')&&$('#riskmode').closest('.subfilter');
-  const stepRow=$('#riskcatpills')&&$('#riskcatpills').closest('.subfilter');
+  const modelRow=$('#riskmode')&&$('#riskmode').closest('.filter-group,.subfilter');
+  const stepRow=$('#riskcatpills')&&$('#riskcatpills').closest('.filter-group,.subfilter');
   if(modelRow) modelRow.hidden=total;
   if(stepRow) stepRow.hidden=false;
 }
@@ -2806,7 +2921,7 @@ function riskChartOptions(){
     ? chartFilterOptions({metric:'equipment',stepSelection:riskSelection(),sortDirection:state.riskSort})
     : chartFilterOptions({metric:'risk',resolved:riskResolved(),stepSelection:riskSelection(),sortDirection:state.riskSort});
 }
-function currentRiskRows(){ return riskAreaRows(state.model.equipment,state.riskDim,riskChartOptions()); }
+function currentRiskRows(){ return filterRowsBySearch(riskAreaRows(state.model.equipment,state.riskDim,riskChartOptions()),state.riskSearch); }
 function riskChartEquipment(){
   return filterEquipmentForChart(
     state.model.equipment,
@@ -2816,9 +2931,11 @@ function riskChartEquipment(){
 function fatRiskOptions(){ return chartFilterOptions({stepSelection:fatSelection(),rootCauses:rootCauseList(),sortDirection:state.fatRiskSort}); }
 function currentIssueRows(){
   const opts=issueChartOptions();
-  return rootCauseList().length
+  const rows=rootCauseList().length
     ? issueDistributionRowsFromIssues(state.model.equipment,state.model.issueRows,state.dim,opts)
     : issueDistributionRows(state.model.equipment,state.dim,opts);
+  const searched=filterRowsBySearch(rows,state.chartSearch);
+  return searchQuery(state.chartSearch) ? issueShareRows(searched) : searched;
 }
 $('#excludeRooms').addEventListener('change',e=>{
   state.excludeRooms=e.target.checked;
@@ -2835,6 +2952,11 @@ $('#sort-step-chart').addEventListener('change',e=>{ state.chartSort=e.target.va
 $('#sort-matrix').addEventListener('change',e=>{ state.matrixSort=e.target.value; renderMatrix(); });
 $('#sort-risk').addEventListener('change',e=>{ state.riskSort=e.target.value; exitRiskFocus(true); renderRisk(); });
 $('#sort-fat-risk').addEventListener('change',e=>{ state.fatRiskSort=e.target.value; exitFatRiskFocus(true); renderFatRisk(); });
+$('#chart-search').addEventListener('input',debounce(e=>{ state.chartSearch=e.target.value; exitFocus(true); renderChart(); },120));
+$('#step-chart-search').addEventListener('input',debounce(e=>{ state.stepChartSearch=e.target.value; exitStepFocus(true); renderStepChart(); },120));
+$('#matrix-search').addEventListener('input',debounce(e=>{ state.matrixSearch=e.target.value; renderMatrix(); },120));
+$('#risk-search').addEventListener('input',debounce(e=>{ state.riskSearch=e.target.value; exitRiskFocus(true); renderRisk(); },120));
+$('#fat-risk-search').addEventListener('input',debounce(e=>{ state.fatRiskSearch=e.target.value; exitFatRiskFocus(true); renderFatRisk(); },120));
 function setIssueCardSide(side){
   state.issueCardSide=side==='step'?'step':'distribution';
   exitFocus(true); exitStepFocus(true);
@@ -2914,6 +3036,9 @@ function categoryAxisFit(desktopMin=130,desktopMax=210,mobileMin=92,mobileMax=13
 }
 function renderChart(){
   const dim=state.dim;
+  const allRows=(rootCauseList().length
+    ? issueDistributionRowsFromIssues(state.model.equipment,state.model.issueRows,state.dim,issueChartOptions())
+    : issueDistributionRows(state.model.equipment,state.dim,issueChartOptions()));
   const rows=currentIssueRows(); // ALL groups — no cap; the plot scrolls to fit them
   const summary=stepSelectionSummary(catSelection(),'No filter');
   const root=rootCauseList().length?` · ${rootCauseSummary()}`:'';
@@ -2922,9 +3047,9 @@ function renderChart(){
   // size the plot so every bar is drawn; the viewport scrolls when it overflows
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
   $('#chartholder').style.height=holderH+'px';
-  $('#charthint').textContent = holderH>CHART_VP
-    ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s — scroll to see them. Chart PNG and Excel export include every one.`
-    : '';
+  const searchHint=searchQuery(state.chartSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} ${dim.toLowerCase()}s.`:'';
+  const scrollHint=holderH>CHART_VP ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s — scroll to see them. Chart PNG and Excel export include every one.` : '';
+  $('#charthint').textContent = [searchHint,scrollHint].filter(Boolean).join(' ');
   const labels=rows.map(r=>r.key), data=rows.map(r=>r.issueCount);
   const max=Math.max(1,...data);
   const colors=data.map(v=>riskColor(v/max));
@@ -2960,7 +3085,7 @@ function issueCategoryColor(category){
   return hashColor(category);
 }
 function stepChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
-function currentStepRows(){ return stepCaughtRows(state.model.issueRows,state.model.equipment,stepChartOptions()); }
+function currentStepRows(){ return filterRowsBySearch(stepCaughtRows(state.model.issueRows,state.model.equipment,stepChartOptions()),state.stepChartSearch); }
 function renderStepLegend(categories){
   $('#stepCategoryLegend').innerHTML = categories.length
     ? categories.map(c=>`<span class="lg"><span class="sw" style="background:${issueCategoryColor(c)}"></span>${esc(c)}</span>`).join('')
@@ -2968,15 +3093,16 @@ function renderStepLegend(categories){
 }
 function renderStepChart(){
   if(!state.model) return;
+  const allRows=stepCaughtRows(state.model.issueRows,state.model.equipment,stepChartOptions());
   const rows=currentStepRows();
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   renderStepLegend(categories);
   $('#step-chart-title').textContent=`Issues by Cx Step${rootCauseList().length?' · '+rootCauseSummary():''}`;
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
   $('#stepchartholder').style.height=holderH+'px';
-  $('#stepcharthint').textContent = holderH>CHART_VP
-    ? `All ${rows.length.toLocaleString()} Cx steps — scroll to see them. Chart PNG and Excel export include every one.`
-    : '';
+  const searchHint=searchQuery(state.stepChartSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} Cx steps.`:'';
+  const scrollHint=holderH>CHART_VP ? `All ${rows.length.toLocaleString()} Cx steps — scroll to see them. Chart PNG and Excel export include every one.` : '';
+  $('#stepcharthint').textContent = [searchHint,scrollHint].filter(Boolean).join(' ');
   if(state.stepChart) state.stepChart.destroy();
   const ctx=$('#stepchart').getContext('2d');
   state.stepChart=new Chart(ctx,{
@@ -3181,23 +3307,6 @@ function riskColor(t){ t=Math.max(0,Math.min(1,t));
   let col; if(t<0.5){ const k=t/0.5; col=a.map((v,i)=>Math.round(v+(b[i]-v)*k)); }
   else{ const k=(t-0.5)/0.5; col=b.map((v,i)=>Math.round(v+(c[i]-v)*k)); }
   return `rgb(${col[0]},${col[1]},${col[2]})`; }
-function stepColor(step){ return step==='QAQC'?'var(--qaqc)':step==='DV'?'var(--dv)':'var(--ehs)'; }
-function stepContributionHTML(equipment){
-  const rows=stepIssueContributions(equipment);
-  const max=Math.max(1,...rows.map(r=>r.issueCount));
-  return `<div class="stepcatch" data-tip="Issues caught by step category. Equipment with multiple step types contributes to each step it has.">
-    <div class="stepcatch-head">
-      <div class="stepcatch-title hastip">Step issue contribution</div>
-      <div class="stepcatch-note">share of QAQC / DV / EHS issue touches</div>
-    </div>
-    ${rows.map(r=>`<div class="stepcatch-row">
-      <div class="stepcatch-step" style="color:${stepColor(r.step)}">${r.step}</div>
-      <div class="stepcatch-track"><div class="stepcatch-fill" style="width:${Math.max(r.issueCount?8:0,Math.round(r.issueCount/max*100))}%;background:${stepColor(r.step)}">${r.ratio}%</div></div>
-      <div class="stepcatch-meta">${r.issueCount.toLocaleString()} iss · ${r.equipmentCount.toLocaleString()} eq</div>
-    </div>`).join('')}
-  </div>`;
-}
-
 /* ---- risk matrix (signature) ----
    Reframed: QAQC/DV/EHS steps EXIST to surface issues, so catching more is GOOD.
    Color is inverted vs the risk chart — longer/greener bar = more issues caught. */
@@ -3206,6 +3315,7 @@ function renderMatrix(){
   const m=sortRowsByMetric(scoreMatrix(equipment),'avgIssues',state.matrixSort);
   const maxAvg=Math.max(0.001,...m.map(x=>x.avgIssues));
   const goodColor=(avg)=>riskColor(1-(avg/maxAvg)); // high avg → green, low → red
+  const query=searchQuery(state.matrixSearch);
   // verdict: does more step coverage surface MORE issues (steps doing their job)?
   const V=stepsVerdict(equipment);
   let verdict={cls:'',text:'Not enough coverage to judge yet.'};
@@ -3219,12 +3329,17 @@ function renderMatrix(){
     : '<svg class="vic" viewBox="0 0 24 24" fill="none" stroke="#8b97a4" stroke-width="2"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>';
   const bdim=state.matrixDim||'Steps';
   let html=`<div class="verdict ${verdict.cls}">${vic}<div><b>${verdict.cls==='good'?'Steps are catching issues':verdict.cls==='bad'?'Coverage is finding fewer issues':'Signal inconclusive'}</b><span>${verdict.text}</span></div></div>`;
-  html+=stepContributionHTML(equipment);
+  let shownTiers=0;
   for(const x of m){
+    const combosAll=sortRowsByMetric(tierBreakdown(equipment,x.score,bdim),'avgIssues',state.matrixSort);
+    const tierMatches=!query || chartRowSearchText(x).includes(query);
+    const combos=query && !tierMatches ? filterRowsBySearch(combosAll,query) : combosAll;
+    if(query && !tierMatches && !combos.length) continue;
+    shownTiers++;
     const w=Math.round((x.avgIssues/maxAvg)*100);
     const col=goodColor(x.avgIssues);
     const hasBreak = x.equipmentCount>0;
-    const open=state.matrixExpanded.has(x.score);
+    const open=state.matrixExpanded.has(x.score) || !!query;
     const caret = hasBreak
       ? `<button class="bcaret" aria-expanded="${open?'true':'false'}" title="Break down ${x.label} by ${esc(bdim)}">▾</button>`
       : `<span class="bcaret-sp"></span>`;
@@ -3240,7 +3355,6 @@ function renderMatrix(){
       </div>
     </div>`;
     if(hasBreak){
-      const combos=sortRowsByMetric(tierBreakdown(equipment,x.score,bdim),'avgIssues',state.matrixSort);
       html+=`<div class="mbreak ${open?'open':''}" id="mbreak-${x.score}"><div class="mbreak-inner">${
         combos.length?combos.map(c=>{
           const avg=c.count?c.issueCount/c.count:0, cw=Math.round((avg/maxAvg)*100), ccol=goodColor(avg);
@@ -3256,6 +3370,8 @@ function renderMatrix(){
       }</div></div>`;
     }
   }
+  if(query && !shownTiers) html+=`<p class="empty">No Risk Hypothesis rows match “${esc(state.matrixSearch)}”.</p>`;
+  if(query && shownTiers) html+=`<div class="search-note">Showing <b>${shownTiers.toLocaleString()}</b> of ${m.length.toLocaleString()} coverage tiers matching “${esc(state.matrixSearch)}”.</div>`;
   html+=`<div class="axis">Bar = avg issues caught per equipment · <b>longer &amp; greener = steps catching more</b></div>`;
   $('#matrixbody').innerHTML=html;
 }
@@ -3285,6 +3401,7 @@ function renderRisk(){
   const dim=state.riskDim, V=stepsVerdict();
   const resolved=riskResolved();
   const totalMode=riskMetricIsEquipment();
+  const allAreas=riskAreaRows(state.model.equipment,state.riskDim,riskChartOptions());
   const areas=currentRiskRows();
   const stepSummary=stepSelectionSummary(riskSelection(),'No filter');
   $('#risk-title').textContent=totalMode ? `Total Equipment by ${dim}` : 'Highest Risk Areas';
@@ -3318,7 +3435,9 @@ function renderRisk(){
 
   const holderH=Math.min(CHART_MAXH,Math.max(300,areas.length*CHART_PERBAR+44));
   $('#riskholder').style.height=holderH+'px';
-  $('#riskhint').textContent = holderH>CHART_VP ? `All ${areas.length.toLocaleString()} ${dl}s ${totalMode?'by total equipment':'ranked by risk'} — scroll to see them.` : '';
+  const searchHint=searchQuery(state.riskSearch)?`Showing ${areas.length.toLocaleString()} of ${allAreas.length.toLocaleString()} ${dl}s.`:'';
+  const scrollHint=holderH>CHART_VP ? `All ${areas.length.toLocaleString()} ${dl}s ${totalMode?'by total equipment':'ranked by risk'} — scroll to see them.` : '';
+  $('#riskhint').textContent = [searchHint,scrollHint].filter(Boolean).join(' ');
 
   const labels=areas.map(a=>a.key), data=areas.map(a=>totalMode?a.n:a.risk);
   const maxVal=Math.max(1,...data);
@@ -3346,11 +3465,12 @@ function renderRisk(){
   });
 }
 function currentFatRiskRows(){
-  return fatRiskRows(state.model.issueRows,state.model.equipment,state.fatRiskDim,fatRiskOptions());
+  return filterRowsBySearch(fatRiskRows(state.model.issueRows,state.model.equipment,state.fatRiskDim,fatRiskOptions()),state.fatRiskSearch);
 }
 function renderFatRisk(){
   if(!state.model) return;
   const dim=state.fatRiskDim;
+  const allRows=fatRiskRows(state.model.issueRows,state.model.equipment,state.fatRiskDim,fatRiskOptions());
   const rows=currentFatRiskRows();
   const stepSummary=stepSelectionSummary(fatSelection(),'No filter');
   const rootSummary=rootCauseList().length?` · ${rootCauseSummary()}`:'';
@@ -3359,7 +3479,9 @@ function renderFatRisk(){
     <div>Ranking ${esc(dim.toLowerCase())}s by FAT issue exposure. FAT issues on equipment with <b>no QAQC/DV/EHS coverage</b> rank highest, then remaining FAT issue volume and coverage depth. <span class="rb-mode">FAT exposure</span></div>`;
   const holderH=Math.min(CHART_MAXH,Math.max(300,rows.length*CHART_PERBAR+44));
   $('#fatriskholder').style.height=holderH+'px';
-  $('#fatriskhint').textContent = holderH>CHART_VP ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s ranked by FAT risk — scroll to see them.` : '';
+  const searchHint=searchQuery(state.fatRiskSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} ${dim.toLowerCase()}s.`:'';
+  const scrollHint=holderH>CHART_VP ? `All ${rows.length.toLocaleString()} ${dim.toLowerCase()}s ranked by FAT risk — scroll to see them.` : '';
+  $('#fatriskhint').textContent = [searchHint,scrollHint].filter(Boolean).join(' ');
   const labels=rows.map(r=>r.key), data=rows.map(r=>r.risk), colors=rows.map(r=>riskColor(r.risk/100));
   if(state.fatRiskChart) state.fatRiskChart.destroy();
   const ctx=$('#fatriskchart').getContext('2d');
@@ -3747,7 +3869,7 @@ function exportIssueDistributionXlsx(){
   const rows=currentIssueRows();
   const filter=stepSelectionSummary(catSelection(),'No filter');
   const aoa=[
-    ...filterSummaryRows('Issue Distribution',{Dimension:state.dim,'Step filter':filter,'Root cause':rootCauseExportLabel()}),
+    ...filterSummaryRows('Issue Distribution',{Dimension:state.dim,'Step filter':filter,'Root cause':rootCauseExportLabel(),Search:state.chartSearch||'None'}),
     [state.dim,'Issues','Issue share %','Equipment','With issues','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
     ...rows.map(r=>[r.key,r.issueCount,r.issueShare,r.equipmentCount,r.withIssues,...scoreColumns(r)])
   ];
@@ -3757,7 +3879,7 @@ function exportStepCaughtXlsx(){
   const rows=currentStepRows();
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   const aoa=[
-    ...filterSummaryRows('Issues Caught by Step',{'Root cause':rootCauseExportLabel()}),
+    ...filterSummaryRows('Issues Caught by Step',{'Root cause':rootCauseExportLabel(),Search:state.stepChartSearch||'None'}),
     ['Cx Step','Issues','Equipment',...categories.map(c=>`${c} issues`),...categories.map(c=>`${c} %`)],
     ...rows.map(r=>[
       r.key,r.issueCount,r.equipmentCount,
@@ -3771,8 +3893,8 @@ function exportRiskXlsx(){
   const totalMode=riskMetricIsEquipment(), resolved=riskResolved(), rows=currentRiskRows();
   const filter=stepSelectionSummary(riskSelection(),'No filter');
   const details=totalMode
-    ? {Dimension:state.riskDim,View:'Total equipment','Step filter':filter}
-    : {Dimension:state.riskDim,View:'Risk assessment','Risk model':resolved==='blind'?'Blind spots':'Hotspots','Step filter':filter};
+    ? {Dimension:state.riskDim,View:'Total equipment','Step filter':filter,Search:state.riskSearch||'None'}
+    : {Dimension:state.riskDim,View:'Risk assessment','Risk model':resolved==='blind'?'Blind spots':'Hotspots','Step filter':filter,Search:state.riskSearch||'None'};
   const aoa=totalMode
     ? [
       ...filterSummaryRows('Risk Analysis',details),
@@ -3793,7 +3915,7 @@ function exportFatRiskXlsx(){
   const categories=sortIssueCategories([...new Set(rows.flatMap(r=>Object.keys(r.categoryCounts||{})))]);
   const roots=[...new Set(rows.flatMap(r=>Object.keys(r.rootCauseCounts||{})))].sort();
   const aoa=[
-    ...filterSummaryRows('FAT Risk Exposure',{Dimension:state.fatRiskDim,'Step filter':filter,'Root cause':rootCauseExportLabel()}),
+    ...filterSummaryRows('FAT Risk Exposure',{Dimension:state.fatRiskDim,'Step filter':filter,'Root cause':rootCauseExportLabel(),Search:state.fatRiskSearch||'None'}),
     [state.fatRiskDim,'FAT risk','FAT issues','Equipment','No-step equipment','No-step FAT issues','With-step equipment','With-step FAT issues','Avg coverage %',...categories.map(c=>`${c} FAT issues`),...roots.map(r=>`${r} root cause`)],
     ...rows.map(r=>[
       r.key,r.risk,r.fatIssueCount,r.equipmentCount,r.unprotectedEquipmentCount,r.unprotectedIssueCount,r.protectedEquipmentCount,r.protectedIssueCount,Math.round((r.avgCoverage||0)*100),
@@ -3805,26 +3927,28 @@ function exportFatRiskXlsx(){
 }
 function exportMatrixXlsx(){
   const equipment=matrixEquipment(), matrix=sortRowsByMetric(scoreMatrix(equipment),'avgIssues',state.matrixSort), bdim=state.matrixDim||'Steps';
+  const query=searchQuery(state.matrixSearch);
+  const matrixRows=matrix.filter(m=>{
+    if(!query) return true;
+    if(chartRowSearchText(m).includes(query)) return true;
+    return tierBreakdown(equipment,m.score,bdim).some(row=>chartRowSearchText(row).includes(query));
+  });
   const matrixAoa=[
-    ...filterSummaryRows('Risk Hypothesis',{Breakdown:bdim}),
+    ...filterSummaryRows('Risk Hypothesis',{Breakdown:bdim,Search:state.matrixSearch||'None'}),
     ['Coverage','Equipment','Issues','Avg issues / equipment','% with issues'],
-    ...matrix.map(m=>[m.label,m.equipmentCount,m.issueCount,+m.avgIssues.toFixed(2),+m.pctWithIssues.toFixed(1)])
+    ...matrixRows.map(m=>[m.label,m.equipmentCount,m.issueCount,+m.avgIssues.toFixed(2),+m.pctWithIssues.toFixed(1)])
   ];
-  const breakdown=[...filterSummaryRows('Risk Hypothesis Breakdown',{Breakdown:bdim}),['Coverage',bdim,'Share of coverage tier %','Equipment','Issues','Avg issues / equipment']];
-  matrix.forEach(m=>{
-    sortRowsByMetric(tierBreakdown(equipment,m.score,bdim),'avgIssues',state.matrixSort).forEach(row=>{
+  const breakdown=[...filterSummaryRows('Risk Hypothesis Breakdown',{Breakdown:bdim,Search:state.matrixSearch||'None'}),['Coverage',bdim,'Share of coverage tier %','Equipment','Issues','Avg issues / equipment']];
+  matrixRows.forEach(m=>{
+    const tierMatches=!query || chartRowSearchText(m).includes(query);
+    const rows=sortRowsByMetric(tierBreakdown(equipment,m.score,bdim),'avgIssues',state.matrixSort);
+    (query && !tierMatches ? filterRowsBySearch(rows,query) : rows).forEach(row=>{
       breakdown.push([m.label,row.key,row.ratio,row.count,row.issueCount,+row.avgIssues.toFixed(2)]);
     });
   });
-  const contributions=[
-    ...filterSummaryRows('Step Issue Contribution'),
-    ['Step','Issue share %','Issues','Equipment','Avg issues / equipment'],
-    ...stepIssueContributions(equipment).map(r=>[r.step,r.ratio,r.issueCount,r.equipmentCount,+r.avgIssues.toFixed(2)])
-  ];
   writeFilteredWorkbook(`risk_hypothesis${chartFilterFileSuffix()}.xlsx`,[
     {name:'Risk Hypothesis',aoa:matrixAoa,widths:[14,11,10,22,14]},
     {name:'Breakdown',aoa:breakdown,widths:[14,30,22,11,10,22]},
-    {name:'Step Contribution',aoa:contributions,widths:[12,13,10,11,22]},
   ]);
 }
 $('#h-xlsx').addEventListener('click',async()=>{
@@ -3963,10 +4087,15 @@ $('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
 $('#xlsx-fat-risk').addEventListener('click',exportFatRiskXlsx);
 async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}
   OV.show('Rendering image'); OV.indet('Capturing '+name.replace('.png','')+'…'); await raf();
-  try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false});
+  document.body.classList.add('export-freeze','export-capture');
+  resizeChartsSoon();
+  await raf(); await raf();
+  try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false,
+    ignoreElements:node=>['overlay','toast','app-tooltip'].includes(node.id),
+    onclone:doc=>doc.body.classList.add('export-freeze','export-capture')});
     c.toBlob(b=>{download(b,name);toast('PNG saved');}); }
   catch(err){ console.error(err); toast('Could not render PNG'); }
-  finally{ OV.hide(); } }
+  finally{ document.body.classList.remove('export-capture'); resizeChartsSoon(); await raf(); document.body.classList.remove('export-freeze'); OV.hide(); } }
 $('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypothesis${chartFilterFileSuffix()}.png`));
 $('#xlsx-matrix').addEventListener('click',exportMatrixXlsx);
 $('#dl-dash').addEventListener('click',async()=>{
