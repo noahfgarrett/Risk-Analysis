@@ -13,6 +13,10 @@ function loadPipeline() {
   return context
 }
 
+function loadHtml() {
+  return readFileSync(new URL('../index.html', import.meta.url), 'utf8')
+}
+
 const equipment = [
   {
     systemName: 'Alpha',
@@ -116,6 +120,36 @@ test('blind-spot risk scoring produces finite bars from coverage rows', () => {
   assert.equal(alpha.issues, 1)
   assert.equal(alpha.scoreDist[0], 1)
   assert.equal(alpha.scoreDist[1], 1)
+})
+
+test('risk total equipment mode ignores step filters and includes fully covered equipment', () => {
+  const ctx = loadPipeline()
+  const none = { none: true, categories: [], mode: 'any' }
+  const assessmentRows = ctx.riskAreaRows(equipment, 'System', {
+    metric: 'risk',
+    resolved: 'blind',
+    stepSelection: none,
+  })
+  const totalRows = ctx.riskAreaRows(equipment, 'System', {
+    metric: 'equipment',
+    stepSelection: none,
+  })
+
+  assert.equal(assessmentRows.find((row) => row.key === 'Alpha').n, 1)
+  assert.equal(assessmentRows.find((row) => row.key === 'Beta'), undefined)
+  assert.equal(totalRows.find((row) => row.key === 'Alpha').n, 2)
+  assert.equal(totalRows.find((row) => row.key === 'Beta').n, 2)
+  assert.equal(totalRows.find((row) => row.key === 'Beta').scoreDist[3], 1)
+})
+
+test('risk metric selector sits in the title header instead of a subfilter pill row', () => {
+  const html = loadHtml()
+  const riskFace = html.match(/<div class="risk-face risk-face-front">([\s\S]*?)<div class="riskbanner"/)
+
+  assert.ok(riskFace, 'risk analysis face markup is present')
+  assert.match(riskFace[1], /<div class="risk-title-row">[\s\S]*<h3 id="risk-title">Highest Risk Areas<\/h3>[\s\S]*<select id="riskmetric"/)
+  assert.doesNotMatch(riskFace[1], /<span class="subfilter-label">View<\/span>[\s\S]*id="riskmetric"/)
+  assert.doesNotMatch(riskFace[1], /<div class="pills" id="riskmetric"/)
 })
 
 test('issue distribution rows include share labels for chart bars', () => {

@@ -207,6 +207,10 @@ button{font-family:inherit}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:12px;flex-wrap:wrap}
 .section-head h3{margin:0;font-size:15px;letter-spacing:-.01em}
 .section-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.risk-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.riskmetric-control{display:inline-flex;align-items:center;gap:6px;margin-top:1px}
+.riskmetric-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
+.riskmetric-control select{height:28px;min-width:148px;padding:4px 28px 4px 8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface)}
 .sort-select{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:11px;font-weight:700}
 .sort-select select{height:32px;min-width:112px;padding:5px 8px;border-radius:7px;font-size:12px}
 .grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
@@ -532,6 +536,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
 .matrix .axis{font-size:11px;color:var(--ink-3);margin-top:6px;text-align:center}
 /* category sub-filter pills */
 .subfilter{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.subfilter[hidden]{display:none}
 .subfilter-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
 .matrix-filter{margin:-2px 0 10px}
 .select-slim{min-width:150px;padding:6px 10px;font-size:13px;border-radius:7px}
@@ -639,7 +644,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.2</span>
+      Risk Analysis v<span id="version-label">1.1.3</span>
     </button>
   </header>
 
@@ -838,7 +843,16 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
             <div class="section-head">
               <div>
                 <div class="eyebrow">Risk analysis</div>
-                <h3 id="risk-title">Highest Risk Areas</h3>
+                <div class="risk-title-row">
+                  <h3 id="risk-title">Highest Risk Areas</h3>
+                  <label class="riskmetric-control" data-tip="Risk Assessment ranks areas with the selected risk model. Use the None step filter when you want to focus on equipment with no QAQC / DV / EHS steps. Total Equipment shows every equipment item, including equipment with all three QAQC / DV / EHS steps.">
+                    <span>View</span>
+                    <select id="riskmetric">
+                      <option value="risk">Risk assessment</option>
+                      <option value="equipment">Total equipment</option>
+                    </select>
+                  </label>
+                </div>
               </div>
               <div class="section-actions">
                 <label class="sort-select">Sort <select id="sort-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
@@ -1504,6 +1518,32 @@ function riskBreakdownGroups(equipment, dim, resolved){
     equipment:(map.get(row.key)||[]).slice().sort((a,b)=>(b.issueCount||0)-(a.issueCount||0) || String(a.name||'').localeCompare(String(b.name||'')))
   }));
 }
+function equipmentBreakdownGroups(equipment, dim, sortDirection){
+  const rows=areaStatsFrom(equipment, e=>dimensionKey(e,dim));
+  const map=new Map();
+  for(const e of equipment){
+    const key=dimensionKey(e,dim);
+    if(!map.has(key)) map.set(key,[]);
+    map.get(key).push(e);
+  }
+  return sortRowsByMetric(rows.map(row=>({
+    ...row,
+    equipment:(map.get(row.key)||[]).slice().sort((a,b)=>(b.issueCount||0)-(a.issueCount||0) || String(a.name||'').localeCompare(String(b.name||'')))
+  })),'n',sortDirection||'desc');
+}
+function riskAreaRows(equipment, dim, opts){
+  opts=opts||{};
+  const metric=opts.metric==='equipment'?'equipment':'risk';
+  const filterOpts={...opts};
+  if(metric==='equipment') delete filterOpts.stepSelection;
+  const keyFn=typeof dim==='function' ? dim : (e=>dimensionKey(e,dim));
+  const areas=areaStatsFrom(filterEquipmentForChart(equipment,filterOpts), keyFn);
+  if(metric==='equipment'){
+    return sortRowsByMetric(areas.map(row=>({...row,metricValue:row.n})),'n',opts.sortDirection||'desc');
+  }
+  const resolved=opts.resolved||'blind';
+  return sortRowsByMetric(scoreRisk(areas,resolved).map(row=>({...row,metricValue:row.risk})),'risk',opts.sortDirection||'desc');
+}
 function selectUpdateAsset(assets){
   const htmlAssets=(assets||[]).filter(a=>String(a.name||'').toLowerCase().endsWith('.html'));
   const html=htmlAssets.find(a=>/^Risk-Analysis-v\d+\.\d+\.\d+\.html$/i.test(String(a.name||''))) || htmlAssets[0];
@@ -1712,7 +1752,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.2';
+const APP_VERSION='1.1.3';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1720,7 +1760,7 @@ const state = {
   roleSheet:{esr:null,dd:null,iss:null,fx:null}, sheets:{esr:null,dd:null,iss:null,fx:null},
   esr:null, dd:null, iss:null, model:null,
   dim:'System', focus:null, matrixDim:'Steps',
-  riskDim:'System', riskMode:'auto', riskChart:null, riskFocus:null,
+  riskDim:'System', riskMode:'auto', riskMetric:'risk', riskChart:null, riskFocus:null,
   riskCardSide:'standard', fatRiskDim:'System', fatRiskChart:null, fatRiskFocus:null, fatRiskSort:'desc',
   catSel:new Set(), catNone:false, catMode:'any',
   riskCatSel:new Set(), riskCatNone:false, riskCatMode:'any',
@@ -1737,6 +1777,15 @@ const state = {
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.3',
+    date:'2026-07-08T17:05:00Z',
+    type:'feature',
+    stats:'Small update',
+    notes:`### Updates
+- Minor dashboard refinements
+- Small chart and export improvements`
+  },
   {
     version:'1.1.2',
     date:'2026-07-08T16:45:00Z',
@@ -2639,6 +2688,7 @@ function renderDashboard(){
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
+  updateRiskMetricPills();
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
   // counted once (no double-count across multiple step types).
   const caught=state.model.equipment.reduce((a,e)=>a+(e.score>=1?e.issueCount:0),0);
@@ -2678,6 +2728,14 @@ function updateStepPills(containerSel, matchSel, sel, none){
     p.classList.toggle('active',on);
   });
   const mm=$(matchSel); if(mm){ sel.size>=2 ? mm.removeAttribute('hidden') : mm.setAttribute('hidden',''); }
+}
+function updateRiskMetricPills(){
+  const total=riskMetricIsEquipment();
+  const metric=$('#riskmetric'); if(metric) metric.value=state.riskMetric;
+  const modelRow=$('#riskmode')&&$('#riskmode').closest('.subfilter');
+  const stepRow=$('#riskcatpills')&&$('#riskcatpills').closest('.subfilter');
+  if(modelRow) modelRow.hidden=total;
+  if(stepRow) stepRow.hidden=total;
 }
 function toggleStepSelection(which, c){
   const sel=which==='risk'?state.riskCatSel:(which==='fat'?state.fatCatSel:state.catSel);
@@ -2720,6 +2778,7 @@ function catMatch(e){ return matchStepSelection(e,catSelection()); }
 function riskMatch(e){ return matchStepSelection(e,riskSelection()); }
 function catActive(){ return state.catNone || state.catSel.size>0; }
 function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
+function riskMetricIsEquipment(){ return state.riskMetric==='equipment'; }
 function issueChartOptions(){ return chartFilterOptions({stepSelection:catSelection(),rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
 function issueChartEquipment(){
   const opts=issueChartOptions();
@@ -2734,7 +2793,18 @@ function issueChartEquipment(){
     return {...e, issueCount, hasIssues:issueCount>0};
   });
 }
-function riskChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions({stepSelection:riskSelection()})); }
+function riskChartOptions(){
+  return riskMetricIsEquipment()
+    ? chartFilterOptions({metric:'equipment',sortDirection:state.riskSort})
+    : chartFilterOptions({metric:'risk',resolved:riskResolved(),stepSelection:riskSelection(),sortDirection:state.riskSort});
+}
+function currentRiskRows(){ return riskAreaRows(state.model.equipment,state.riskDim,riskChartOptions()); }
+function riskChartEquipment(){
+  return filterEquipmentForChart(
+    state.model.equipment,
+    riskMetricIsEquipment() ? chartFilterOptions() : chartFilterOptions({stepSelection:riskSelection()})
+  );
+}
 function fatRiskOptions(){ return chartFilterOptions({stepSelection:fatSelection(),rootCauses:rootCauseList(),sortDirection:state.fatRiskSort}); }
 function currentIssueRows(){
   const opts=issueChartOptions();
@@ -3206,47 +3276,62 @@ function renderRisk(){
   if(!state.model) return;
   const dim=state.riskDim, V=stepsVerdict();
   const resolved=riskResolved();
-  const areas=sortRowsByMetric(scoreRisk(areaRisk(dim), resolved),'risk',state.riskSort);
+  const totalMode=riskMetricIsEquipment();
+  const areas=currentRiskRows();
   const stepSummary=stepSelectionSummary(riskSelection(),'No filter');
-  $('#risk-title').textContent=`Highest Risk Areas${stepSummary==='No filter'?'':' · '+stepSummary}`;
+  $('#risk-title').textContent=totalMode ? `Total Equipment by ${dim}` : 'Highest Risk Areas';
 
   const modeTag = state.riskMode==='auto' ? `Auto → ${resolved==='blind'?'Blind spots':'Hotspots'}` : (resolved==='blind'?'Blind spots':'Hotspots');
   const dl=esc(dim.toLowerCase());
-  let why;
-  if(resolved==='blind'){
+  let why, tag;
+  if(totalMode){
+    why = `Showing every equipment item by ${dl}, including units with all three QAQC/DV/EHS steps. Risk model and step filters are not applied in this view.`;
+    tag = 'Total equipment';
+  } else if(resolved==='blind'){
     why = V.cls==='good'
       ? `Because more QAQC/DV/EHS coverage is <b>catching more issues</b>, the biggest risk is where coverage is <b>low</b> and few issues have been found — problems likely exist there but haven't surfaced yet. Ranking ${dl}s by that exposure.`
       : `Ranking ${dl}s by where step coverage is <b>low</b> and few issues have been found — the likely blind spots where undiscovered issues may be waiting.`;
+    tag = modeTag;
   } else {
     why = V.cls==='bad'
       ? `More coverage isn't clearly surfacing more issues, so step gaps aren't a reliable early warning here. Risk instead follows where issues are <b>actually concentrated</b> right now.`
       : `Ranking ${dl}s by where issues are <b>actually concentrated</b> right now — the confirmed hotspots to work down.`;
+    tag = modeTag;
   }
-  const ic = resolved==='blind'
+  const ic = totalMode
+    ? '<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#2f83cc" stroke-width="2"><path d="M4 19V5M4 19h16"/><path d="M8 16V9M13 16V6M18 16v-4"/></svg>'
+    : resolved==='blind'
     ? '<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
     : '<svg class="rb-ic" viewBox="0 0 24 24" fill="none" stroke="#c25139" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
-  const filterNote=stepSummary==='No filter' ? '' : ` Filtered to <b>${esc(stepSummary)}</b>.`;
-  $('#riskbanner').innerHTML = `${ic}<div>${why}${filterNote} <span class="rb-mode">${modeTag}</span></div>`;
+  const filterNote=(!totalMode&&stepSummary!=='No filter') ? ' Step filter active.' : '';
+  $('#riskbanner').innerHTML = `${ic}<div>${why}${filterNote} <span class="rb-mode">${tag}</span></div>`;
 
   const holderH=Math.min(CHART_MAXH,Math.max(300,areas.length*CHART_PERBAR+44));
   $('#riskholder').style.height=holderH+'px';
-  $('#riskhint').textContent = holderH>CHART_VP ? `All ${areas.length.toLocaleString()} ${dl}s ranked by risk — scroll to see them.` : '';
+  $('#riskhint').textContent = holderH>CHART_VP ? `All ${areas.length.toLocaleString()} ${dl}s ${totalMode?'by total equipment':'ranked by risk'} — scroll to see them.` : '';
 
-  const labels=areas.map(a=>a.key), data=areas.map(a=>a.risk), colors=areas.map(a=>riskColor(a.risk/100));
+  const labels=areas.map(a=>a.key), data=areas.map(a=>totalMode?a.n:a.risk);
+  const maxVal=Math.max(1,...data);
+  const colors=areas.map(a=>riskColor(totalMode?(a.n/maxVal):(a.risk/100)));
   if(state.riskChart) state.riskChart.destroy();
   const ctx=$('#riskchart').getContext('2d');
   const pctf=v=>Math.round(v*100)+'%';
+  const xScale=totalMode
+    ? {beginAtZero:true,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Equipment count'}}
+    : {beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Risk index (0–100)'}};
   state.riskChart=new Chart(ctx,{
     type:'bar',
     data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:areas.length>400?250:600,easing:'easeOutQuart'},
-      onClick:(evt,els)=>{ if(els.length) enterRiskFocus(dim,areas[els[0].index],areas,resolved); },
+      onClick:(evt,els)=>{ if(els.length) enterRiskFocus(dim,areas[els[0].index],areas,resolved,totalMode?'equipment':'risk'); },
       plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{const a=areas[c.dataIndex];
-        return resolved==='blind'
+        return totalMode
+          ? [` ${a.n.toLocaleString()} equipment`,` ${a.issues.toLocaleString()} issues found (${a.ipe.toFixed(2)}/equip)`,` avg coverage ${pctf(a.covFrac)}`,` Coverage mix: ${coverageMixText(a)}`]
+          : resolved==='blind'
           ? [` Risk index ${a.risk}/100`,` ${a.n.toLocaleString()} equip · avg coverage ${pctf(a.covFrac)}`,` ${a.issues.toLocaleString()} issues found so far (${a.ipe.toFixed(2)}/equip)`,` Coverage mix: ${coverageMixText(a)}`]
           : [` Risk index ${a.risk}/100`,` ${a.issues.toLocaleString()} issues · ${a.n.toLocaleString()} equip (${a.ipe.toFixed(2)}/equip)`,` avg coverage ${pctf(a.covFrac)}`,` Coverage mix: ${coverageMixText(a)}`]; }}}},
-      scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Risk index (0–100)'}},
+      scales:{ x:xScale,
         y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}} } }
   });
 }
@@ -3371,38 +3456,47 @@ $$('#fatriskdim .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#fatriskdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
   state.fatRiskDim=p.dataset.dim; exitFatRiskFocus(true); renderFatRisk();
 }));
+$('#riskmetric').addEventListener('change',e=>{
+  state.riskMetric=e.target.value==='equipment'?'equipment':'risk';
+  updateRiskMetricPills(); exitRiskFocus(true); renderRisk();
+});
 $$('#riskmode .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#riskmode .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
   state.riskMode=p.dataset.mode; exitRiskFocus(true); renderRisk();
 }));
 $('#dl-risk').addEventListener('click',()=>{ if(!state.riskChart)return;
-  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`risk_by_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Risk chart PNG saved'); });
+  const prefix=riskMetricIsEquipment()?'risk_total_equipment_by':'risk_by';
+  const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`${prefix}_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Risk chart PNG saved'); });
 $('#xlsx-risk').addEventListener('click',exportRiskXlsx);
 
 /* ---- risk chart drill-down: click a bar → break its area down by another dimension ---- */
-function enterRiskFocus(dim,row,areas,resolved){
+function enterRiskFocus(dim,row,areas,resolved,metric){
+  metric=metric==='equipment'?'equipment':'risk';
+  const totalMode=metric==='equipment';
   const all=riskChartEquipment().filter(e=>DIM_KEYFN[dim](e)===row.key);
   const bdim = dim==='Classification' ? 'System' : 'Classification'; // default breakdown
-  state.riskFocus={dim,key:row.key,resolved,all,bdim,rank:areas.findIndex(a=>a.key===row.key)+1,n:areas.length,area:row,groups:[]};
+  state.riskFocus={dim,key:row.key,resolved,metric,all,bdim,rank:areas.findIndex(a=>a.key===row.key)+1,n:areas.length,area:row,groups:[]};
   const others=RISK_DIMS.filter(x=>x!==dim);
   const f=$('#riskfocus');
   f.innerHTML=`
     <button class="focus-back" id="riskfocus-back">← All ${esc(dim.toLowerCase())}s</button>
     <div class="focus-head">
       <div class="focus-name">${esc(row.key)}</div>
-      <div class="focus-sub">${esc(dim)} · ranked #${state.riskFocus.rank} of ${state.riskFocus.n} · ${resolved==='blind'?'blind-spot':'hotspot'} risk</div>
+      <div class="focus-sub">${esc(dim)} · ranked #${state.riskFocus.rank} of ${state.riskFocus.n} · ${totalMode?'total equipment':(resolved==='blind'?'blind-spot':'hotspot')+' risk'}</div>
     </div>
     <div class="focus-stats">
-      <div class="fstat" data-tip="This ${esc(dim.toLowerCase())}'s risk index (0–100), relative to the riskiest ${esc(dim.toLowerCase())}. ${resolved==='blind'?'Higher = low step coverage + few issues found = more likely to be hiding undiscovered problems.':'Higher = more issues concentrated here right now.'}"><div class="l hastip">Risk index</div><div class="v">${row.risk}</div></div>
-      <div class="fstat" data-tip="Equipment in this ${esc(dim.toLowerCase())}."><div class="l hastip">Equipment</div><div class="v">${row.n.toLocaleString()}</div></div>
+      <div class="fstat" data-tip="${totalMode?`Equipment in this ${esc(dim.toLowerCase())}.`:`This ${esc(dim.toLowerCase())}'s risk index (0–100), relative to the riskiest ${esc(dim.toLowerCase())}. ${resolved==='blind'?'Higher = low step coverage + few issues found = more likely to be hiding undiscovered problems.':'Higher = more issues concentrated here right now.'}`}"><div class="l hastip">${totalMode?'Equipment':'Risk index'}</div><div class="v">${totalMode?row.n.toLocaleString():row.risk}</div></div>
+      ${totalMode?'':`<div class="fstat" data-tip="Equipment in this ${esc(dim.toLowerCase())}."><div class="l hastip">Equipment</div><div class="v">${row.n.toLocaleString()}</div></div>`}
       <div class="fstat" data-tip="Average QAQC/DV/EHS step coverage across this group's equipment (0–100%)."><div class="l hastip">Avg coverage</div><div class="v">${Math.round(row.covFrac*100)}%</div></div>
       <div class="fstat" data-tip="Issues found so far on this group's equipment."><div class="l hastip">Issues found</div><div class="v">${row.issues.toLocaleString()}</div></div>
       <div class="fstat" data-tip="This group's equipment split by QAQC/DV/EHS step coverage."><div class="l hastip">Coverage mix</div><div class="v" style="font-size:12px;font-weight:700">${coverageMixHTML(row.scoreDist,row.n)}</div></div>
     </div>
     <div class="rf-explain">
-      <b>Risk index (0–100)</b> — ${resolved==='blind'
+      ${totalMode
+        ? '<b>Total equipment</b> — higher means more equipment exists in this area. QAQC/DV/EHS coverage does not exclude equipment in this view.'
+        : `<b>Risk index (0–100)</b> — ${resolved==='blind'
         ? 'higher means more likely to be <b>hiding undiscovered issues</b>: low QAQC/DV/EHS coverage and few issues found so far. Scaled so the riskiest below = 100.'
-        : 'higher means <b>more issues are concentrated</b> here right now. Scaled so the riskiest below = 100.'}
+        : 'higher means <b>more issues are concentrated</b> here right now. Scaled so the riskiest below = 100.'}`}
     </div>
     <div class="rf-controls">
       <span class="subfilter-label">Break down by</span>
@@ -3417,18 +3511,24 @@ function enterRiskFocus(dim,row,areas,resolved){
 }
 function renderRiskBreakdown(){
   const rf=state.riskFocus; if(!rf) return;
-  const areas=sortRowsByMetric(riskBreakdownGroups(rf.all, rf.bdim, rf.resolved),'risk',state.riskSort);
+  const totalMode=rf.metric==='equipment';
+  const areas=totalMode
+    ? equipmentBreakdownGroups(rf.all, rf.bdim, state.riskSort)
+    : sortRowsByMetric(riskBreakdownGroups(rf.all, rf.bdim, rf.resolved),'risk',state.riskSort);
   rf.groups=areas;
   const CAP=200, shown=areas.slice(0,CAP), hidden=areas.length-shown.length;
-  const hint=$('#riskfocus-hint'); if(hint) hint.textContent=`${areas.length.toLocaleString()} ${rf.bdim.toLowerCase()}${areas.length===1?'':'s'}, ${state.riskSort==='asc'?'lowest':'highest'} risk first`;
+  const hint=$('#riskfocus-hint'); if(hint) hint.textContent=`${areas.length.toLocaleString()} ${rf.bdim.toLowerCase()}${areas.length===1?'':'s'}, ${state.riskSort==='asc'?'lowest':'highest'} ${totalMode?'equipment count':'risk'} first`;
+  const maxEquipment=Math.max(1,...areas.map(a=>a.n||0));
   $('#riskfocus-list').innerHTML = areas.length ? shown.map((a,i)=>{
-    const col=riskColor(a.risk/100);
+    const value=totalMode?a.n:a.risk;
+    const width=totalMode?Math.round((a.n/maxEquipment)*100):a.risk;
+    const col=riskColor(totalMode?(a.n/maxEquipment):(a.risk/100));
     return `<div class="rf-group">
       <button class="rf-row" data-rfi="${i}" aria-expanded="false">
         <span class="rf-caret">▾</span>
         <span class="rf-name clip" title="${esc(a.key)}">${esc(a.key)}</span>
-        <span class="rf-bar-wrap"><span class="rf-bar" style="width:${Math.max(a.risk,2)}%;background:${col}"></span></span>
-        <span class="rf-val">${a.risk}</span>
+        <span class="rf-bar-wrap"><span class="rf-bar" style="width:${Math.max(width,2)}%;background:${col}"></span></span>
+        <span class="rf-val">${value.toLocaleString()}</span>
         <span class="rf-meta">
           <span class="rf-meta-line"><b>${a.n.toLocaleString()} eq</b><span>${a.issues.toLocaleString()} iss</span></span>
           ${riskCoverageMixHTML(a)}
@@ -3658,14 +3758,24 @@ function exportStepCaughtXlsx(){
   writeFilteredWorkbook(`issues_caught_by_step${chartFilterFileSuffix()}.xlsx`,[{name:'Issues by Step',aoa,widths:[28,10,11,...categories.map(()=>12),...categories.map(()=>9)]}]);
 }
 function exportRiskXlsx(){
-  const resolved=riskResolved(), rows=sortRowsByMetric(scoreRisk(areaStatsFrom(riskChartEquipment(),DIM_KEYFN[state.riskDim]),resolved),'risk',state.riskSort);
+  const totalMode=riskMetricIsEquipment(), resolved=riskResolved(), rows=currentRiskRows();
   const filter=stepSelectionSummary(riskSelection(),'No filter');
-  const aoa=[
-    ...filterSummaryRows('Risk Analysis',{Dimension:state.riskDim,'Risk model':resolved==='blind'?'Blind spots':'Hotspots','Step filter':filter}),
-    [state.riskDim,'Risk index','Equipment','Issues','Issues / equipment','Avg coverage %','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
-    ...rows.map(r=>[r.key,r.risk,r.n,r.issues,+r.ipe.toFixed(2),Math.round(r.covFrac*100),...scoreColumns(r)])
-  ];
-  writeFilteredWorkbook(`risk_analysis_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.xlsx`,[{name:'Risk Analysis',aoa,widths:[28,10,11,10,18,14,7,7,7,7,8,8,8,8]}]);
+  const details=totalMode
+    ? {Dimension:state.riskDim,View:'Total equipment','Step filter':'Ignored in Total equipment'}
+    : {Dimension:state.riskDim,View:'Risk assessment','Risk model':resolved==='blind'?'Blind spots':'Hotspots','Step filter':filter};
+  const aoa=totalMode
+    ? [
+      ...filterSummaryRows('Risk Analysis',details),
+      [state.riskDim,'Equipment','Issues','Issues / equipment','Avg coverage %','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
+      ...rows.map(r=>[r.key,r.n,r.issues,+r.ipe.toFixed(2),Math.round(r.covFrac*100),...scoreColumns(r)])
+    ]
+    : [
+      ...filterSummaryRows('Risk Analysis',details),
+      [state.riskDim,'Risk index','Equipment','Issues','Issues / equipment','Avg coverage %','0/3','1/3','2/3','3/3','0/3 %','1/3 %','2/3 %','3/3 %'],
+      ...rows.map(r=>[r.key,r.risk,r.n,r.issues,+r.ipe.toFixed(2),Math.round(r.covFrac*100),...scoreColumns(r)])
+    ];
+  const name=totalMode ? `risk_total_equipment_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.xlsx` : `risk_analysis_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.xlsx`;
+  writeFilteredWorkbook(name,[{name:'Risk Analysis',aoa,widths:totalMode?[28,11,10,18,14,7,7,7,7,8,8,8,8]:[28,10,11,10,18,14,7,7,7,7,8,8,8,8]}]);
 }
 function exportFatRiskXlsx(){
   const rows=currentFatRiskRows();
