@@ -171,15 +171,17 @@ test('alex custom view keeps only the approved equipment classifications', () =>
   const rows = [
     { name: 'pump', systemName: 'Alpha', classification: 'PMP', score: 1, present: { QAQC: true } },
     { name: 'panel', systemName: 'Alpha', classification: 'dist-pvc', score: 2, present: { QAQC: true, DV: true } },
+    { name: 'branch panel', systemName: 'Alpha', classification: 'BRP', score: 1, present: { QAQC: true } },
+    { name: 'gas cabinet', systemName: 'Beta', classification: 'GC', score: 1, present: { EHS: true } },
     { name: 'unknown', systemName: 'Beta', classification: 'Valve', score: 0, present: {} },
     { name: 'unclassified', systemName: 'Beta', classification: '(unclassified)', score: 0, present: {} },
   ]
 
   const filtered = ctx.filterEquipmentForChart(rows, { alexCustomView: true })
 
-  assert.deepEqual(filtered.map((row) => row.name), ['pump', 'panel'])
-  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'Classification', { alexCustomView: true }).map((row) => row.key)), JSON.stringify(['dist-pvc', 'PMP']))
-  assert.equal(ctx.filterEquipmentForChart(rows, { alexCustomView: false }).length, 4)
+  assert.deepEqual(filtered.map((row) => row.name), ['pump', 'panel', 'branch panel', 'gas cabinet'])
+  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'Classification', { alexCustomView: true }).map((row) => row.key)), JSON.stringify(['BRP', 'dist-pvc', 'GC', 'PMP']))
+  assert.equal(ctx.filterEquipmentForChart(rows, { alexCustomView: false }).length, 6)
 })
 
 test('saved custom views match selected values within each dimension', () => {

@@ -639,7 +639,7 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.1</span>
+      Risk Analysis v<span id="version-label">1.1.2</span>
     </button>
   </header>
 
@@ -711,9 +711,9 @@ input[type=text]:focus,select:focus{outline:2px solid var(--accent-wash);border-
           <input type="checkbox" id="excludeRooms" />
           Remove rooms <span>RR systems / UPNs</span>
         </label>
-        <label class="toggle-control" data-tip="Shows only these equipment classifications: RIO, SSH, LAT, AFD, DIST-SS, DIST-PVC, TFRM-DRY, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, PCZ, RCTO, SUBMAIN, SYS, VMB.">
+        <label class="toggle-control" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB.">
           <input type="checkbox" id="alexCustomView" />
-          Alex M Custom View <span>approved classifications only</span>
+          Remove Devices <span>classification filter</span>
         </label>
         <button class="btn custom-view-btn" id="customViewBtn" title="Create and manage locally saved custom chart views">
           Custom view <span class="cv-current" id="customViewCurrent">No saved view</span>
@@ -1094,9 +1094,10 @@ function classifyStep(header){
 
 const STEP_CATEGORIES = ['QAQC','DV','EHS'];
 const ALEX_M_CUSTOM_CLASSIFICATIONS = [
-  'RIO','SSH','LAT','AFD','DIST-SS','DIST-PVC','TFRM-DRY','PMP','PUR','SC',
-  'STRATIX ENCLOSURE','STRATIX RING','BAT-SWG','CC','CDM','DIST-PP','EF','PCZ',
-  'RCTO','SUBMAIN','SYS','VMB'
+  'RIO','SSH','BRP','LAT','MAIN','AFD','DIST-SS','PLC','GDP','LCP','DIST-PVC',
+  'TFRM-DRY','ACU','DIST-SS304','SKD','BCD','BDR','DIST-CS','EMO','LSS','PMP',
+  'PUR','SC','STRATIX ENCLOSURE','STRATIX RING','BAT-SWG','CC','CDM','DIST-PP',
+  'EF','GC','PCZ','RCTO','SUBMAIN','SYS','VMB'
 ];
 const ALEX_M_CLASSIFICATION_SET = new Set(ALEX_M_CUSTOM_CLASSIFICATIONS);
 const CUSTOM_VIEW_DIMENSIONS = ['System','Discipline','Milestone','Classification','Building'];
@@ -1711,7 +1712,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.1';
+const APP_VERSION='1.1.2';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1736,6 +1737,15 @@ const state = {
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.2',
+    date:'2026-07-08T16:45:00Z',
+    type:'feature',
+    stats:'Small update',
+    notes:`### Updates
+- Minor dashboard refinements
+- Small chart and export improvements`
+  },
   {
     version:'1.1.1',
     date:'2026-07-08T16:30:00Z',
@@ -2642,9 +2652,9 @@ function renderDashboard(){
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
-function alexCustomViewText(){ return state.alexCustomView ? 'Alex M Custom View enabled' : 'Alex M Custom View off'; }
+function alexCustomViewText(){ return state.alexCustomView ? 'Remove Devices enabled' : 'Remove Devices off'; }
 function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,savedView:activeSavedView(),...(extra||{})}; }
-function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_alex_m':''}${activeCustomViewFileSuffix()}`; }
+function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_remove_devices':''}${activeCustomViewFileSuffix()}`; }
 function baseChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions()); }
 function matrixEquipment(){ return baseChartEquipment(); }
 
@@ -3594,7 +3604,7 @@ function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:
 function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
 function safeFilePart(v){ return String(v||'data').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'data'; }
 function filterSummaryRows(kind, extra){
-  const rows=[['Export',kind],['Room filter',roomFilterText()],['Alex M Custom View',alexCustomViewText()],['Saved custom view',customViewExportLabel()]];
+  const rows=[['Export',kind],['Room filter',roomFilterText()],['Remove Devices',alexCustomViewText()],['Saved custom view',customViewExportLabel()]];
   if(extra) Object.entries(extra).forEach(([k,v])=>rows.push([k,v]));
   rows.push([]);
   return rows;
