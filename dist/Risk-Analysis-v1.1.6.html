@@ -670,7 +670,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.5</span>
+      Risk Analysis v<span id="version-label">1.1.6</span>
     </button>
   </header>
 
@@ -1804,7 +1804,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.5';
+const APP_VERSION='1.1.6';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1831,6 +1831,15 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
   {
+    version:'1.1.6',
+    date:'2026-07-08T20:05:00Z',
+    type:'fix',
+    stats:'Changelog update',
+    notes:`### Updates
+- Refined historical changelog notes
+- Better aligned patch notes with released dashboard changes`
+  },
+  {
     version:'1.1.5',
     date:'2026-07-08T19:45:00Z',
     type:'feature',
@@ -1838,16 +1847,18 @@ const CHANGELOG=[
     notes:`### Updates
 - Refined dashboard filter layout and search placement
 - Simplified the Risk Hypothesis view
-- Improved filtered chart exports`
+- Improved filtered chart exports
+- Polished chart search fields`
   },
   {
     version:'1.1.4',
     date:'2026-07-08T17:20:00Z',
     type:'feature',
-    stats:'Chart controls',
+    stats:'Risk Analysis filters',
     notes:`### Updates
-- Added chart sort controls
-- Refined Risk Analysis drill-down display`
+- Added step filters to Total Equipment view
+- Added AND / OR matching for selected steps
+- Kept Risk Analysis controls closer to the chart title`
   },
   {
     version:'1.1.3',
@@ -1855,8 +1866,9 @@ const CHANGELOG=[
     type:'feature',
     stats:'Risk Analysis view',
     notes:`### Updates
-- Added Total Equipment view
-- Added step filters for that view`
+- Added Risk Assessment / Total Equipment view selector
+- Moved the selector into the chart header
+- Refined tooltip copy around missing-step risk`
   },
   {
     version:'1.1.2',
@@ -1864,8 +1876,9 @@ const CHANGELOG=[
     type:'feature',
     stats:'Device filter update',
     notes:`### Updates
-- Updated device filtering label
-- Expanded the included classification list`
+- Renamed the custom classification toggle
+- Expanded the device classification list
+- Applied the filter consistently across dashboard charts`
   },
   {
     version:'1.1.1',
@@ -1874,16 +1887,18 @@ const CHANGELOG=[
     stats:'Saved views',
     notes:`### Updates
 - Added locally saved custom views
-- Added selectable filters for key dashboard dimensions`
+- Added selectable filters for key dashboard dimensions
+- Added view naming, switching, and deletion`
   },
   {
     version:'1.1.0',
     date:'2026-07-08T16:15:00Z',
     type:'feature',
-    stats:'Risk view update',
+    stats:'FAT risk update',
     notes:`### Updates
 - Added FAT risk view
-- Added broader root-cause and classification filtering`
+- Added broader root-cause and classification filtering
+- Added supporting drill-downs and exports`
   },
   {
     version:'1.0.5',
@@ -1892,7 +1907,8 @@ const CHANGELOG=[
     stats:'Issue view update',
     notes:`### Updates
 - Added issues-by-step view
-- Added category stacks and drill-downs`
+- Added category stacks and drill-downs
+- Added root-cause context for issue details`
   },
   {
     version:'1.0.4',
@@ -1901,7 +1917,8 @@ const CHANGELOG=[
     stats:'Chart controls',
     notes:`### Updates
 - Added chart sort controls
-- Refined Risk Analysis tier labeling`
+- Refined Risk Analysis tier labeling
+- Improved first-level drill-down readability`
   },
   {
     version:'1.0.3',
@@ -1910,7 +1927,8 @@ const CHANGELOG=[
     stats:'Risk drill-downs',
     notes:`### Updates
 - Added deeper Risk Analysis drill-downs
-- Added equipment lists beneath selected groups`
+- Added equipment lists beneath selected groups
+- Matched the drill-down behavior to other charts`
   },
   {
     version:'1.0.2',
@@ -1919,7 +1937,8 @@ const CHANGELOG=[
     stats:'Export update',
     notes:`### Updates
 - Added fullscreen chart views
-- Added filtered chart exports and room filtering`
+- Added filtered chart exports
+- Added room filtering and expanded-state improvements`
   },
   {
     version:'1.0.1',
@@ -1928,6 +1947,7 @@ const CHANGELOG=[
     stats:'Chart polish',
     notes:`### Updates
 - Added issue ratio labels
+- Refined Risk Hypothesis chart spacing
 - Refined update download flow`
   },
   {
@@ -1943,7 +1963,8 @@ const CHANGELOG=[
 ### Updates
 - Added offline local vendor libraries
 - Added one-time GitHub release update check
-- Added Update and Changelog modal`
+- Added Update and Changelog modal
+- Added versioned HTML download support`
   }
 ];
 function isNewer(remote, local){
