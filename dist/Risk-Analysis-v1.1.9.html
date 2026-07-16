@@ -673,7 +673,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.8</span>
+      Risk Analysis v<span id="version-label">1.1.9</span>
     </button>
   </header>
 
@@ -1807,7 +1807,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.8';
+const APP_VERSION='1.1.9';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1833,6 +1833,16 @@ const state = {
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
 const CHANGELOG=[
+  {
+    version:'1.1.9',
+    date:'2026-07-16T17:05:00Z',
+    type:'fix',
+    stats:'Chart refinements',
+    notes:`### Updates
+- Improved chart drill-down interactions
+- Added clearer Risk Analysis labels
+- Refined chart hover feedback`
+  },
   {
     version:'1.1.8',
     date:'2026-07-08T21:25:00Z',
@@ -3125,6 +3135,39 @@ function setLabelText(selector, text){
   el.textContent=text;
   el.title=text;
 }
+const ROW_ACTION_CHARTS=new Set(['mainchart','stepchart','riskchart','fatriskchart']);
+function chartRowBounds(chart,index){
+  const yScale=chart&&chart.scales&&chart.scales.y, area=chart&&chart.chartArea;
+  const labels=chart&&chart.data&&chart.data.labels;
+  if(!yScale||!area||!labels||index<0||index>=labels.length) return null;
+  const centers=labels.map((_,i)=>yScale.getPixelForValue(i));
+  const y=centers[index];
+  if(!Number.isFinite(y)) return null;
+  const top=index===0 ? area.top : (centers[index-1]+y)/2;
+  const bottom=index===labels.length-1 ? area.bottom : (y+centers[index+1])/2;
+  return {top,bottom,y};
+}
+function chartRowIndexAtPoint(chart,x,y){
+  if(!chart||!ROW_ACTION_CHARTS.has(chart.canvas&&chart.canvas.id)) return -1;
+  const labels=chart.data&&chart.data.labels, area=chart.chartArea;
+  if(!labels||!labels.length||!area) return -1;
+  if(x<0||x>chart.width||y<area.top||y>area.bottom) return -1;
+  for(let i=0;i<labels.length;i++){
+    const b=chartRowBounds(chart,i);
+    if(b&&y>=b.top&&y<=b.bottom) return i;
+  }
+  return -1;
+}
+function chartRowIndexFromClick(chart,evt,els){
+  if(els&&els.length) return els[0].index;
+  return chartRowIndexAtPoint(chart,evt&&evt.x,evt&&evt.y);
+}
+function clearChartRowHover(chart){
+  if(!chart) return;
+  chart.$rowHoverIndex=-1;
+  if(chart.canvas) chart.canvas.style.cursor='';
+  chart.draw();
+}
 function renderChart(){
   const dim=state.dim;
   const allRows=(rootCauseList().length
@@ -3152,8 +3195,8 @@ function renderChart(){
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
-      onClick:(evt,els)=>{ if(els.length) enterFocus(dim,rows[els[0].index],rows); },
-      plugins:{ legend:{display:false},
+      onClick:(evt,els)=>{ const i=chartRowIndexFromClick(state.chart,evt,els); if(i>=0&&rows[i]) enterFocus(dim,rows[i],rows); },
+      plugins:{ rowHover:{onRowClick:i=>{ if(rows[i]) enterFocus(dim,rows[i],rows); }}, legend:{display:false},
         tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex]; return ` ${r.issueCount} issues · ${r.equipmentCount} equip · ${r.withIssues} with issues`;}}} },
       scales:{
         x:{beginAtZero:true,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Total issues'}},
@@ -3209,8 +3252,8 @@ function renderStepChart(){
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
-      onClick:(evt,els)=>{ if(els.length) enterStepFocus(rows[els[0].index]); },
-      plugins:{ legend:{display:false},
+      onClick:(evt,els)=>{ const i=chartRowIndexFromClick(state.stepChart,evt,els); if(i>=0&&rows[i]) enterStepFocus(rows[i]); },
+      plugins:{ rowHover:{onRowClick:i=>{ if(rows[i]) enterStepFocus(rows[i]); }}, legend:{display:false},
         tooltip:{callbacks:{label:c=>{
           const r=rows[c.dataIndex], count=Number(c.raw)||0, pct=r&&r.issueCount?Math.round(count/r.issueCount*100):0;
           return ` ${c.dataset.label}: ${count.toLocaleString()} issues (${pct}%)`;
@@ -3541,11 +3584,11 @@ function renderRisk(){
     : {beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Risk index (0–100)'}};
   state.riskChart=new Chart(ctx,{
     type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26,barLabels:areas.map(a=>totalMode?`${a.n.toLocaleString()} eq`:`${a.risk} · ${a.n.toLocaleString()} eq`)}]},
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:areas.length>400?250:600,easing:'easeOutQuart'},
-      onClick:(evt,els)=>{ if(els.length) enterRiskFocus(dim,areas[els[0].index],areas,resolved,totalMode?'equipment':'risk'); },
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{const a=areas[c.dataIndex];
+      onClick:(evt,els)=>{ const i=chartRowIndexFromClick(state.riskChart,evt,els); if(i>=0&&areas[i]) enterRiskFocus(dim,areas[i],areas,resolved,totalMode?'equipment':'risk'); },
+      plugins:{ rowHover:{onRowClick:i=>{ if(areas[i]) enterRiskFocus(dim,areas[i],areas,resolved,totalMode?'equipment':'risk'); }}, legend:{display:false}, tooltip:{callbacks:{label:c=>{const a=areas[c.dataIndex];
         return totalMode
           ? [` ${a.n.toLocaleString()} equipment`,` ${a.issues.toLocaleString()} issues found (${a.ipe.toFixed(2)}/equip)`,` avg coverage ${pctf(a.covFrac)}`,` Coverage mix: ${coverageMixText(a)}`]
           : resolved==='blind'
@@ -3581,8 +3624,8 @@ function renderFatRisk(){
     data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,maxBarThickness:26}]},
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
-      onClick:(evt,els)=>{ if(els.length) enterFatRiskFocus(dim,rows[els[0].index],rows); },
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex];
+      onClick:(evt,els)=>{ const i=chartRowIndexFromClick(state.fatRiskChart,evt,els); if(i>=0&&rows[i]) enterFatRiskFocus(dim,rows[i],rows); },
+      plugins:{ rowHover:{onRowClick:i=>{ if(rows[i]) enterFatRiskFocus(dim,rows[i],rows); }}, legend:{display:false}, tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex];
         return [` FAT risk ${r.risk}/100`,` ${r.fatIssueCount.toLocaleString()} FAT issues · ${r.equipmentCount.toLocaleString()} equipment`,` ${r.unprotectedIssueCount.toLocaleString()} FAT issues on ${r.unprotectedEquipmentCount.toLocaleString()} no-step equipment`,` Categories: ${categorySegments(r.categoryCounts,r.fatIssueCount).map(s=>`${s.category} ${s.count}`).join(' · ')||'none'}`]; }}}},
       scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'FAT risk index (0–100)'}},
         y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} } }
@@ -3688,6 +3731,7 @@ $$('#riskmode .pill').forEach(p=>p.addEventListener('click',()=>{
   state.riskMode=p.dataset.mode; exitRiskFocus(true); renderRisk();
 }));
 $('#dl-risk').addEventListener('click',()=>{ if(!state.riskChart)return;
+  clearChartRowHover(state.riskChart);
   const prefix=riskMetricIsEquipment()?'risk_total_equipment_by':'risk_by';
   const a=document.createElement('a'); a.href=state.riskChart.toBase64Image('image/png',1); a.download=`${prefix}_${safeFilePart(state.riskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Risk chart PNG saved'); });
 $('#xlsx-risk').addEventListener('click',exportRiskXlsx);
@@ -4121,8 +4165,34 @@ $('#dl-analysis').addEventListener('click',async()=>{
 // paint white behind chart canvas for clean PNG
 Chart.register(
   {id:'whitebg',beforeDraw:(c)=>{const {ctx}=c; ctx.save(); ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore();}},
+  {id:'rowHoverBand',
+    beforeDraw(chart){
+      if(!ROW_ACTION_CHARTS.has(chart.canvas&&chart.canvas.id)) return;
+      const i=chart.$rowHoverIndex;
+      const b=chartRowBounds(chart,i);
+      if(!b) return;
+      const ctx=chart.ctx;
+      ctx.save();
+      ctx.fillStyle='rgba(17,24,32,.045)';
+      ctx.fillRect(0,b.top,chart.width,b.bottom-b.top);
+      ctx.restore();
+    },
+    afterEvent(chart,args){
+      if(!ROW_ACTION_CHARTS.has(chart.canvas&&chart.canvas.id)) return;
+      const evt=args.event||{};
+      const next=evt.type==='mouseout' ? -1 : chartRowIndexAtPoint(chart,evt.x,evt.y);
+      if(evt.type==='click'&&next>=0&&!args.inChartArea){
+        const cb=chart.options&&chart.options.plugins&&chart.options.plugins.rowHover&&chart.options.plugins.rowHover.onRowClick;
+        if(typeof cb==='function') cb(next,chart,evt);
+      }
+      if(chart.$rowHoverIndex!==next){
+        chart.$rowHoverIndex=next;
+        args.changed=true;
+      }
+      if(chart.canvas) chart.canvas.style.cursor=next>=0?'pointer':'';
+    }
+  },
   {id:'barValueLabels',afterDatasetsDraw(chart){
-    if(chart.canvas.id!=='mainchart') return;
     const dataset=chart.data.datasets&&chart.data.datasets[0];
     const labels=dataset&&dataset.barLabels;
     if(!labels||!labels.length) return;
@@ -4168,12 +4238,15 @@ Chart.register(
   }}
 );
 $('#dl-chart').addEventListener('click',()=>{ if(!state.chart)return;
+  clearChartRowHover(state.chart);
   const a=document.createElement('a'); a.href=state.chart.toBase64Image('image/png',1); a.download=`issues_by_${safeFilePart(state.dim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-chart').addEventListener('click',exportIssueDistributionXlsx);
 $('#dl-step-chart').addEventListener('click',()=>{ if(!state.stepChart)return;
+  clearChartRowHover(state.stepChart);
   const a=document.createElement('a'); a.href=state.stepChart.toBase64Image('image/png',1); a.download=`issues_caught_by_step${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-step-chart').addEventListener('click',exportStepCaughtXlsx);
 $('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
+  clearChartRowHover(state.fatRiskChart);
   const a=document.createElement('a'); a.href=state.fatRiskChart.toBase64Image('image/png',1); a.download=`fat_risk_by_${safeFilePart(state.fatRiskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-fat-risk').addEventListener('click',exportFatRiskXlsx);
 async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not loaded');return;}
