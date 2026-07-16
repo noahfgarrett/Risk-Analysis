@@ -215,6 +215,16 @@ test('update asset selection prefers the versioned plain HTML asset for simple d
   assert.equal(selected.downloadUrl, 'download-versioned')
 })
 
+test('update dismissal remains temporary and startup checks bypass stale release caching', () => {
+  const html = loadHtml()
+
+  assert.match(html, /cache:'no-store'/)
+  assert.match(html, /const UPDATE_CACHE_KEY=`risk-analysis:update:\$\{APP_VERSION\}`/)
+  assert.match(html, /<button class="btn ghost" id="update-skip">Not now<\/button>/)
+  assert.match(html, /openUpdateModal\(state\.updateInfo,state\.updateInfo\?'update':'changelog'\)/)
+  assert.match(html, /window\.addEventListener\('pageshow',e=>\{ if\(e\.persisted\) runStartupUpdateCheck\(true\); \}\)/)
+})
+
 test('room filtering removes equipment whose system or UPN is RR', () => {
   const ctx = loadPipeline()
   const rows = [

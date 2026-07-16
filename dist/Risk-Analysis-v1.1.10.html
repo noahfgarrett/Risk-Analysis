@@ -673,7 +673,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.9</span>
+      Risk Analysis v<span id="version-label">1.1.10</span>
     </button>
   </header>
 
@@ -1807,7 +1807,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.9';
+const APP_VERSION='1.1.10';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -1828,11 +1828,22 @@ const state = {
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
+  updateDismissedThisSession:false, updateCheckRunning:false,
 };
 
 const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/releases/latest';
 const UPDATE_TIMEOUT_MS=5000;
+const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.1.10',
+    date:'2026-07-16T17:50:00Z',
+    type:'fix',
+    stats:'Update flow improvements',
+    notes:`### Updates
+- Improved update reminders
+- Refined update access and reliability`
+  },
   {
     version:'1.1.9',
     date:'2026-07-16T17:05:00Z',
@@ -1999,11 +2010,11 @@ function isNewer(remote, local){
   return false;
 }
 async function checkForUpdate(){
+  let timer;
   try{
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),UPDATE_TIMEOUT_MS);
-    const res=await fetch(GITHUB_API_URL,{signal:controller.signal,headers:{Accept:'application/vnd.github.v3+json'}});
-    clearTimeout(timer);
+    timer=setTimeout(()=>controller.abort(),UPDATE_TIMEOUT_MS);
+    const res=await fetch(GITHUB_API_URL,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/vnd.github.v3+json'}});
     if(!res.ok) return null;
     const release=await res.json();
     const remoteVersion=String(release.tag_name||'').replace(/^v/,'');
@@ -2012,6 +2023,17 @@ async function checkForUpdate(){
     if(!asset) return null;
     return {version:remoteVersion,releaseNotes:release.body||'',...asset};
   }catch(_){ return null; }
+  finally{ clearTimeout(timer); }
+}
+function readCachedUpdate(){
+  try{
+    const info=JSON.parse(localStorage.getItem(UPDATE_CACHE_KEY)||'null');
+    if(!info || !isNewer(info.version,APP_VERSION) || !info.downloadUrl || !info.assetName) return null;
+    return info;
+  }catch(_){ return null; }
+}
+function cacheUpdate(info){
+  try{ localStorage.setItem(UPDATE_CACHE_KEY,JSON.stringify(info)); }catch(_){}
 }
 function formatDate(iso){
   const d=new Date(iso); if(Number.isNaN(d.getTime())) return '';
@@ -2038,6 +2060,7 @@ function openUpdateModal(info=null, tab){
   const m=updateModalEl(); m.hidden=false; requestAnimationFrame(()=>m.classList.add('show'));
 }
 function closeUpdateModal(){
+  if(state.updateInfo) state.updateDismissedThisSession=true;
   const m=updateModalEl(); m.classList.remove('show'); setTimeout(()=>{m.hidden=true;},180);
 }
 function setUpdateTab(tab){ state.updateModalTab=tab; state.downloadError=null; renderUpdateModal(); }
@@ -2078,7 +2101,7 @@ function renderUpdateModal(){
       <div class="up-note"><b>After downloading:</b><br>Use the new HTML file as your current Risk Analysis app. Your workbook data still stays local.</div>
       ${state.downloadError?`<div class="up-error">${esc(state.downloadError)}</div>`:''}
       <div class="modal-actions">
-        <button class="btn ghost" id="update-skip">Skip this version</button>
+        <button class="btn ghost" id="update-skip">Not now</button>
         <button class="btn primary" id="update-download">${state.downloadingUpdate?'Preparing...':`Download v${esc(info.version)}`}</button>
       </div>`;
   } else {
@@ -2106,7 +2129,30 @@ async function downloadUpdateFile(info){
     directUpdateDownload(direct.url,direct.filename);
   }
 }
-$('#version-btn').addEventListener('click',()=>openUpdateModal(null,'changelog'));
+function showAvailableUpdate(info,autoOpen=true){
+  state.updateInfo=info;
+  $('#version-btn').classList.add('has-update');
+  if(autoOpen && !state.updateDismissedThisSession) openUpdateModal(info,'update');
+  else if(!updateModalEl().hidden && state.updateModalTab==='update') renderUpdateModal();
+}
+async function runStartupUpdateCheck(restored=false){
+  if(state.updateCheckRunning) return;
+  if(restored) state.updateDismissedThisSession=false;
+  const cached=readCachedUpdate();
+  if(cached) showAvailableUpdate(cached,true);
+  state.updateCheckRunning=true;
+  try{
+    const info=await checkForUpdate();
+    if(info){
+      cacheUpdate(info);
+      showAvailableUpdate(info,!cached);
+    }
+  }finally{ state.updateCheckRunning=false; }
+}
+$('#version-btn').addEventListener('click',()=>{
+  state.updateDismissedThisSession=false;
+  openUpdateModal(state.updateInfo,state.updateInfo?'update':'changelog');
+});
 $('#update-close').addEventListener('click',closeUpdateModal);
 $('#update-modal').addEventListener('click',e=>{ if(e.target===$('#update-modal')) closeUpdateModal(); });
 $('#update-tabs').addEventListener('click',e=>{ const t=e.target.closest('.up-tab'); if(t&&!t.hidden) setUpdateTab(t.dataset.tab); });
@@ -2121,10 +2167,8 @@ $('#update-body').addEventListener('click',async e=>{
     finally{ state.downloadingUpdate=false; renderUpdateModal(); }
   }
 });
-window.addEventListener('load',async()=>{
-  const info=await checkForUpdate();
-  if(info){ state.updateInfo=info; $('#version-btn').classList.add('has-update'); openUpdateModal(info,'update'); }
-});
+window.addEventListener('load',()=>runStartupUpdateCheck());
+window.addEventListener('pageshow',e=>{ if(e.persisted) runStartupUpdateCheck(true); });
 
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200); }
 function download(blob, name){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1500); }
