@@ -1,6 +1,6 @@
 {
   "name": "risk-analysis",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "description": "Offline Cardinal QCx equipment risk analysis app",
   "type": "module",

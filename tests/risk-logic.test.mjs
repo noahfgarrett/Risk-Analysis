@@ -482,6 +482,9 @@ test('issue chart selector exposes escalation filters, drilldown, and filtered e
   assert.match(html, /id="escalationLegendToggle"/)
   assert.match(html, /id="escalationLegendCount"/)
   assert.match(html, /data-escalation-type=/)
+  assert.match(html, /data-escalation-group-toggle=/)
+  assert.match(html, /data-escalation-group-select=/)
+  assert.match(html, /state\.escalationTypeGroupsOpen\.has\(key\)/)
   assert.match(html, /state\.escalationTypes\.has\(transition\)\?state\.escalationTypes\.delete\(transition\):state\.escalationTypes\.add\(transition\)/)
   assert.doesNotMatch(html, /id="escalationStepFilter"/)
   assert.match(html, /id="escalationRootCauseFilter"/)
@@ -495,7 +498,11 @@ test('issue chart selector exposes escalation filters, drilldown, and filtered e
   assert.match(html, /details\['Escalation type'\]=escalationTypeExportLabel\(\)/)
   assert.match(html, /id:'stackTotalLabels'/)
   assert.match(html, /state\.escalationChart\.toBase64Image\('image\/png',1\)/)
-  assert.match(html, /if\(c==='OAS'\) return '#557fbd'/)
+  const grouped = ctx.groupEscalationTransitions(['COR → NCR-D', 'WI → DWN', 'COR → WI', 'COR → OAS', 'NCR-D → NGI'])
+  assert.equal(JSON.stringify(grouped.map((group) => [group.key, group.transitions.length])), JSON.stringify([
+    ['ncr', 1], ['dwn', 1], ['ngi', 1], ['wi', 1], ['oas', 1],
+  ]))
+  assert.match(html, /if\(c==='OAS'\) return '#79b7e6'/)
   assert.equal(ctx.issueCategoryRank('OAS'), ctx.issueCategoryRank('WI'))
 })
 

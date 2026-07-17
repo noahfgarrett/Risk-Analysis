@@ -277,6 +277,18 @@ body.chart-fullscreen{overflow:hidden}
 .issue-legend button.lg:hover{border-color:#b9c6d2;background:#f3f6f8}
 .issue-legend button.lg.active{border-color:#9cc6e8;background:var(--accent-wash);color:var(--accent)}
 .issue-legend button.lg.filtered-out{opacity:.48}
+.escalation-legend-groups{flex-direction:column;align-items:stretch;gap:6px}
+.escalation-type-group{border:1px solid var(--line);border-radius:7px;background:var(--surface-2);overflow:hidden}
+.escalation-type-group-head{display:flex;align-items:center;gap:5px;min-height:32px;padding:3px 5px}
+.escalation-type-group-toggle{appearance:none;border:0;background:transparent;display:flex;align-items:center;gap:7px;min-width:0;flex:1;padding:3px;color:var(--ink-2);font-size:11.5px;font-weight:800;text-align:left;cursor:pointer}
+.escalation-type-group-toggle .sw{flex:0 0 9px}
+.escalation-type-group-caret{color:var(--ink-3);font-size:9px;transition:transform .14s}
+.escalation-type-group.open .escalation-type-group-caret{transform:rotate(180deg)}
+.escalation-type-group-count{margin-left:auto;color:var(--ink-3);font-family:var(--mono);font-size:10px;font-weight:650}
+.escalation-type-group-select{appearance:none;border:1px solid var(--line-2);border-radius:5px;background:var(--surface);color:var(--ink-3);padding:3px 7px;font-size:10px;font-weight:800;cursor:pointer}
+.escalation-type-group-select:hover,.escalation-type-group-select.active{border-color:#9cc6e8;background:var(--accent-wash);color:var(--accent)}
+.escalation-type-group-items{display:flex;gap:5px;flex-wrap:wrap;padding:7px 8px 8px;border-top:1px solid var(--line);background:var(--surface)}
+.escalation-type-group-items[hidden]{display:none}
 .legend-dropdown{position:relative;align-self:flex-start;margin:-2px 0 10px;z-index:24}
 .legend-dropdown-button{height:30px;display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink-2);font-size:11.5px;font-weight:750;cursor:pointer}
 .legend-dropdown-count{min-width:20px;padding:1px 5px;border-radius:5px;background:var(--surface-2);color:var(--ink-3);font-family:var(--mono);font-size:10.5px;text-align:center}
@@ -1510,6 +1522,33 @@ function issueCategoryRank(category){
   if(c==='WI'||c==='OAS') return 50;
   return 100;
 }
+function transitionTargetCategory(transition){
+  const parts=String(transition||'').split('→');
+  return (parts[parts.length-1]||transition||'').trim();
+}
+const ESCALATION_TYPE_GROUPS=[
+  {key:'cor',label:'COR',category:'COR',order:10},
+  {key:'ncr',label:'NCR',category:'NCR',order:20},
+  {key:'dwn',label:'DWN',category:'DWN',order:30},
+  {key:'ngi',label:'NGI',category:'NGI',order:40},
+  {key:'wi',label:'WI',category:'WI',order:50},
+  {key:'oas',label:'OAS',category:'OAS',order:60},
+  {key:'other',label:'Other',category:'Other',order:100},
+];
+function escalationTypeGroup(transition){
+  const category=transitionTargetCategory(transition).toUpperCase();
+  const key=category.includes('NCR')?'ncr':category.toLowerCase();
+  return ESCALATION_TYPE_GROUPS.find(group=>group.key===key)||ESCALATION_TYPE_GROUPS[ESCALATION_TYPE_GROUPS.length-1];
+}
+function groupEscalationTransitions(transitions){
+  const groups=new Map();
+  for(const transition of (transitions||[])){
+    const meta=escalationTypeGroup(transition);
+    if(!groups.has(meta.key)) groups.set(meta.key,{...meta,transitions:[]});
+    groups.get(meta.key).transitions.push(transition);
+  }
+  return [...groups.values()].sort((a,b)=>a.order-b.order).map(group=>({...group,transitions:group.transitions.slice().sort((a,b)=>String(a).localeCompare(String(b)))}));
+}
 function sortIssueCategories(categories){
   return (categories||[]).slice().sort((a,b)=>issueCategoryRank(a)-issueCategoryRank(b) || String(a).localeCompare(String(b)));
 }
@@ -2065,7 +2104,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.2.3';
+const APP_VERSION='1.2.4';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -2085,7 +2124,7 @@ const state = {
   chartSearch:'', stepChartSearch:'', escalationSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
   escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
-  escalationLegendOpen:false, escalationTypes:new Set(),
+  escalationLegendOpen:false, escalationTypes:new Set(), escalationTypeGroupsOpen:new Set(),
   rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
@@ -2096,6 +2135,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.2.4',
+    date:'2026-07-17T18:51:26Z',
+    type:'feature',
+    stats:'Escalation legend refinements',
+    notes:`### Updates
+- Organized escalation types into grouped controls
+- Added group-level filtering options
+- Refined category colors and selection behavior`
+  },
   {
     version:'1.2.3',
     date:'2026-07-17T15:58:18Z',
@@ -3019,7 +3068,7 @@ async function handleFile(file){
     state.roleSheet.fx =matchSheet(state.sheetNames,['Full Export','full export','fullexport']);
     state.roleSheet.sql=matchSheet(state.sheetNames,['Issue SQL Table','issue sql']);
     loadRoleSheets();
-    state.catInit=false; state.catAssign={}; state.colOverride={}; state.fxOverride={}; state.sqlOverride={}; state.escalationTypes.clear();
+    state.catInit=false; state.catAssign={}; state.colOverride={}; state.fxOverride={}; state.sqlOverride={}; state.escalationTypes.clear(); state.escalationTypeGroupsOpen.clear();
     // 4) analyze each matched report with visible, phase-based progress
     await recompute(true,progressRange(72,97,'Building analysis…'));
     $('#filepill').style.display='flex'; $('#filepillname').textContent=file.name;
@@ -3691,7 +3740,7 @@ function issueCategoryColor(category){
   if(c==='DWN') return '#c25139';
   if(c==='NGI') return '#8b97a4';
   if(c==='WI') return '#2f83cc';
-  if(c==='OAS') return '#557fbd';
+  if(c==='OAS') return '#79b7e6';
   return hashColor(category);
 }
 function stepChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
@@ -3740,14 +3789,23 @@ function renderStepChart(){
     }
   });
 }
-function transitionTargetCategory(transition){
-  const parts=String(transition||'').split('→');
-  return (parts[parts.length-1]||transition||'').trim();
-}
 function renderEscalationLegend(transitions){
   const selected=new Set(escalationTypeList()), filtering=selected.size>0;
-  $('#escalationLegend').innerHTML=transitions.length
-    ? transitions.map(t=>`<button type="button" class="lg${selected.has(t)?' active':''}${filtering&&!selected.has(t)?' filtered-out':''}" data-escalation-type="${esc(t)}" aria-pressed="${selected.has(t)?'true':'false'}" title="${selected.has(t)?'Remove':'Filter to'} ${esc(t)}"><span class="sw" style="background:${issueCategoryColor(transitionTargetCategory(t))}"></span>${esc(t)}</button>`).join('')
+  const groups=groupEscalationTransitions(transitions);
+  $('#escalationLegend').classList.add('escalation-legend-groups');
+  $('#escalationLegend').innerHTML=groups.length
+    ? groups.map(group=>{
+      const open=state.escalationTypeGroupsOpen.has(group.key);
+      const selectedCount=group.transitions.filter(transition=>selected.has(transition)).length;
+      const allSelected=filtering&&selectedCount===group.transitions.length;
+      return `<div class="escalation-type-group${open?' open':''}" data-escalation-type-group="${group.key}">
+        <div class="escalation-type-group-head">
+          <button type="button" class="escalation-type-group-toggle" data-escalation-group-toggle="${group.key}" aria-expanded="${open?'true':'false'}"><span class="escalation-type-group-caret">▾</span><span class="sw" style="background:${issueCategoryColor(group.category)}"></span><span>${esc(group.label)}</span><span class="escalation-type-group-count">${filtering?`${selectedCount}/${group.transitions.length}`:group.transitions.length}</span></button>
+          <button type="button" class="escalation-type-group-select${allSelected?' active':''}" data-escalation-group-select="${group.key}" aria-pressed="${allSelected?'true':'false'}">${allSelected?'Clear':'All'}</button>
+        </div>
+        <div class="escalation-type-group-items" ${open?'':'hidden'}>${group.transitions.map(t=>`<button type="button" class="lg${selected.has(t)?' active':''}${filtering&&!selected.has(t)?' filtered-out':''}" data-escalation-type="${esc(t)}" aria-pressed="${selected.has(t)?'true':'false'}" title="${selected.has(t)?'Remove':'Filter to'} ${esc(t)}"><span class="sw" style="background:${issueCategoryColor(transitionTargetCategory(t))}"></span>${esc(t)}</button>`).join('')}</div>
+      </div>`;
+    }).join('')
     : '<span class="lg">No matching escalations</span>';
   const dropdown=$('#escalationLegendDropdown'), toggle=$('#escalationLegendToggle'), count=$('#escalationLegendCount');
   if(count) count.textContent=filtering?`${selected.size}/${transitions.length}`:transitions.length.toLocaleString();
@@ -3755,6 +3813,25 @@ function renderEscalationLegend(transitions){
   if(toggle) toggle.setAttribute('aria-expanded',state.escalationLegendOpen?'true':'false');
 }
 $('#escalationLegend').addEventListener('click',ev=>{
+  const groupToggle=ev.target.closest('[data-escalation-group-toggle]');
+  if(groupToggle){
+    const key=groupToggle.dataset.escalationGroupToggle, group=groupToggle.closest('.escalation-type-group'), items=group&&group.querySelector('.escalation-type-group-items');
+    state.escalationTypeGroupsOpen.has(key)?state.escalationTypeGroupsOpen.delete(key):state.escalationTypeGroupsOpen.add(key);
+    const open=state.escalationTypeGroupsOpen.has(key);
+    if(group) group.classList.toggle('open',open);
+    if(items) items.hidden=!open;
+    groupToggle.setAttribute('aria-expanded',open?'true':'false');
+    ev.stopPropagation(); return;
+  }
+  const groupSelect=ev.target.closest('[data-escalation-group-select]');
+  if(groupSelect){
+    const group=groupSelect.closest('.escalation-type-group');
+    const transitions=$$('[data-escalation-type]',group).map(pill=>pill.dataset.escalationType);
+    const allSelected=transitions.length&&transitions.every(transition=>state.escalationTypes.has(transition));
+    transitions.forEach(transition=>allSelected?state.escalationTypes.delete(transition):state.escalationTypes.add(transition));
+    exitEscalationFocus(true); renderEscalationChart();
+    ev.stopPropagation(); return;
+  }
   const pill=ev.target.closest('[data-escalation-type]'); if(!pill) return;
   const transition=pill.dataset.escalationType;
   state.escalationTypes.has(transition)?state.escalationTypes.delete(transition):state.escalationTypes.add(transition);
@@ -4957,7 +5034,7 @@ Chart.register(
         const w=Math.abs(p.x-p.base); if(w<34) return;
         const category=chart.canvas.id==='escalationchart'?transitionTargetCategory(dataset.label):dataset.label||'';
         const upper=String(category).toUpperCase();
-        ctx.fillStyle=(upper==='COR'||upper==='NGI')?'#111820':'#fff';
+        ctx.fillStyle=(upper==='COR'||upper==='NGI'||upper==='OAS')?'#111820':'#fff';
         ctx.fillText(pct+'%', p.base+(p.x-p.base)/2, p.y);
       });
     });
