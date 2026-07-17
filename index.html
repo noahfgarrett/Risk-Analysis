@@ -6,7 +6,7 @@
 <title>Cardinal QCx — Equipment Risk Analyzer</title>
 
 <!-- Libraries are vendored locally so workbook analysis stays offline. -->
-<script src="vendor/xlsx.bundle.js"></script>
+<script id="xlsx-runtime" src="vendor/xlsx.bundle.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
 <script src="vendor/html2canvas.min.js"></script>
 
@@ -185,10 +185,8 @@ button{font-family:inherit}
 .card.fullscreen .chartwrap{height:calc(100vh - 250px)}
 .card.fullscreen.matrix{padding:18px}
 body.chart-fullscreen{overflow:hidden}
-.issue-card{padding:0;perspective:1400px;overflow:hidden}
-.issue-card-inner{position:relative;min-height:650px;transform-style:preserve-3d;transition:transform .27s cubic-bezier(.2,.7,.2,1)}
-.issue-card-inner.flipping-out{transform:rotateY(90deg)}
-.issue-card-inner.flipping-in{transition:none;transform:rotateY(-90deg)}
+.issue-card{padding:0;overflow:hidden}
+.issue-card-inner{position:relative;min-height:650px}
 .issue-face{display:none;min-height:650px;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);flex-direction:column}
 .issue-face.active{display:flex}
 .issue-card.fullscreen .issue-card-inner,.issue-card.fullscreen .issue-face{min-height:100%}
@@ -211,12 +209,18 @@ body.chart-fullscreen{overflow:hidden}
 .filter-search span{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
 .filter-search input{width:100%;min-width:0;height:32px;padding:6px 10px;border-radius:7px;font-size:12.5px;line-height:16px;background:var(--surface)}
 .filter-search input::placeholder{color:var(--ink-3)}
-.escalation-filter-shelf{display:grid;gap:8px}
-.escalation-dimension-row,.escalation-utility-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;width:100%}
-.escalation-filter-shelf .filter-group{display:flex;flex-direction:column;align-items:stretch;gap:4px}
-.escalation-filter-shelf .filter-group.compact{width:auto}
+.escalation-filter-shelf{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
+.escalation-breakdown-row{width:100%;flex-wrap:nowrap}
+.escalation-breakdown-row .pills{min-width:0}
+.escalation-breakdown-row .pill{padding-inline:5px;font-size:11.5px;white-space:nowrap}
+.escalation-utility-row{display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);gap:8px;width:100%;align-items:end}
+.escalation-filter-shelf .filter-group.compact{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%}
 .escalation-filter-shelf .root-select{width:100%;min-width:0;flex:auto}
-.escalation-filter-shelf .filter-search{margin-left:0;width:100%;min-width:220px;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:auto}
+.escalation-filter-shelf .filter-search{margin-left:0;width:100%;min-width:0;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:auto}
+@media(max-width:1350px) and (min-width:901px){
+  .escalation-breakdown-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+  .escalation-breakdown-row .pills{width:100%}
+}
 .search-note{font-size:11.5px;color:var(--ink-3);margin:-5px 2px 8px}
 .search-note b{color:var(--ink-2)}
 .matrix-filter{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
@@ -474,6 +478,10 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .fstat .v{font-size:23px;font-weight:750;font-family:var(--mono);letter-spacing:-.01em;margin-top:3px;line-height:1.05}
 .fstat .v small{font-size:12px;color:var(--ink-3);font-weight:600}
 .fstat .v .score-3,.fstat .v .score-2,.fstat .v .score-1,.fstat .v .score-0{font-size:12px;font-weight:700}
+.escalation-focus-stats{grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:8px}
+.escalation-focus-rollup{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:start;margin:0 2px 12px;padding:10px 12px;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+.escalation-focus-rollup .l{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding-top:2px}
+.escalation-focus-rollup .v{min-width:0;font-size:12px;font-weight:700}
 .focus-list{margin-top:2px}
 .fc-head{font-size:11px;color:var(--ink-3);margin:2px 2px 6px;letter-spacing:.02em}
 .fc-group{border-top:1px solid var(--line)}
@@ -489,6 +497,13 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .fc-body.open{grid-template-rows:1fr}
 .fc-inner{overflow:hidden;min-height:0}
 .fc-inner .drilltable{margin:0 0 8px}
+.fc-body.open .fc-inner,.rf-body.open .rf-inner{overflow-x:auto;overflow-y:hidden;scrollbar-gutter:stable;padding-bottom:7px}
+.fc-inner .drilltable,.rf-inner .drilltable{min-width:760px}
+#escalationfocus .drilltable,#fatriskfocus .drilltable{min-width:980px}
+.fc-inner::-webkit-scrollbar,.rf-inner::-webkit-scrollbar{height:9px}
+.fc-inner::-webkit-scrollbar-track,.rf-inner::-webkit-scrollbar-track{background:var(--paper);border-radius:5px}
+.fc-inner::-webkit-scrollbar-thumb,.rf-inner::-webkit-scrollbar-thumb{background:var(--line-2);border:2px solid var(--paper);border-radius:5px}
+.fc-inner::-webkit-scrollbar-thumb:hover,.rf-inner::-webkit-scrollbar-thumb:hover{background:var(--ink-3)}
 /* ---- risk chart drill-down breakdown ---- */
 .rf-explain{font-size:12px;color:var(--ink-2);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 2px 12px;line-height:1.5}
 .rf-explain b{color:var(--ink)}
@@ -826,12 +841,9 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             </div>
             <div class="issue-face issue-face-escalation" data-issue-view="escalation">
               <div class="section-head">
-                <div class="chart-title-row">
-                  <div>
-                    <div class="eyebrow">Issue Escalation</div>
-                    <h3 id="escalation-chart-title">Escalations by Original Category</h3>
-                  </div>
-                  <label class="chart-group-control"><span>Group by</span><select id="escalation-group"><option value="original">Original Category</option><option value="cxStep">Cx Step</option></select></label>
+                <div>
+                  <div class="eyebrow">Issue Escalation</div>
+                  <h3 id="escalation-chart-title">Escalations by Issue Type</h3>
                 </div>
                 <div class="section-actions">
                   <label class="sort-select">Sort <select id="sort-escalation"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
@@ -844,18 +856,19 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                 </div>
               </div>
               <div class="filter-shelf escalation-filter-shelf">
-                <div class="escalation-dimension-row">
-                  <div class="filter-group compact"><span class="filter-title">System</span><div id="escalationFilterSystem" class="root-select"></div></div>
-                  <div class="filter-group compact"><span class="filter-title">Discipline</span><div id="escalationFilterDiscipline" class="root-select"></div></div>
-                  <div class="filter-group compact"><span class="filter-title">Building</span><div id="escalationFilterBuilding" class="root-select"></div></div>
-                  <div class="filter-group compact"><span class="filter-title">Milestone</span><div id="escalationFilterMilestone" class="root-select"></div></div>
-                  <div class="filter-group compact"><span class="filter-title">Classification</span><div id="escalationFilterClassification" class="root-select"></div></div>
+                <div class="filter-group grow escalation-breakdown-row">
+                  <span class="filter-title">Breakdown</span>
+                  <div class="pills" id="escalationdimpills">
+                    <button class="pill active" data-escalation-group="original">No Filter</button>
+                    <button class="pill" data-escalation-group="System">System</button>
+                    <button class="pill" data-escalation-group="Discipline">Discipline</button>
+                    <button class="pill" data-escalation-group="Building">Building</button>
+                    <button class="pill" data-escalation-group="Milestone">Milestone</button>
+                    <button class="pill" data-escalation-group="Classification">Classification</button>
+                    <button class="pill" data-escalation-group="cxStep">Cx Steps</button>
+                  </div>
                 </div>
                 <div class="escalation-utility-row">
-                  <div class="filter-group compact">
-                    <span class="filter-title">Cx Step</span>
-                    <div id="escalationStepFilter" class="root-select"></div>
-                  </div>
                   <div class="filter-group compact">
                     <span class="filter-title">Root cause</span>
                     <div id="escalationRootCauseFilter" class="root-select"></div>
@@ -934,7 +947,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               </div>
               <div class="section-actions">
                 <label class="sort-select">Sort <select id="sort-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
-                <button class="btn ghost issue-flip-btn" id="risk-flip-fat" title="Show FAT risk exposure">FAT Risk</button>
+                <label class="issue-view-control">View <span class="issue-view-box"><select class="issue-view-select risk-view-select" aria-label="Risk chart view"><option value="standard" selected>Risk Analysis</option><option value="fat">FAT Risk</option></select><span class="issue-view-caret">▾</span></span></label>
                 <button class="btn ghost" data-fullscreen-target="riskcard" title="View risk analysis full screen">Full</button>
                 <button class="btn ghost" id="xlsx-risk" title="Export filtered risk analysis XLSX">XLSX</button>
                 <button class="btn ghost" id="dl-risk" title="Download risk chart PNG">
@@ -997,7 +1010,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               </div>
               <div class="section-actions">
                 <label class="sort-select">Sort <select id="sort-fat-risk"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
-                <button class="btn ghost issue-flip-btn" id="risk-flip-standard" title="Show standard risk analysis">Standard Risk</button>
+                <label class="issue-view-control">View <span class="issue-view-box"><select class="issue-view-select risk-view-select" aria-label="Risk chart view"><option value="standard">Risk Analysis</option><option value="fat" selected>FAT Risk</option></select><span class="issue-view-caret">▾</span></span></label>
                 <button class="btn ghost" data-fullscreen-target="riskcard" title="View FAT risk full screen">Full</button>
                 <button class="btn ghost" id="xlsx-fat-risk" title="Export filtered FAT risk XLSX">XLSX</button>
                 <button class="btn ghost" id="dl-fat-risk" title="Download FAT risk chart PNG">
@@ -1177,6 +1190,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 const norm = (v) => (v == null ? '' : String(v).trim());
 const lc = (v) => norm(v).toLowerCase();
 const digits = (v) => { const m = String(v == null ? '' : v).match(/\d+/); return m ? m[0] : ''; };
+const normalizeCxStep = (v) => { const value=norm(v); return !value||/^\(?null\)?$/i.test(value)?'No Cx Step':value; };
 
 const META_ALIASES = {
   name:['equipment name'], description:['equipment description'], building:['building'],
@@ -1464,7 +1478,7 @@ function stepCaughtRows(issueRows, equipment, opts){
   const rows=issueRowsForChart(equipment, issueRows, opts);
   const map=new Map();
   for(const issue of rows){
-    const key=issue.cxStep || '(blank Cx Step)';
+    const key=normalizeCxStep(issue.cxStep);
     let row=map.get(key);
     if(!row){ row={key, issueCount:0, equipmentKeys:new Set(), categoryCounts:{}, issues:[]}; map.set(key,row); }
     row.issueCount++;
@@ -1484,7 +1498,7 @@ function stepCaughtRows(issueRows, equipment, opts){
 }
 function stepCaughtBreakdown(issueRows, equipment, step, dim, opts){
   opts=opts||{};
-  const rows=issueRowsForChart(equipment, issueRows, opts).filter(issue=>(issue.cxStep||'(blank Cx Step)')===step);
+  const rows=issueRowsForChart(equipment, issueRows, opts).filter(issue=>normalizeCxStep(issue.cxStep)===step);
   const map=new Map();
   for(const issue of rows){
     const key=issueDimKey(issue,dim);
@@ -1511,8 +1525,8 @@ function stepCaughtBreakdown(issueRows, equipment, step, dim, opts){
 }
 function escalationRowsForChart(equipment, escalationRows, opts){
   opts=opts||{};
-  const steps=new Set((opts.cxSteps||[]).map(v=>String(v||'').trim()).filter(Boolean));
-  return issueRowsForChart(equipment,escalationRows,opts).filter(row=>!steps.size||steps.has(row.cxStep));
+  const steps=new Set((opts.cxSteps||[]).map(normalizeCxStep));
+  return issueRowsForChart(equipment,escalationRows,opts).filter(row=>!steps.size||steps.has(normalizeCxStep(row.cxStep)));
 }
 function sortEscalationTransitions(transitions, rows){
   const categoryByTransition=new Map((rows||[]).map(row=>[row.transition,row.issueCategory]));
@@ -1521,12 +1535,17 @@ function sortEscalationTransitions(transitions, rows){
     return ar-br || String(a).localeCompare(String(b));
   });
 }
+function escalationGroupKey(issue, groupBy){
+  if(groupBy==='cxStep') return normalizeCxStep(issue.cxStep);
+  if(groupBy==='original') return issue.originalCategory||'(blank)';
+  return issueDimKey(issue,groupBy);
+}
 function escalationGroupedRows(escalationRows, equipment, groupBy, opts){
   opts=opts||{};
   const filtered=escalationRowsForChart(equipment,escalationRows,opts);
   const map=new Map();
   for(const issue of filtered){
-    const key=groupBy==='cxStep' ? (issue.cxStep||'(blank Cx Step)') : (issue.originalCategory||'(blank)');
+    const key=escalationGroupKey(issue,groupBy);
     let row=map.get(key);
     if(!row){
       row={key,issueCount:0,equipmentKeys:new Set(),transitionCounts:{},cxStepCounts:{},rootCauseCounts:{},issues:[]};
@@ -1535,7 +1554,8 @@ function escalationGroupedRows(escalationRows, equipment, groupBy, opts){
     row.issueCount++;
     row.equipmentKeys.add(issue.equipmentKey);
     row.transitionCounts[issue.transition]=(row.transitionCounts[issue.transition]||0)+1;
-    row.cxStepCounts[issue.cxStep]=(row.cxStepCounts[issue.cxStep]||0)+1;
+    const cxStep=normalizeCxStep(issue.cxStep);
+    row.cxStepCounts[cxStep]=(row.cxStepCounts[cxStep]||0)+1;
     row.rootCauseCounts[issue.rootCause]=(row.rootCauseCounts[issue.rootCause]||0)+1;
     row.issues.push(issue);
   }
@@ -1562,13 +1582,17 @@ function escalationCategoryRows(escalationRows, equipment, opts){
 function escalationCxStepRows(escalationRows, equipment, opts){
   return escalationGroupedRows(escalationRows,equipment,'cxStep',opts);
 }
+function escalationDimensionRows(escalationRows, equipment, dim, opts){
+  return escalationGroupedRows(escalationRows,equipment,dim,opts);
+}
 function escalationBreakdown(escalationRows,equipment,groupValue,dim,opts,transition,groupBy){
+  groupBy=groupBy||'original';
   const filtered=escalationRowsForChart(equipment,escalationRows,opts).filter(issue=>
-    (groupBy==='cxStep' ? (issue.cxStep||'(blank Cx Step)')===groupValue : issue.originalCategory===groupValue) &&
+    escalationGroupKey(issue,groupBy)===groupValue &&
     (!transition||issue.transition===transition));
   const map=new Map();
   for(const issue of filtered){
-    const key=dim==='Cx Step' ? (issue.cxStep||'(blank Cx Step)') : issueDimKey(issue,dim);
+    const key=dim==='Cx Step' ? normalizeCxStep(issue.cxStep) : issueDimKey(issue,dim);
     let group=map.get(key);
     if(!group){
       group={key,issueCount:0,equipment:new Map(),transitionCounts:{},cxStepCounts:{},rootCauseCounts:{}};
@@ -1576,7 +1600,8 @@ function escalationBreakdown(escalationRows,equipment,groupValue,dim,opts,transi
     }
     group.issueCount++;
     group.transitionCounts[issue.transition]=(group.transitionCounts[issue.transition]||0)+1;
-    group.cxStepCounts[issue.cxStep]=(group.cxStepCounts[issue.cxStep]||0)+1;
+    const cxStep=normalizeCxStep(issue.cxStep);
+    group.cxStepCounts[cxStep]=(group.cxStepCounts[cxStep]||0)+1;
     group.rootCauseCounts[issue.rootCause]=(group.rootCauseCounts[issue.rootCause]||0)+1;
     let eq=group.equipment.get(issue.equipmentKey);
     if(!eq){
@@ -1585,7 +1610,7 @@ function escalationBreakdown(escalationRows,equipment,groupValue,dim,opts,transi
     }
     eq.issueCount++;
     eq.transitionCounts[issue.transition]=(eq.transitionCounts[issue.transition]||0)+1;
-    eq.cxStepCounts[issue.cxStep]=(eq.cxStepCounts[issue.cxStep]||0)+1;
+    eq.cxStepCounts[cxStep]=(eq.cxStepCounts[cxStep]||0)+1;
     eq.rootCauseCounts[issue.rootCause]=(eq.rootCauseCounts[issue.rootCause]||0)+1;
     eq.issueIds.push(issue.issueId);
   }
@@ -1627,7 +1652,8 @@ function fatRiskRows(issueRows, equipment, dim, opts){
     eq.fatIssueCount++;
     eq.categoryCounts[issue.category]=(eq.categoryCounts[issue.category]||0)+1;
     eq.rootCauseCounts[issue.rootCause]=(eq.rootCauseCounts[issue.rootCause]||0)+1;
-    eq.cxStepCounts[issue.cxStep||'(blank Cx Step)']=(eq.cxStepCounts[issue.cxStep||'(blank Cx Step)']||0)+1;
+    const cxStep=normalizeCxStep(issue.cxStep);
+    eq.cxStepCounts[cxStep]=(eq.cxStepCounts[cxStep]||0)+1;
   }
   const out=[...map.values()].map(group=>{
     const equipmentRows=[...group.equipment.values()];
@@ -1815,7 +1841,7 @@ function parseIssues(aoa){
         equipmentKey:key,
         upn:upnCol>=0?digits(row[upnCol]):'',
         upnRaw:upnCol>=0?norm(row[upnCol]):'',
-        cxStep:cxStepCol>=0?norm(row[cxStepCol]):'',
+        cxStep:normalizeCxStep(cxStepCol>=0?row[cxStepCol]:''),
         category:categoryCol>=0?(norm(row[categoryCol])||'(blank)'):'(blank)',
         rootCause:rootCauseCol>=0?(norm(row[rootCauseCol])||'(blank)'):'(blank)',
       });
@@ -1839,7 +1865,7 @@ function parseIssueSql(aoa, opts){
       if(!issueId) continue;
       const originalCategory=originalCategoryCol>=0?norm(row[originalCategoryCol]):'';
       const issueCategory=categoryCol>=0?norm(row[categoryCol]):'';
-      const cxStep=cxStepCol>=0?norm(row[cxStepCol]):'';
+      const cxStep=normalizeCxStep(cxStepCol>=0?row[cxStepCol]:'');
       const isEscalated=!!originalCategory&&!!issueCategory&&lc(originalCategory)!==lc(issueCategory);
       total++; if(isEscalated) escalated++;
       rows.push({
@@ -1847,7 +1873,7 @@ function parseIssueSql(aoa, opts){
         issueKey:lc(issueId),
         originalCategory:originalCategory||'(blank)',
         issueCategory:issueCategory||'(blank)',
-        cxStep:cxStep||'(blank Cx Step)',
+        cxStep,
         transition:isEscalated?`${originalCategory} → ${issueCategory}`:'',
         escalated:isEscalated,
       });
@@ -1992,10 +2018,9 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.2.1';
 $('#version-label').textContent=APP_VERSION;
 
-const ESCALATION_FILTER_DIMENSIONS=['System','Discipline','Building','Milestone','Classification'];
 const state = {
   fileName:'', aoaBySheet:{}, sheetNames:[],
   roleSheet:{esr:null,dd:null,iss:null,fx:null,sql:null}, sheets:{esr:null,dd:null,iss:null,fx:null,sql:null},
@@ -2013,8 +2038,6 @@ const state = {
   chartSearch:'', stepChartSearch:'', escalationSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
   escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
-  escalationSteps:new Set(), escalationStepPickerOpen:false,
-  escalationDimensionFilters:{System:[],Discipline:[],Building:[],Milestone:[],Classification:[]}, escalationDimensionPickerOpen:null,
   escalationLegendOpen:false,
   rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
@@ -2026,6 +2049,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.2.1',
+    date:'2026-07-17T15:12:55Z',
+    type:'fix',
+    stats:'Performance and chart refinements',
+    notes:`### Updates
+- Improved large workbook loading
+- Refined dashboard view controls and drill-downs
+- Improved Cx Step handling and table navigation`
+  },
   {
     version:'1.2.0',
     date:'2026-07-17T14:43:02Z',
@@ -2433,20 +2466,45 @@ function readFileWithProgress(file, onProg){
 }
 
 /* ---- workbook parsing: off-main-thread when possible ----------------------------
-   Parsing + AOA conversion is the single most expensive step. We run it in a Web
-   Worker so the main thread (and the progress bar) stays smooth. A ping/ack
-   handshake detects environments where workers or the CDN import are unavailable
-   (e.g. some file:// sandboxes) and falls back to a chunked main-thread parse. */
+   Parsing + AOA conversion is the single most expensive step. Standalone builds
+   reuse their embedded XLSX runtime inside the worker, so opening the HTML from
+   disk stays responsive too. Sheet conversion is row-batched for real progress. */
 const XLSX_WORKER_SRC=new URL('vendor/xlsx.bundle.js', window.location.href).href;
 function makeParseWorker(){
-  const src=`self.onmessage=function(ev){var m=ev.data;
+  const runtime=$('#xlsx-runtime');
+  const embedded=runtime&&!runtime.getAttribute('src')?runtime.textContent:'';
+  const src=`${embedded}\n;self.onmessage=function(ev){var m=ev.data;
     if(m.type==='ping'){self.postMessage({type:'ack'});return;}
-    if(m.type==='parse'){try{importScripts(m.cdn);
-      self.postMessage({type:'progress',pct:0.12,label:'Parsing workbook\u2026'});
+    if(m.type==='parse'){try{if(typeof XLSX==='undefined')importScripts(m.runtimeUrl);
+      self.postMessage({type:'progress',pct:0.02,label:'Opening workbook\u2026'});
       var wb=XLSX.read(new Uint8Array(m.buf),{type:'array'});
-      var names=wb.SheetNames.slice(),aoa={};
-      for(var i=0;i<names.length;i++){aoa[names[i]]=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,raw:false,defval:''});
-        self.postMessage({type:'progress',pct:0.12+0.88*((i+1)/names.length),label:'Reading '+names[i]});}
+      self.postMessage({type:'progress',pct:0.28,label:'Workbook opened'});
+      var names=wb.SheetNames.slice(),aoa={},ranges=[],totalCells=0;
+      for(var i=0;i<names.length;i++){
+        var ws=wb.Sheets[names[i]],ref=ws&&ws['!ref'],range=ref?XLSX.utils.decode_range(ref):null;
+        var cells=range?Math.max(1,(range.e.r-range.s.r+1)*(range.e.c-range.s.c+1)):1;
+        ranges.push({range:range,cells:cells});totalCells+=cells;
+      }
+      var completedCells=0;
+      for(var i=0;i<names.length;i++){
+        var name=names[i],ws=wb.Sheets[name],meta=ranges[i],range=meta.range,out=[];
+        if(range){
+          var colCount=Math.max(1,range.e.c-range.s.c+1);
+          var rowsPerBatch=Math.max(100,Math.floor(100000/colCount));
+          for(var start=range.s.r;start<=range.e.r;start+=rowsPerBatch){
+            var end=Math.min(range.e.r,start+rowsPerBatch-1);
+            var part=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:'',range:{s:{r:start,c:range.s.c},e:{r:end,c:range.e.c}}});
+            for(var p=0;p<part.length;p++)out.push(part[p]);
+            var batchCells=(end-start+1)*colCount;
+            completedCells+=batchCells;
+            self.postMessage({type:'progress',pct:0.28+0.72*Math.min(1,completedCells/Math.max(1,totalCells)),label:'Reading '+name});
+          }
+        }else{
+          completedCells+=meta.cells;
+          self.postMessage({type:'progress',pct:0.28+0.72*Math.min(1,completedCells/Math.max(1,totalCells)),label:'Reading '+name});
+        }
+        aoa[name]=out;
+      }
       self.postMessage({type:'done',sheetNames:names,aoaBySheet:aoa});
     }catch(e){self.postMessage({type:'error',message:String(e&&e.message||e)});}}};`;
   const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
@@ -2456,17 +2514,18 @@ function parseInWorker(buf, onProg){
   return new Promise((resolve,reject)=>{
     if(!window.Worker) return reject(new Error('no worker'));
     let w, acked=false, settled=false;
-    const cleanup=()=>{ try{w.terminate();}catch(_){} try{URL.revokeObjectURL(w._url);}catch(_){} };
+    let watchdog;
+    const cleanup=()=>{ clearTimeout(watchdog); try{w.terminate();}catch(_){} try{URL.revokeObjectURL(w._url);}catch(_){} };
+    const armWatchdog=()=>{ clearTimeout(watchdog); watchdog=setTimeout(()=>{ if(!settled){ settled=true; cleanup(); reject(new Error('worker stalled')); } },600000); };
     try{ w=makeParseWorker(); }catch(e){ return reject(e); }
     const ackT=setTimeout(()=>{ if(!acked){ settled=true; cleanup(); reject(new Error('worker ack timeout')); } },2500);
-    const hardT=setTimeout(()=>{ if(!settled){ settled=true; cleanup(); reject(new Error('worker timeout')); } },60000);
-    w.onerror=e=>{ if(settled)return; settled=true; clearTimeout(ackT); clearTimeout(hardT); cleanup(); reject(new Error('worker error: '+(e.message||''))); };
+    w.onerror=e=>{ if(settled)return; settled=true; clearTimeout(ackT); cleanup(); reject(new Error('worker error: '+(e.message||''))); };
     w.onmessage=e=>{
       const d=e.data;
-      if(d.type==='ack'){ acked=true; clearTimeout(ackT); w.postMessage({type:'parse',buf:buf,cdn:XLSX_WORKER_SRC}); return; }
-      if(d.type==='progress'){ onProg&&onProg(d.pct,d.label); return; }
-      if(d.type==='error'){ if(settled)return; settled=true; clearTimeout(hardT); cleanup(); reject(new Error(d.message)); return; }
-      if(d.type==='done'){ if(settled)return; settled=true; clearTimeout(hardT); cleanup(); resolve({sheetNames:d.sheetNames,aoaBySheet:d.aoaBySheet}); }
+      if(d.type==='ack'){ acked=true; clearTimeout(ackT); armWatchdog(); w.postMessage({type:'parse',buf:buf,runtimeUrl:XLSX_WORKER_SRC}); return; }
+      if(d.type==='progress'){ armWatchdog(); onProg&&onProg(d.pct,d.label); return; }
+      if(d.type==='error'){ if(settled)return; settled=true; cleanup(); reject(new Error(d.message)); return; }
+      if(d.type==='done'){ if(settled)return; settled=true; cleanup(); resolve({sheetNames:d.sheetNames,aoaBySheet:d.aoaBySheet}); }
     };
     w.postMessage({type:'ping'});
   });
@@ -2483,7 +2542,6 @@ async function parseMainThread(buf, onProg){
   return {sheetNames:names, aoaBySheet:aoa};
 }
 async function parseWorkbook(buf, onProg){
-  if(location.protocol==='file:') return await parseMainThread(buf,onProg);
   try{ return await parseInWorker(buf,onProg); }
   catch(e){ return await parseMainThread(buf,onProg); }
 }
@@ -2843,7 +2901,7 @@ async function handleFile(file){
     // 2) parse + AOA conversion off-thread when possible (20→70%)
     const {sheetNames,aoaBySheet}=await parseWorkbook(buf,progressRange(20,70,'Parsing workbook…'));
     state.fileName=file.name; state.sheetNames=sheetNames; state.aoaBySheet=aoaBySheet;
-    // 3) role match + model (70→96%)
+    // 3) role match + model (70→97%)
     await progressTo(72,'Matching tabs…',4);
     state.roleSheet.esr=matchSheet(state.sheetNames,['Equipment Status Report','equipment status']);
     state.roleSheet.dd =matchSheet(state.sheetNames,['Drop Downs- VF','drop downs vf','dropdowns vf','drop downs']);
@@ -2852,10 +2910,8 @@ async function handleFile(file){
     state.roleSheet.sql=matchSheet(state.sheetNames,['Issue SQL Table','issue sql']);
     loadRoleSheets();
     state.catInit=false; state.catAssign={}; state.colOverride={}; state.fxOverride={}; state.sqlOverride={};
-    await progressTo(84,'Building analysis…',6);
-    // 4) recompute + first render (virtualized — instant regardless of size)
-    await recompute(true);
-    await progressTo(96,'Rendering…',5);
+    // 4) analyze each matched report with visible, phase-based progress
+    await recompute(true,progressRange(72,97,'Building analysis…'));
     $('#filepill').style.display='flex'; $('#filepillname').textContent=file.name;
     $$('#tabs .tab').forEach(t=>t.disabled=false);
     await progressTo(100,'Done',2);
@@ -2873,24 +2929,36 @@ function loadRoleSheets(){
 }
 
 /* ---- recompute pipeline ---- */
-function recompute(initFilters){
+async function recompute(initFilters,onProgress){
+  const checkpoint=async(p,label)=>{ if(onProgress){ onProgress(p,label); await yieldUI(); } };
+  await checkpoint(0.02,'Reading equipment status…');
   const opts={ catAssign:state.catAssign, ignoreStepValues:state.ignoreNA?['n/a']:[], colOverride:state.colOverride };
   state.esr=parseEquipmentStatus(state.sheets.esr, opts);
+  await checkpoint(0.18,'Classifying QAQC, DV, and EHS steps…');
   if(!state.catInit){ // seed catAssign from detected defaults so the mapping UI is editable
     state.esr.stepCols.forEach(s=>{ state.catAssign[s.header.toLowerCase()]=s.defaultCats.slice(); });
     state.catInit=true;
     state.esr=parseEquipmentStatus(state.sheets.esr, {catAssign:state.catAssign, ignoreStepValues:opts.ignoreStepValues, colOverride:state.colOverride});
   }
+  await checkpoint(0.32,'Matching systems…');
   state.dd=parseDropdowns(state.sheets.dd);
+  await checkpoint(0.38,'Reading issue grid…');
   state.iss=parseIssues(state.sheets.iss);
+  await checkpoint(0.53,'Matching classifications…');
   state.fx=parseFullExport(state.sheets.fx, state.fxOverride);
+  await checkpoint(0.63,'Reading issue history…');
   state.sql=parseIssueSql(state.sheets.sql,state.sqlOverride);
+  await checkpoint(0.72,'Linking equipment and issues…');
   state.model=buildModel(state.esr,state.dd,state.iss,state.fx,state.sql);
+  await checkpoint(0.88,'Ordering equipment…');
   precomputeOrder();
   if(initFilters) buildFilters();
   else fillRootCauseFilters();
+  await checkpoint(0.94,'Preparing dashboard…');
   renderDashboard(); renderMapping();
-  return renderHierarchy(true);
+  await checkpoint(0.98,'Preparing equipment hierarchy…');
+  await renderHierarchy(true);
+  await checkpoint(1,'Analysis ready');
 }
 
 /* ---- filters ---- */
@@ -2947,9 +3015,7 @@ document.addEventListener('click',ev=>{
   if(toggle){
     const id=toggle.dataset.rootToggle;
     state.rootPickerOpen=state.rootPickerOpen===id?null:id;
-    state.escalationDimensionPickerOpen=null;
     syncRootCauseFilters();
-    syncEscalationDimensionFilters();
     ev.preventDefault();
     return;
   }
@@ -2971,117 +3037,6 @@ document.addEventListener('click',ev=>{
   if(state.rootPickerOpen && !ev.target.closest('.multi-select')){
     state.rootPickerOpen=null;
     syncRootCauseFilters();
-  }
-});
-function escalationDimensionFilterList(dim){ return [...((state.escalationDimensionFilters&&state.escalationDimensionFilters[dim])||[])]; }
-function escalationDimensionValues(dim){
-  if(!state.model) return [];
-  const equipment=filterEquipmentForChart(state.model.equipment,chartFilterOptions());
-  return uniq(equipment.map(e=>dimensionKey(e,dim)));
-}
-function escalationDimensionNoun(dim){ return dim==='Classification'?'classifications':dim.toLowerCase()+'s'; }
-function escalationDimensionSummary(dim){
-  const vals=escalationDimensionFilterList(dim);
-  if(!vals.length) return `All ${escalationDimensionNoun(dim)}`;
-  if(vals.length===1) return vals[0];
-  return `${vals.length} ${escalationDimensionNoun(dim)}`;
-}
-function escalationDimensionExportLabel(dim){
-  const vals=escalationDimensionFilterList(dim);
-  return vals.length?vals.join(' / '):`All ${escalationDimensionNoun(dim)}`;
-}
-function escalationDimensionFiltersForChart(){
-  const filters={};
-  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{filters[dim]=escalationDimensionFilterList(dim);});
-  return filters;
-}
-function escalationDimensionFilterId(dim){ return `escalationFilter${dim}`; }
-function syncEscalationDimensionFilters(){
-  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{
-    const el=$('#'+escalationDimensionFilterId(dim)); if(!el) return;
-    const vals=escalationDimensionValues(dim), selected=new Set(escalationDimensionFilterList(dim).filter(v=>vals.includes(v)));
-    state.escalationDimensionFilters[dim]=[...selected];
-    const summary=escalationDimensionSummary(dim), open=state.escalationDimensionPickerOpen===dim;
-    el.innerHTML=`<div class="multi-select ${open?'open':''}" data-escalation-dimension-picker="${esc(dim)}">
-      <button type="button" class="ms-button" data-escalation-dimension-toggle="${esc(dim)}" title="${esc(summary)}"><span class="ms-label">${esc(summary)}</span><span class="ms-caret">▾</span></button>
-      <div class="ms-menu">
-        <label class="ms-option"><input type="checkbox" data-escalation-dimension-all="${esc(dim)}" ${selected.size?'':'checked'} />All ${esc(escalationDimensionNoun(dim))}</label>
-        ${vals.map(v=>`<label class="ms-option"><input type="checkbox" data-escalation-dimension-value="${esc(v)}" data-escalation-dimension="${esc(dim)}" ${selected.has(v)?'checked':''} />${esc(v)}</label>`).join('')}
-      </div>
-    </div>`;
-  });
-}
-function applyEscalationDimensionChange(){
-  syncEscalationDimensionFilters(); exitEscalationFocus(true); renderEscalationChart();
-}
-document.addEventListener('click',ev=>{
-  const toggle=ev.target.closest('[data-escalation-dimension-toggle]');
-  if(toggle){
-    const dim=toggle.dataset.escalationDimensionToggle;
-    state.escalationDimensionPickerOpen=state.escalationDimensionPickerOpen===dim?null:dim;
-    state.escalationStepPickerOpen=false; state.rootPickerOpen=null;
-    syncEscalationDimensionFilters(); syncEscalationStepFilter(); syncRootCauseFilters();
-    ev.preventDefault(); return;
-  }
-  const all=ev.target.closest('[data-escalation-dimension-all]');
-  if(all){
-    state.escalationDimensionFilters[all.dataset.escalationDimensionAll]=[];
-    applyEscalationDimensionChange(); ev.stopPropagation(); return;
-  }
-  const item=ev.target.closest('[data-escalation-dimension-value]');
-  if(item){
-    const dim=item.dataset.escalationDimension, val=item.dataset.escalationDimensionValue;
-    const selected=new Set(escalationDimensionFilterList(dim));
-    selected.has(val)?selected.delete(val):selected.add(val);
-    state.escalationDimensionFilters[dim]=[...selected];
-    applyEscalationDimensionChange(); ev.stopPropagation(); return;
-  }
-  if(state.escalationDimensionPickerOpen&&!ev.target.closest('[data-escalation-dimension-picker]')){
-    state.escalationDimensionPickerOpen=null; syncEscalationDimensionFilters();
-  }
-});
-function escalationStepValues(){ return (state.model&&state.model.escalationSteps)||[]; }
-function escalationStepList(){ return [...(state.escalationSteps||new Set())]; }
-function escalationStepSummary(){
-  const vals=escalationStepList();
-  if(!vals.length) return 'All Cx steps';
-  if(vals.length===1) return vals[0];
-  return `${vals.length} Cx steps`;
-}
-function escalationStepExportLabel(){ const vals=escalationStepList(); return vals.length?vals.join(' / '):'All Cx steps'; }
-function syncEscalationStepFilter(){
-  const el=$('#escalationStepFilter'); if(!el) return;
-  const vals=escalationStepValues(), selected=new Set(escalationStepList());
-  state.escalationSteps=new Set([...selected].filter(v=>vals.includes(v)));
-  const summary=escalationStepSummary();
-  el.innerHTML=`<div class="multi-select ${state.escalationStepPickerOpen?'open':''}">
-    <button type="button" class="ms-button" data-escalation-step-toggle="1" title="${esc(summary)}"><span class="ms-label">${esc(summary)}</span><span class="ms-caret">▾</span></button>
-    <div class="ms-menu">
-      <label class="ms-option"><input type="checkbox" data-escalation-step-all="1" ${state.escalationSteps.size?'':'checked'} />All Cx steps</label>
-      ${vals.map(v=>`<label class="ms-option"><input type="checkbox" data-escalation-step-value="${esc(v)}" ${state.escalationSteps.has(v)?'checked':''} />${esc(v)}</label>`).join('')}
-    </div>
-  </div>`;
-}
-function applyEscalationStepChange(){
-  syncEscalationStepFilter(); exitEscalationFocus(true); renderEscalationChart();
-}
-document.addEventListener('click',ev=>{
-  if(ev.target.closest('[data-escalation-step-toggle]')){
-    state.escalationStepPickerOpen=!state.escalationStepPickerOpen;
-    state.escalationDimensionPickerOpen=null; state.rootPickerOpen=null;
-    syncEscalationStepFilter(); syncEscalationDimensionFilters(); syncRootCauseFilters(); ev.preventDefault(); return;
-  }
-  if(ev.target.closest('[data-escalation-step-all]')){
-    state.escalationSteps.clear(); applyEscalationStepChange(); ev.stopPropagation(); return;
-  }
-  const item=ev.target.closest('[data-escalation-step-value]');
-  if(item){
-    const val=item.dataset.escalationStepValue;
-    state.escalationSteps.has(val)?state.escalationSteps.delete(val):state.escalationSteps.add(val);
-    applyEscalationStepChange(); ev.stopPropagation(); return;
-  }
-  if(state.escalationStepPickerOpen&&!ev.target.closest('#escalationStepFilter')){
-    state.escalationStepPickerOpen=false; syncEscalationStepFilter();
   }
 });
 function debounce(fn,ms){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args),ms); }; }
@@ -3225,17 +3180,16 @@ function renderDashboard(){
   const chartSort=$('#sort-chart'); if(chartSort) chartSort.value=state.chartSort;
   const stepChartSort=$('#sort-step-chart'); if(stepChartSort) stepChartSort.value=state.chartSort;
   const escalationSort=$('#sort-escalation'); if(escalationSort) escalationSort.value=state.escalationSort;
-  const escalationGroup=$('#escalation-group'); if(escalationGroup) escalationGroup.value=state.escalationGroup;
   const matrixSort=$('#sort-matrix'); if(matrixSort) matrixSort.value=state.matrixSort;
   const riskSort=$('#sort-risk'); if(riskSort) riskSort.value=state.riskSort;
   const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
   updateCustomViewButton();
   syncRootCauseFilters();
-  syncEscalationDimensionFilters();
-  syncEscalationStepFilter();
+  syncEscalationGroupPills();
   syncChartSearchInputs();
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   syncIssueViewUI();
+  syncRiskViewUI();
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
   updateRiskMetricPills();
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
@@ -3374,7 +3328,7 @@ function catActive(){ return state.catNone || state.catSel.size>0; }
 function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
 function riskMetricIsEquipment(){ return state.riskMetric==='equipment'; }
 function issueChartOptions(){ return chartFilterOptions({stepSelection:catSelection(),rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
-function escalationChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),cxSteps:escalationStepList(),dimensionFilters:escalationDimensionFiltersForChart(),sortDirection:state.escalationSort}); }
+function escalationChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.escalationSort}); }
 function issueChartEquipment(){
   const opts=issueChartOptions();
   const base=filterEquipmentForChart(state.model.equipment,opts);
@@ -3410,9 +3364,7 @@ function currentIssueRows(){
   return searchQuery(state.chartSearch) ? issueShareRows(searched) : searched;
 }
 function currentEscalationRows(){
-  const rows=state.escalationGroup==='cxStep'
-    ? escalationCxStepRows(state.model.escalationRows,state.model.equipment,escalationChartOptions())
-    : escalationCategoryRows(state.model.escalationRows,state.model.equipment,escalationChartOptions());
+  const rows=escalationGroupedRows(state.model.escalationRows,state.model.equipment,state.escalationGroup,escalationChartOptions());
   return filterRowsBySearch(rows,state.escalationSearch);
 }
 $('#excludeRooms').addEventListener('change',e=>{
@@ -3428,11 +3380,15 @@ $('#alexCustomView').addEventListener('change',e=>{
 $('#sort-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; exitFocus(true); renderChart(); });
 $('#sort-step-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; $('#sort-chart').value=state.chartSort; exitStepFocus(true); renderStepChart(); });
 $('#sort-escalation').addEventListener('change',e=>{ state.escalationSort=e.target.value; exitEscalationFocus(true); renderEscalationChart(); });
-$('#escalation-group').addEventListener('change',e=>{
-  state.escalationGroup=e.target.value==='cxStep'?'cxStep':'original';
-  if(state.escalationGroup==='cxStep'&&state.escalationFocusDim==='Cx Step') state.escalationFocusDim='System';
-  exitEscalationFocus(true); renderEscalationChart();
-});
+function syncEscalationGroupPills(){
+  $$('#escalationdimpills .pill').forEach(p=>p.classList.toggle('active',p.dataset.escalationGroup===state.escalationGroup));
+}
+$$('#escalationdimpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  state.escalationGroup=p.dataset.escalationGroup||'original';
+  const activeDim=state.escalationGroup==='cxStep'?'Cx Step':state.escalationGroup;
+  if(state.escalationFocusDim===activeDim) state.escalationFocusDim='System';
+  syncEscalationGroupPills(); exitEscalationFocus(true); renderEscalationChart();
+}));
 $('#sort-matrix').addEventListener('change',e=>{ state.matrixSort=e.target.value; renderMatrix(); });
 $('#sort-risk').addEventListener('change',e=>{ state.riskSort=e.target.value; exitRiskFocus(true); renderRisk(); });
 $('#sort-fat-risk').addEventListener('change',e=>{ state.fatRiskSort=e.target.value; exitFatRiskFocus(true); renderFatRisk(); });
@@ -3448,49 +3404,28 @@ function renderIssueCardSide(){
   else renderChart();
 }
 function syncIssueViewUI(){
-  $$('.issue-view-select').forEach(sel=>{ sel.value=state.issueCardSide; });
+  $$('#chartcard .issue-view-select').forEach(sel=>{ sel.value=state.issueCardSide; });
   $$('#chartcard .issue-face').forEach(face=>face.classList.toggle('active',face.dataset.issueView===state.issueCardSide));
 }
-let issueFlipTimer=null;
 function setIssueCardSide(side){
   if(!['distribution','step','escalation'].includes(side)) side='distribution';
-  const inner=$('#chartcard .issue-card-inner');
-  if(!inner||inner.dataset.flipping==='1') return;
   if(side===state.issueCardSide){ syncIssueViewUI(); renderIssueCardSide(); resizeChartsSoon(); return; }
-  const current=$('#chartcard .issue-face.active'), next=$(`#chartcard .issue-face[data-issue-view="${side}"]`);
-  if(!next) return;
   state.issueCardSide=side;
   exitFocus(true); exitStepFocus(true); exitEscalationFocus(true);
-  $$('.issue-view-select').forEach(sel=>{ sel.value=side; sel.disabled=true; });
-  inner.dataset.flipping='1';
-  inner.classList.add('flipping-out');
-  clearTimeout(issueFlipTimer);
-  issueFlipTimer=setTimeout(()=>{
-    if(current) current.classList.remove('active');
-    next.classList.add('active');
-    inner.classList.remove('flipping-out');
-    inner.classList.add('flipping-in');
-    renderIssueCardSide(); resizeChartsSoon();
-    void inner.offsetWidth;
-    requestAnimationFrame(()=>{
-      inner.classList.remove('flipping-in');
-      issueFlipTimer=setTimeout(()=>{
-        inner.dataset.flipping='0';
-        $$('.issue-view-select').forEach(sel=>{ sel.disabled=false; sel.value=state.issueCardSide; });
-        resizeChartsSoon();
-      },300);
-    });
-  },275);
+  syncIssueViewUI();
+  renderIssueCardSide();
+  resizeChartsSoon();
 }
-$$('.issue-view-select').forEach(sel=>sel.addEventListener('change',e=>setIssueCardSide(e.target.value)));
+$$('#chartcard .issue-view-select').forEach(sel=>sel.addEventListener('change',e=>setIssueCardSide(e.target.value)));
+function syncRiskViewUI(){ $$('.risk-view-select').forEach(sel=>{ sel.value=state.riskCardSide; }); }
 function setRiskCardSide(side){
   state.riskCardSide=side==='fat'?'fat':'standard';
   exitRiskFocus(true); exitFatRiskFocus(true);
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
+  syncRiskViewUI();
   requestAnimationFrame(()=>{ state.riskCardSide==='fat' ? renderFatRisk() : renderRisk(); resizeChartsSoon(); });
 }
-$('#risk-flip-fat').addEventListener('click',()=>setRiskCardSide('fat'));
-$('#risk-flip-standard').addEventListener('click',()=>setRiskCardSide('standard'));
+$$('.risk-view-select').forEach(sel=>sel.addEventListener('change',e=>setRiskCardSide(e.target.value)));
 function resizeChartsSoon(){
   const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.escalationChart) state.escalationChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
   requestAnimationFrame(resize);
@@ -3638,7 +3573,7 @@ function issueCategoryColor(category){
   if(c==='DWN') return '#c25139';
   if(c==='NGI') return '#8b97a4';
   if(c==='WI') return '#2f83cc';
-  if(c==='OAS') return '#8b97a4';
+  if(c==='OAS') return '#557fbd';
   return hashColor(category);
 }
 function stepChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
@@ -3713,20 +3648,27 @@ document.addEventListener('click',ev=>{
   $('#escalationLegendDropdown').classList.remove('open');
   $('#escalationLegendToggle').setAttribute('aria-expanded','false');
 });
-function escalationGroupLabel(){ return state.escalationGroup==='cxStep'?'Cx Step':'Original Category'; }
-function escalationGroupNoun(){ return state.escalationGroup==='cxStep'?'Cx steps':'original categories'; }
+function escalationGroupLabel(groupBy){
+  const value=groupBy||state.escalationGroup;
+  if(value==='original') return 'Issue Type';
+  if(value==='cxStep') return 'Cx Step';
+  return value;
+}
+function escalationGroupNoun(groupBy){
+  const value=groupBy||state.escalationGroup;
+  if(value==='original') return 'issue types';
+  if(value==='cxStep') return 'Cx steps';
+  if(value==='Classification') return 'classifications';
+  return value.toLowerCase()+'s';
+}
+function escalationGroupFilePart(){ return state.escalationGroup==='original'?'issue_type':safeFilePart(escalationGroupLabel()); }
 function renderEscalationChart(){
   if(!state.model) return;
-  const allRows=state.escalationGroup==='cxStep'
-    ? escalationCxStepRows(state.model.escalationRows,state.model.equipment,escalationChartOptions())
-    : escalationCategoryRows(state.model.escalationRows,state.model.equipment,escalationChartOptions());
+  const allRows=escalationGroupedRows(state.model.escalationRows,state.model.equipment,state.escalationGroup,escalationChartOptions());
   const rows=currentEscalationRows();
   const transitions=sortEscalationTransitions([...new Set(rows.flatMap(r=>Object.keys(r.transitionCounts||{})))],rows.flatMap(r=>r.issues||[]));
   renderEscalationLegend(transitions);
   const filters=[];
-  const activeDimensionFilters=ESCALATION_FILTER_DIMENSIONS.filter(dim=>escalationDimensionFilterList(dim).length);
-  if(activeDimensionFilters.length) filters.push(`${activeDimensionFilters.length} dimension filter${activeDimensionFilters.length===1?'':'s'}`);
-  if(escalationStepList().length) filters.push(escalationStepSummary());
   if(rootCauseList().length) filters.push(rootCauseSummary());
   setLabelText('#escalation-chart-title',`Escalations by ${escalationGroupLabel()}${filters.length?' · '+filters.join(' · '):''}`);
   const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
@@ -3944,28 +3886,30 @@ function enterEscalationFocus(row,transition){
   const transitionCounts={}, cxStepCounts={}, originalCategoryCounts={};
   issues.forEach(issue=>{
     transitionCounts[issue.transition]=(transitionCounts[issue.transition]||0)+1;
-    cxStepCounts[issue.cxStep]=(cxStepCounts[issue.cxStep]||0)+1;
+    const cxStep=normalizeCxStep(issue.cxStep);
+    cxStepCounts[cxStep]=(cxStepCounts[cxStep]||0)+1;
     originalCategoryCounts[issue.originalCategory]=(originalCategoryCounts[issue.originalCategory]||0)+1;
   });
-  const groupBy=state.escalationGroup, groupLabel=groupBy==='cxStep'?'Cx Step':'Original category';
-  const breakdownDimensions=groupBy==='cxStep'?['System','Discipline','Building','Milestone','Classification']:['System','Discipline','Building','Milestone','Classification','Cx Step'];
+  const groupBy=state.escalationGroup, groupLabel=escalationGroupLabel(groupBy);
+  const activeDimension=groupBy==='cxStep'?'Cx Step':groupBy;
+  const breakdownDimensions=['System','Discipline','Building','Milestone','Classification','Cx Step'].filter(dim=>dim!==activeDimension);
   let breakdownDim=state.escalationFocusDim||'System';
-  if(!breakdownDimensions.includes(breakdownDim)) breakdownDim='System';
+  if(!breakdownDimensions.includes(breakdownDim)) breakdownDim=breakdownDimensions[0];
   state.escalationFocusDim=breakdownDim;
   state.escalationFocus={groupValue:row.key,groupBy,transition:transition||'',bdim:breakdownDim,row};
   const f=$('#escalationfocus'), equipmentCount=new Set(issues.map(issue=>issue.equipmentKey)).size;
   f.innerHTML=`
-    <button class="focus-back" id="escalationfocus-back">← All ${groupBy==='cxStep'?'Cx steps':'original categories'}</button>
+    <button class="focus-back" id="escalationfocus-back">← All ${esc(escalationGroupNoun(groupBy))}</button>
     <div class="focus-head">
       <div class="focus-name">${esc(transition||row.key)}</div>
-      <div class="focus-sub">${transition?'Escalation path':groupLabel} · ${issues.length.toLocaleString()} escalations · ${equipmentCount.toLocaleString()} equipment${groupBy==='original'?' · '+esc(escalationStepSummary()):''}</div>
+      <div class="focus-sub">${transition?'Escalation path':esc(groupLabel)} · ${issues.length.toLocaleString()} escalations · ${equipmentCount.toLocaleString()} equipment</div>
     </div>
-    <div class="focus-stats">
+    <div class="focus-stats escalation-focus-stats">
       <div class="fstat"><div class="l">Escalations</div><div class="v">${issues.length.toLocaleString()}</div></div>
       <div class="fstat"><div class="l">Equipment</div><div class="v">${equipmentCount.toLocaleString()}</div></div>
       <div class="fstat"><div class="l">Paths</div><div class="v" style="font-size:12px;font-weight:700">${countChips(transitionCounts)}</div></div>
-      <div class="fstat"><div class="l">${groupBy==='cxStep'?'Originals':'Cx Steps'}</div><div class="v" style="font-size:12px;font-weight:700">${countChips(groupBy==='cxStep'?originalCategoryCounts:cxStepCounts)}</div></div>
     </div>
+    <div class="escalation-focus-rollup"><div class="l">${groupBy==='cxStep'?'Original issue types':'Cx Steps'}</div><div class="v">${countChips(groupBy==='cxStep'?originalCategoryCounts:cxStepCounts)}</div></div>
     <div class="step-focus-controls">
       <span class="subfilter-label">Break down by</span>
       <select id="escalationfocus-dim">${breakdownDimensions.map(x=>`<option value="${x}" ${x===state.escalationFocus.bdim?'selected':''}>${x}</option>`).join('')}</select>
@@ -3991,7 +3935,7 @@ function renderEscalationBreakdown(){
         ${escalationStackMiniHTML(g.transitionCounts,g.issueCount)}
       </button>
       <div class="fc-body" id="escalationbody-${i}"><div class="fc-inner"></div></div>
-    </div>`).join(''):`<p class="empty">No matching escalations for this ${focus.groupBy==='cxStep'?'Cx step':'category'}.</p>`;
+    </div>`).join(''):`<p class="empty">No matching escalations for this ${esc(escalationGroupLabel(focus.groupBy).toLowerCase())}.</p>`;
 }
 function escalationEquipmentTable(group){
   const items=(group.equipment||[]).slice(0,FOCUS_CAP), hidden=(group.equipment||[]).length-items.length;
@@ -4650,9 +4594,7 @@ function exportStepCaughtXlsx(){
   writeFilteredWorkbook(`issues_caught_by_step${chartFilterFileSuffix()}.xlsx`,[{name:'Issues by Step',aoa,widths:[28,10,11,...categories.map(()=>12),...categories.map(()=>9)]}]);
 }
 function escalationExportDetails(){
-  const details={'Group by':escalationGroupLabel()};
-  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{details[dim]=escalationDimensionExportLabel(dim);});
-  details['Cx Step']=escalationStepExportLabel();
+  const details={Breakdown:escalationGroupLabel()};
   details['Root cause']=rootCauseExportLabel();
   details.Search=state.escalationSearch||'None';
   return details;
@@ -4671,7 +4613,7 @@ function exportEscalationXlsx(){
     ['Issue ID','Equipment Name','System','Discipline','Building','Milestone','Classification','Original Category','Current Category','Escalation Path','SQL Cx Step','Issue Grid Cx Step','Root Cause'],
     ...visibleIssues.map(issue=>[issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.originalCategory,issue.issueCategory,issue.transition,issue.cxStep,issue.gridCxStep,issue.rootCause])
   ];
-  writeFilteredWorkbook(`issue_escalation_by_${state.escalationGroup==='cxStep'?'cx_step':'original_category'}${chartFilterFileSuffix()}.xlsx`,[
+  writeFilteredWorkbook(`issue_escalation_by_${escalationGroupFilePart()}${chartFilterFileSuffix()}.xlsx`,[
     {name:'Escalation Summary',aoa:summary,widths:[20,12,11,...transitions.map(()=>20),...transitions.map(()=>12)]},
     {name:'Escalation Detail',aoa:detail,widths:[16,22,24,16,12,12,20,18,18,24,20,20,18]}
   ]);
@@ -4914,7 +4856,7 @@ $('#dl-step-chart').addEventListener('click',()=>{ if(!state.stepChart)return;
 $('#xlsx-step-chart').addEventListener('click',exportStepCaughtXlsx);
 $('#dl-escalation').addEventListener('click',()=>{ if(!state.escalationChart)return;
   clearChartRowHover(state.escalationChart);
-  const a=document.createElement('a'); a.href=state.escalationChart.toBase64Image('image/png',1); a.download=`issue_escalation_by_${state.escalationGroup==='cxStep'?'cx_step':'original_category'}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
+  const a=document.createElement('a'); a.href=state.escalationChart.toBase64Image('image/png',1); a.download=`issue_escalation_by_${escalationGroupFilePart()}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-escalation').addEventListener('click',exportEscalationXlsx);
 $('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
   clearChartRowHover(state.fatRiskChart);

@@ -215,6 +215,16 @@ test('update asset selection prefers the versioned plain HTML asset for simple d
   assert.equal(selected.downloadUrl, 'download-versioned')
 })
 
+test('standalone imports keep workbook parsing off the main thread with batched progress', () => {
+  const html = loadHtml()
+
+  assert.match(html, /<script id="xlsx-runtime" src="vendor\/xlsx\.bundle\.js"><\/script>/)
+  assert.doesNotMatch(html, /if\(location\.protocol==='file:'\)/)
+  assert.match(html, /rowsPerBatch=Math\.max\(100,Math\.floor\(100000\/colCount\)\)/)
+  assert.match(html, /completedCells\/Math\.max\(1,totalCells\)/)
+  assert.match(html, /await recompute\(true,progressRange\(72,97,'Building analysis…'\)\)/)
+})
+
 test('update dismissal remains temporary and startup checks bypass stale release caching', () => {
   const html = loadHtml()
 
@@ -332,6 +342,32 @@ test('issue parsing keeps Cx Step, Category, Root Cause, and UPN per issue row',
   }))
 })
 
+test('blank and NULL Cx Step values count together as No Cx Step', () => {
+  const ctx = loadPipeline()
+  const issues = ctx.parseIssues([
+    ['Issue ID', 'Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Issue-1', 'Pump A', '1001', 'NULL', 'DWN', 'Design'],
+    ['Issue-2', 'Pump A', '1001', '', 'DWN', 'Install'],
+  ])
+  const sql = ctx.parseIssueSql([
+    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep'],
+    ['Issue-1', 'COR', 'DWN', 'NULL'],
+    ['Issue-2', 'WI', 'DWN', ''],
+  ])
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', discipline: 'Mechanical', building: 'B1', milestone: 'M1', score: 0, present: {}, categories: [] },
+    ],
+  }, { map: { 1001: 'Water System' } }, issues, { byId: new Map([['pump a', 'Pump']]) }, sql)
+  const rows = ctx.escalationCxStepRows(model.escalationRows, model.equipment, {})
+
+  assert.deepEqual(Array.from(issues.rows.map((row) => row.cxStep)), ['No Cx Step', 'No Cx Step'])
+  assert.deepEqual(Array.from(sql.rows.map((row) => row.cxStep)), ['No Cx Step', 'No Cx Step'])
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].key, 'No Cx Step')
+  assert.equal(rows[0].issueCount, 2)
+})
+
 test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as authoritative', () => {
   const ctx = loadPipeline()
   const issues = ctx.parseIssues([
@@ -366,6 +402,7 @@ test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as au
   const fatRows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, { cxSteps: ['FAT'] })
   const cxStepRows = ctx.escalationCxStepRows(model.escalationRows, model.equipment, {})
   const mechanicalRows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, { dimensionFilters: { Discipline: ['Mechanical'] } })
+  const systemRows = ctx.escalationDimensionRows(model.escalationRows, model.equipment, 'System', {})
   const breakdown = ctx.escalationBreakdown(model.escalationRows, model.equipment, 'COR', 'System', {}, '')
   const cxStepBreakdown = ctx.escalationBreakdown(model.escalationRows, model.equipment, 'FAT', 'System', {}, '', 'cxStep')
 
@@ -373,6 +410,7 @@ test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as au
   assert.equal(JSON.stringify(fatRows.map((row) => row.key)), JSON.stringify(['COR']))
   assert.equal(JSON.stringify(cxStepRows.map((row) => [row.key, row.issueCount])), JSON.stringify([['Commissioning', 1], ['FAT', 1]]))
   assert.equal(JSON.stringify(mechanicalRows.map((row) => row.key)), JSON.stringify(['COR']))
+  assert.equal(JSON.stringify(systemRows.map((row) => row.key)), JSON.stringify(['1001 - Water System', '2002 - Power System']))
   assert.equal(breakdown[0].key, '1001 - Water System')
   assert.equal(breakdown[0].equipment[0].name, 'Pump A')
   assert.equal(cxStepBreakdown[0].key, '1001 - Water System')
@@ -383,26 +421,38 @@ test('issue chart selector exposes escalation filters, drilldown, and filtered e
   const ctx = loadPipeline()
 
   assert.match(html, /<option value="escalation">Issue Escalation<\/option>/)
-  assert.match(html, /id="escalation-group"/)
-  assert.match(html, /<option value="cxStep">Cx Step<\/option>/)
-  assert.match(html, /id="escalationFilterSystem"/)
-  assert.match(html, /id="escalationFilterDiscipline"/)
-  assert.match(html, /id="escalationFilterBuilding"/)
-  assert.match(html, /id="escalationFilterMilestone"/)
-  assert.match(html, /id="escalationFilterClassification"/)
+  assert.match(html, /id="escalationdimpills"/)
+  assert.match(html, /data-escalation-group="original">No Filter<\/button>/)
+  assert.match(html, /data-escalation-group="System">System<\/button>/)
+  assert.match(html, /data-escalation-group="Classification">Classification<\/button>/)
+  assert.match(html, /data-escalation-group="cxStep">Cx Steps<\/button>/)
+  assert.doesNotMatch(html, /id="escalation-group"/)
+  assert.doesNotMatch(html, /id="escalationFilterSystem"/)
   assert.doesNotMatch(html, /id="escalationcatpills"/)
   assert.match(html, /id="escalationLegendToggle"/)
   assert.match(html, /id="escalationLegendCount"/)
-  assert.match(html, /id="escalationStepFilter"/)
+  assert.doesNotMatch(html, /id="escalationStepFilter"/)
+  assert.match(html, /id="escalationRootCauseFilter"/)
   assert.match(html, /id="escalationfocus"/)
+  assert.match(html, /class="focus-stats escalation-focus-stats"/)
+  assert.match(html, /class="escalation-focus-rollup"/)
   assert.match(html, /id="xlsx-escalation"/)
   assert.match(html, /id="dl-escalation"/)
   assert.match(html, /function exportEscalationXlsx\(\)/)
-  assert.match(html, /function escalationChartOptions\(\)\{ return chartFilterOptions\(\{rootCauses:rootCauseList\(\),cxSteps:escalationStepList\(\),dimensionFilters:/)
+  assert.match(html, /function escalationChartOptions\(\)\{ return chartFilterOptions\(\{rootCauses:rootCauseList\(\),sortDirection:/)
   assert.match(html, /id:'stackTotalLabels'/)
   assert.match(html, /state\.escalationChart\.toBase64Image\('image\/png',1\)/)
-  assert.match(html, /if\(c==='OAS'\) return '#8b97a4'/)
+  assert.match(html, /if\(c==='OAS'\) return '#557fbd'/)
   assert.equal(ctx.issueCategoryRank('OAS'), ctx.issueCategoryRank('WI'))
+})
+
+test('chart view selectors switch directly and risk views share the same dropdown style', () => {
+  const html = loadHtml()
+
+  assert.match(html, /class="issue-view-select risk-view-select"[^>]*>[\s\S]*Risk Analysis[\s\S]*FAT Risk/)
+  assert.doesNotMatch(html, /id="risk-flip-fat"|id="risk-flip-standard"/)
+  assert.doesNotMatch(html, /flipping-out|flipping-in|issueFlipTimer/)
+  assert.match(html, /function setIssueCardSide\(side\)\{[\s\S]*syncIssueViewUI\(\);[\s\S]*renderIssueCardSide\(\);/)
 })
 
 test('issue distribution can count issues by root cause from matched issue rows', () => {
