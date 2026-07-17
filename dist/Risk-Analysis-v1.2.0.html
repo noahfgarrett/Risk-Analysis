@@ -214,6 +214,10 @@ button{font-family:inherit}
 .riskmetric-control{display:inline-flex;align-items:center;gap:6px;margin-top:1px}
 .riskmetric-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
 .riskmetric-control select{height:28px;min-width:148px;padding:4px 28px 4px 8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface)}
+.chart-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chart-group-control{display:inline-flex;align-items:center;gap:6px;margin-top:1px}
+.chart-group-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
+.chart-group-control select{height:28px;min-width:152px;padding:4px 28px 4px 8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface)}
 .sort-select{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:11px;font-weight:700}
 .sort-select select{height:32px;min-width:112px;padding:5px 8px;border-radius:7px;font-size:12px}
 .grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
@@ -224,16 +228,16 @@ button{font-family:inherit}
 .card.fullscreen.matrix{padding:18px}
 body.chart-fullscreen{overflow:hidden}
 .issue-card{padding:0;perspective:1400px;overflow:hidden}
-.issue-card-inner{position:relative;min-height:650px;transform-style:preserve-3d;transition:transform .56s cubic-bezier(.2,.7,.2,1)}
-.issue-card.flipped .issue-card-inner{transform:rotateY(180deg)}
-.issue-face{min-height:650px;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface)}
-.issue-face-front{pointer-events:auto}
-.issue-face-back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;pointer-events:none}
-.issue-card.flipped .issue-face-front{pointer-events:none}
-.issue-card.flipped .issue-face-back{pointer-events:auto}
+.issue-card-inner{position:relative;min-height:650px;transform-style:preserve-3d;transition:transform .27s cubic-bezier(.2,.7,.2,1)}
+.issue-card-inner.flipping-out{transform:rotateY(90deg)}
+.issue-card-inner.flipping-in{transition:none;transform:rotateY(-90deg)}
+.issue-face{display:none;min-height:650px;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);flex-direction:column}
+.issue-face.active{display:flex}
 .issue-card.fullscreen .issue-card-inner,.issue-card.fullscreen .issue-face{min-height:100%}
-.issue-card.fullscreen .issue-face-back{min-height:auto}
-.issue-flip-btn{font-weight:750;color:var(--accent)}
+.issue-view-control{display:inline-flex;align-items:center;gap:6px;color:var(--ink-3);font-size:11px;font-weight:750}
+.issue-view-box{position:relative;display:inline-flex;align-items:center}
+.issue-view-select{height:32px;min-width:172px;padding:5px 30px 5px 10px;border-color:#cfe4f5;background:var(--accent-wash);color:var(--accent);font-size:12px;font-weight:800;cursor:pointer}
+.issue-view-caret{position:absolute;right:10px;color:var(--accent);font-size:10px;pointer-events:none}
 .root-filter-row{margin-top:-2px}
 .filter-shelf{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
 .filter-group{display:inline-flex;align-items:center;gap:7px;min-height:34px;min-width:0}
@@ -249,6 +253,12 @@ body.chart-fullscreen{overflow:hidden}
 .filter-search span{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
 .filter-search input{width:100%;min-width:0;height:32px;padding:6px 10px;border-radius:7px;font-size:12.5px;line-height:16px;background:var(--surface)}
 .filter-search input::placeholder{color:var(--ink-3)}
+.escalation-filter-shelf{display:grid;gap:8px}
+.escalation-dimension-row,.escalation-utility-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;width:100%}
+.escalation-filter-shelf .filter-group{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.escalation-filter-shelf .filter-group.compact{width:auto}
+.escalation-filter-shelf .root-select{width:100%;min-width:0;flex:auto}
+.escalation-filter-shelf .filter-search{margin-left:0;width:100%;min-width:220px;max-width:none;display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:auto}
 .search-note{font-size:11.5px;color:var(--ink-3);margin:-5px 2px 8px}
 .search-note b{color:var(--ink-2)}
 .matrix-filter{display:grid;grid-template-columns:1fr;gap:8px;align-items:start}
@@ -259,6 +269,13 @@ body.chart-fullscreen{overflow:hidden}
 .issue-legend{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px;min-height:24px}
 .issue-legend .lg{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);font-family:var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:var(--surface-2)}
 .issue-legend .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.legend-dropdown{position:relative;align-self:flex-start;margin:-2px 0 10px;z-index:24}
+.legend-dropdown-button{height:30px;display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink-2);font-size:11.5px;font-weight:750;cursor:pointer}
+.legend-dropdown-count{min-width:20px;padding:1px 5px;border-radius:5px;background:var(--surface-2);color:var(--ink-3);font-family:var(--mono);font-size:10.5px;text-align:center}
+.legend-dropdown-caret{color:var(--ink-3);font-size:10px;transition:transform .16s}
+.legend-dropdown.open .legend-dropdown-caret{transform:rotate(180deg)}
+.legend-dropdown-menu{display:none;position:absolute;top:calc(100% + 5px);left:0;width:540px;max-width:calc(100vw - 80px);max-height:230px;overflow:auto;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+.legend-dropdown.open .legend-dropdown-menu{display:flex;margin:0}
 .step-focus-controls{display:flex;align-items:center;gap:10px;margin:8px 2px 12px;flex-wrap:wrap}
 .step-focus-controls select{min-width:160px;padding:6px 10px;font-size:13px;border-radius:7px}
 .step-group{border-top:1px solid var(--line)}
@@ -292,11 +309,11 @@ body.chart-fullscreen{overflow:hidden}
 .risk-flip-card.flipped .risk-face-front{pointer-events:none}
 .risk-flip-card.flipped .risk-face-back{pointer-events:auto}
 .risk-flip-card.fullscreen .risk-card-inner,.risk-flip-card.fullscreen .risk-face{min-height:100%}
-body.export-capture .issue-card.flipped .issue-card-inner,
+body.export-capture .issue-card .issue-card-inner,
 body.export-capture .risk-flip-card.flipped .risk-card-inner{transform:none!important}
-body.export-capture .issue-card.flipped .issue-face-front,
+body.export-capture .issue-card .issue-face{display:none!important}
+body.export-capture .issue-card .issue-face.active{display:flex!important;position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
 body.export-capture .risk-flip-card.flipped .risk-face-front{display:none!important}
-body.export-capture .issue-card.flipped .issue-face-back,
 body.export-capture .risk-flip-card.flipped .risk-face-back{position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
 body.export-capture .issue-card,
 body.export-capture .risk-flip-card{perspective:none!important}
@@ -673,7 +690,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.1.10</span>
+      Risk Analysis v<span id="version-label">1.2.0</span>
     </button>
   </header>
 
@@ -689,6 +706,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
           <code>Equipment Status Report</code>
           <code>Drop Downs- VF</code>
           <code>Issue Grid Report</code>
+          <code>Issue SQL Table</code>
         </div>
       </div>
       <input type="file" id="fileinput" accept=".xlsx,.xlsm,.xls" style="display:none" />
@@ -757,7 +775,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
       <div class="grid-2">
         <div class="card issue-card" id="chartcard">
           <div class="issue-card-inner">
-            <div class="issue-face issue-face-front">
+            <div class="issue-face issue-face-front active" data-issue-view="distribution">
               <div class="section-head">
                 <div>
                   <div class="eyebrow">Issue distribution</div>
@@ -765,7 +783,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                 </div>
                 <div class="section-actions">
                   <label class="sort-select">Sort <select id="sort-chart"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
-                  <button class="btn ghost issue-flip-btn" id="issue-flip-step" title="Show issues caught by Cx Step">Caught by Step</button>
+                  <label class="issue-view-control">View <span class="issue-view-box"><select class="issue-view-select" aria-label="Issue chart view"><option value="distribution">Issue Distribution</option><option value="step">Issues by Step</option><option value="escalation">Issue Escalation</option></select><span class="issue-view-caret">▾</span></span></label>
                   <button class="btn ghost" data-fullscreen-target="chartcard" title="View issue distribution full screen">Full</button>
                   <button class="btn ghost" id="xlsx-chart" title="Export filtered issue distribution XLSX">XLSX</button>
                   <button class="btn ghost" id="dl-chart" title="Download chart PNG">
@@ -815,7 +833,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                 <div class="chartfocus" id="chartfocus" hidden></div>
               </div>
             </div>
-            <div class="issue-face issue-face-back">
+            <div class="issue-face issue-face-step" data-issue-view="step">
               <div class="section-head">
                 <div>
                   <div class="eyebrow">Issues caught by Step</div>
@@ -823,7 +841,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                 </div>
                 <div class="section-actions">
                   <label class="sort-select">Sort <select id="sort-step-chart"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
-                  <button class="btn ghost issue-flip-btn" id="issue-flip-distribution" title="Show issue distribution">Distribution</button>
+                  <label class="issue-view-control">View <span class="issue-view-box"><select class="issue-view-select" aria-label="Issue chart view"><option value="distribution">Issue Distribution</option><option value="step" selected>Issues by Step</option><option value="escalation">Issue Escalation</option></select><span class="issue-view-caret">▾</span></span></label>
                   <button class="btn ghost" data-fullscreen-target="chartcard" title="View issues caught by step full screen">Full</button>
                   <button class="btn ghost" id="xlsx-step-chart" title="Export filtered issues caught by step XLSX">XLSX</button>
                   <button class="btn ghost" id="dl-step-chart" title="Download chart PNG">
@@ -846,6 +864,58 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
                 <div class="chartwrap" id="stepchartscroll"><div class="chartholder" id="stepchartholder"><canvas id="stepchart"></canvas></div></div>
                 <div class="charthint" id="stepcharthint"></div>
                 <div class="chartfocus" id="stepchartfocus" hidden></div>
+              </div>
+            </div>
+            <div class="issue-face issue-face-escalation" data-issue-view="escalation">
+              <div class="section-head">
+                <div class="chart-title-row">
+                  <div>
+                    <div class="eyebrow">Issue Escalation</div>
+                    <h3 id="escalation-chart-title">Escalations by Original Category</h3>
+                  </div>
+                  <label class="chart-group-control"><span>Group by</span><select id="escalation-group"><option value="original">Original Category</option><option value="cxStep">Cx Step</option></select></label>
+                </div>
+                <div class="section-actions">
+                  <label class="sort-select">Sort <select id="sort-escalation"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
+                  <label class="issue-view-control">View <span class="issue-view-box"><select class="issue-view-select" aria-label="Issue chart view"><option value="distribution">Issue Distribution</option><option value="step">Issues by Step</option><option value="escalation" selected>Issue Escalation</option></select><span class="issue-view-caret">▾</span></span></label>
+                  <button class="btn ghost" data-fullscreen-target="chartcard" title="View issue escalation full screen">Full</button>
+                  <button class="btn ghost" id="xlsx-escalation" title="Export filtered issue escalation XLSX">XLSX</button>
+                  <button class="btn ghost" id="dl-escalation" title="Download issue escalation chart PNG">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+                  </button>
+                </div>
+              </div>
+              <div class="filter-shelf escalation-filter-shelf">
+                <div class="escalation-dimension-row">
+                  <div class="filter-group compact"><span class="filter-title">System</span><div id="escalationFilterSystem" class="root-select"></div></div>
+                  <div class="filter-group compact"><span class="filter-title">Discipline</span><div id="escalationFilterDiscipline" class="root-select"></div></div>
+                  <div class="filter-group compact"><span class="filter-title">Building</span><div id="escalationFilterBuilding" class="root-select"></div></div>
+                  <div class="filter-group compact"><span class="filter-title">Milestone</span><div id="escalationFilterMilestone" class="root-select"></div></div>
+                  <div class="filter-group compact"><span class="filter-title">Classification</span><div id="escalationFilterClassification" class="root-select"></div></div>
+                </div>
+                <div class="escalation-utility-row">
+                  <div class="filter-group compact">
+                    <span class="filter-title">Cx Step</span>
+                    <div id="escalationStepFilter" class="root-select"></div>
+                  </div>
+                  <div class="filter-group compact">
+                    <span class="filter-title">Root cause</span>
+                    <div id="escalationRootCauseFilter" class="root-select"></div>
+                  </div>
+                  <label class="filter-search">
+                    <span>Search</span>
+                    <input type="search" id="escalation-search" placeholder="Search escalations..." autocomplete="off" />
+                  </label>
+                </div>
+              </div>
+              <div class="legend-dropdown" id="escalationLegendDropdown">
+                <button type="button" class="legend-dropdown-button" id="escalationLegendToggle" aria-expanded="false"><span>Escalation types</span><span class="legend-dropdown-count" id="escalationLegendCount">0</span><span class="legend-dropdown-caret">▾</span></button>
+                <div class="issue-legend legend-dropdown-menu" id="escalationLegend"></div>
+              </div>
+              <div class="plotregion" id="escalationplotregion">
+                <div class="chartwrap" id="escalationscroll"><div class="chartholder" id="escalationholder"><canvas id="escalationchart"></canvas></div></div>
+                <div class="charthint" id="escalationhint"></div>
+                <div class="chartfocus" id="escalationfocus" hidden></div>
               </div>
             </div>
           </div>
@@ -1045,6 +1115,11 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
       <div class="acc">
         <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Equipment Classification (Full Export)</h3><span class="acc-hint">match rate &amp; column detection</span></button>
         <div class="acc-body"><div class="acc-inner"><div id="map-fx"></div></div></div>
+      </div>
+
+      <div class="acc">
+        <button class="acc-head" aria-expanded="false"><span class="acc-caret">▾</span><h3>Issue Escalation (Issue SQL Table)</h3><span class="acc-hint">issue join &amp; column detection</span></button>
+        <div class="acc-body"><div class="acc-inner"><div id="map-sql"></div></div></div>
       </div>
 
       <div class="acc">
@@ -1359,10 +1434,15 @@ function issueRowsForChart(equipment, issueRows, opts){
   opts=opts||{};
   const allowed=issueEquipmentAllowed(equipment, opts);
   const rootSet=selectedRootCauseSet(opts);
+  const dimensionFilters=normalizeSavedViewFilters({filters:opts.dimensionFilters||{}});
   return (issueRows||[]).filter(row=>{
     const e=allowed.get(row.equipmentKey);
     if(!e) return false;
     if(rootSet.size && !rootSet.has(row.rootCause)) return false;
+    if(!CUSTOM_VIEW_DIMENSIONS.every(dim=>{
+      const selected=dimensionFilters[dim]||[];
+      return !selected.length || selected.includes(issueDimKey(row,dim));
+    })) return false;
     if(opts.excludeRooms && (isRoomEquipment(e)||roomCodeMatch(row.systemName)||roomCodeMatch(row.upnRaw)||roomCodeMatch(row.upn))) return false;
     return true;
   });
@@ -1409,7 +1489,7 @@ function issueCategoryRank(category){
   if(c.includes('NCR')) return 20;
   if(c==='DWN') return 30;
   if(c==='NGI') return 40;
-  if(c==='WI') return 50;
+  if(c==='WI'||c==='OAS') return 50;
   return 100;
 }
 function sortIssueCategories(categories){
@@ -1470,6 +1550,95 @@ function stepCaughtBreakdown(issueRows, equipment, step, dim, opts){
     categoryCounts:group.categoryCounts,
     segments:categorySegments(group.categoryCounts,group.issueCount)
   })).sort((a,b)=>b.issueCount-a.issueCount || String(a.key).localeCompare(String(b.key)));
+}
+function escalationRowsForChart(equipment, escalationRows, opts){
+  opts=opts||{};
+  const steps=new Set((opts.cxSteps||[]).map(v=>String(v||'').trim()).filter(Boolean));
+  return issueRowsForChart(equipment,escalationRows,opts).filter(row=>!steps.size||steps.has(row.cxStep));
+}
+function sortEscalationTransitions(transitions, rows){
+  const categoryByTransition=new Map((rows||[]).map(row=>[row.transition,row.issueCategory]));
+  return (transitions||[]).slice().sort((a,b)=>{
+    const ar=issueCategoryRank(categoryByTransition.get(a)), br=issueCategoryRank(categoryByTransition.get(b));
+    return ar-br || String(a).localeCompare(String(b));
+  });
+}
+function escalationGroupedRows(escalationRows, equipment, groupBy, opts){
+  opts=opts||{};
+  const filtered=escalationRowsForChart(equipment,escalationRows,opts);
+  const map=new Map();
+  for(const issue of filtered){
+    const key=groupBy==='cxStep' ? (issue.cxStep||'(blank Cx Step)') : (issue.originalCategory||'(blank)');
+    let row=map.get(key);
+    if(!row){
+      row={key,issueCount:0,equipmentKeys:new Set(),transitionCounts:{},cxStepCounts:{},rootCauseCounts:{},issues:[]};
+      map.set(key,row);
+    }
+    row.issueCount++;
+    row.equipmentKeys.add(issue.equipmentKey);
+    row.transitionCounts[issue.transition]=(row.transitionCounts[issue.transition]||0)+1;
+    row.cxStepCounts[issue.cxStep]=(row.cxStepCounts[issue.cxStep]||0)+1;
+    row.rootCauseCounts[issue.rootCause]=(row.rootCauseCounts[issue.rootCause]||0)+1;
+    row.issues.push(issue);
+  }
+  const out=[...map.values()].map(row=>({
+    key:row.key,
+    issueCount:row.issueCount,
+    equipmentCount:row.equipmentKeys.size,
+    transitionCounts:row.transitionCounts,
+    cxStepCounts:row.cxStepCounts,
+    rootCauseCounts:row.rootCauseCounts,
+    segments:sortEscalationTransitions(Object.keys(row.transitionCounts),row.issues).map(transition=>({
+      transition,
+      count:row.transitionCounts[transition],
+      ratio:row.issueCount?Math.round(row.transitionCounts[transition]/row.issueCount*100):0,
+      category:(row.issues.find(issue=>issue.transition===transition)||{}).issueCategory||transition,
+    })),
+    issues:row.issues,
+  }));
+  return sortRowsByMetric(out,'issueCount',opts.sortDirection||'desc');
+}
+function escalationCategoryRows(escalationRows, equipment, opts){
+  return escalationGroupedRows(escalationRows,equipment,'original',opts);
+}
+function escalationCxStepRows(escalationRows, equipment, opts){
+  return escalationGroupedRows(escalationRows,equipment,'cxStep',opts);
+}
+function escalationBreakdown(escalationRows,equipment,groupValue,dim,opts,transition,groupBy){
+  const filtered=escalationRowsForChart(equipment,escalationRows,opts).filter(issue=>
+    (groupBy==='cxStep' ? (issue.cxStep||'(blank Cx Step)')===groupValue : issue.originalCategory===groupValue) &&
+    (!transition||issue.transition===transition));
+  const map=new Map();
+  for(const issue of filtered){
+    const key=dim==='Cx Step' ? (issue.cxStep||'(blank Cx Step)') : issueDimKey(issue,dim);
+    let group=map.get(key);
+    if(!group){
+      group={key,issueCount:0,equipment:new Map(),transitionCounts:{},cxStepCounts:{},rootCauseCounts:{}};
+      map.set(key,group);
+    }
+    group.issueCount++;
+    group.transitionCounts[issue.transition]=(group.transitionCounts[issue.transition]||0)+1;
+    group.cxStepCounts[issue.cxStep]=(group.cxStepCounts[issue.cxStep]||0)+1;
+    group.rootCauseCounts[issue.rootCause]=(group.rootCauseCounts[issue.rootCause]||0)+1;
+    let eq=group.equipment.get(issue.equipmentKey);
+    if(!eq){
+      eq={name:issue.equipmentName,systemName:issue.systemName,discipline:issue.discipline,building:issue.building,milestone:issue.milestone,classification:issue.classification,issueCount:0,transitionCounts:{},cxStepCounts:{},rootCauseCounts:{},issueIds:[]};
+      group.equipment.set(issue.equipmentKey,eq);
+    }
+    eq.issueCount++;
+    eq.transitionCounts[issue.transition]=(eq.transitionCounts[issue.transition]||0)+1;
+    eq.cxStepCounts[issue.cxStep]=(eq.cxStepCounts[issue.cxStep]||0)+1;
+    eq.rootCauseCounts[issue.rootCause]=(eq.rootCauseCounts[issue.rootCause]||0)+1;
+    eq.issueIds.push(issue.issueId);
+  }
+  return [...map.values()].map(group=>({
+    key:group.key,
+    issueCount:group.issueCount,
+    equipment:[...group.equipment.values()].sort((a,b)=>b.issueCount-a.issueCount||String(a.name).localeCompare(String(b.name))),
+    transitionCounts:group.transitionCounts,
+    cxStepCounts:group.cxStepCounts,
+    rootCauseCounts:group.rootCauseCounts,
+  })).sort((a,b)=>b.issueCount-a.issueCount||String(a.key).localeCompare(String(b.key)));
 }
 function isFatIssue(row){
   return /fat|factory\s+acceptance/i.test(String(row&&row.cxStep||''));
@@ -1670,6 +1839,7 @@ function parseIssues(aoa){
   const headerIdx=detectHeaderRow(aoa,['equipment name','equipment id','equipment','issue id','cx step','category','root cause']);
   const header=(aoa[headerIdx]||[]).map(norm);
   let idCol=findCol(header,['equipment name']); if(idCol===-1) idCol=findCol(header,['equipment id']); if(idCol===-1) idCol=findCol(header,['equipment']);
+  const issueIdCol=findCol(header,['issue id','issueid','issue number','issue #']);
   const upnCol=findCol(header,['upn tag','upn']);
   const cxStepCol=findCol(header,['cx step','cxstep','commissioning step','step']);
   const categoryCol=findCol(header,['category']);
@@ -1681,6 +1851,8 @@ function parseIssues(aoa){
       const row=aoa[r]||[];
       const key=id.toLowerCase(); counts[key]=(counts[key]||0)+1; if(!raw[key]) raw[key]=id; total++;
       rows.push({
+        issueId:issueIdCol>=0?norm(row[issueIdCol]):'',
+        issueKey:issueIdCol>=0?lc(norm(row[issueIdCol])):'',
         equipmentName:id,
         equipmentKey:key,
         upn:upnCol>=0?digits(row[upnCol]):'',
@@ -1691,7 +1863,39 @@ function parseIssues(aoa){
       });
     }
   }
-  return { counts, raw, rows, idCol, upnCol, cxStepCol, categoryCol, rootCauseCol, headerIdx, header, total };
+  return { counts, raw, rows, idCol, issueIdCol, upnCol, cxStepCol, categoryCol, rootCauseCol, headerIdx, header, total };
+}
+function parseIssueSql(aoa, opts){
+  aoa=aoa||[]; opts=opts||{};
+  const headerIdx=detectHeaderRow(aoa,['cxrecordnumber','originalissuecategory','issuecategory','cxstep']);
+  const header=(aoa[headerIdx]||[]).map(norm);
+  const resolve=(key,aliases)=>opts[key]!=null&&opts[key]>=0?opts[key]:findCol(header,aliases);
+  const recordCol=resolve('recordCol',['cxrecordnumber','cx record number']);
+  const originalCategoryCol=resolve('originalCategoryCol',['originalissuecategory','original issue category']);
+  const categoryCol=resolve('categoryCol',['issuecategory','issue category']);
+  const cxStepCol=resolve('cxStepCol',['cxstep','cx step','commissioning step']);
+  const rows=[]; let total=0, escalated=0;
+  if(recordCol>=0){
+    for(let r=headerIdx+1;r<aoa.length;r++){
+      const row=aoa[r]||[], issueId=norm(row[recordCol]);
+      if(!issueId) continue;
+      const originalCategory=originalCategoryCol>=0?norm(row[originalCategoryCol]):'';
+      const issueCategory=categoryCol>=0?norm(row[categoryCol]):'';
+      const cxStep=cxStepCol>=0?norm(row[cxStepCol]):'';
+      const isEscalated=!!originalCategory&&!!issueCategory&&lc(originalCategory)!==lc(issueCategory);
+      total++; if(isEscalated) escalated++;
+      rows.push({
+        issueId,
+        issueKey:lc(issueId),
+        originalCategory:originalCategory||'(blank)',
+        issueCategory:issueCategory||'(blank)',
+        cxStep:cxStep||'(blank Cx Step)',
+        transition:isEscalated?`${originalCategory} → ${issueCategory}`:'',
+        escalated:isEscalated,
+      });
+    }
+  }
+  return {rows,total,escalated,recordCol,originalCategoryCol,categoryCol,cxStepCol,headerIdx,header};
 }
 // Full Export tab: match ESR Equipment Name → this tab's Equipment ID → Equipment Classification
 function parseFullExport(aoa, opts){
@@ -1713,8 +1917,9 @@ function parseFullExport(aoa, opts){
   }
   return { byId, idCol, clsCol, headerIdx, header, sampleIds, rows };
 }
-function buildModel(esr, dropdowns, issues, fullExport){
+function buildModel(esr, dropdowns, issues, fullExport, issueSql){
   const fx = fullExport || { byId:new Map() };
+  const sql = issueSql || { rows:[] };
   const baseEquipment=esr.equipment.map(eq=>{
     const systemName=dropdowns.map[eq.upn] || (eq.upnRaw?eq.upnRaw:'(no system)');
     const key=eq.name.toLowerCase();
@@ -1767,13 +1972,35 @@ function buildModel(esr, dropdowns, issues, fullExport){
   }
   const matrix=scoreMatrix(equipment);
   const unmatchedArr=[...unmatchedMap.values()].sort((a,b)=>b.count-a.count);
+  const issueRowsById=new Map();
+  for(const row of issueRows){
+    if(row.issueKey&&!issueRowsById.has(row.issueKey)) issueRowsById.set(row.issueKey,row);
+  }
+  const escalationRows=[], unmatchedEscalations=[];
+  for(const sqlRow of (sql.rows||[])){
+    if(!sqlRow.escalated) continue;
+    const issue=issueRowsById.get(sqlRow.issueKey);
+    if(!issue){ unmatchedEscalations.push(sqlRow); continue; }
+    escalationRows.push({
+      ...issue,
+      issueId:sqlRow.issueId,
+      issueKey:sqlRow.issueKey,
+      gridCxStep:issue.cxStep,
+      cxStep:sqlRow.cxStep,
+      originalCategory:sqlRow.originalCategory,
+      issueCategory:sqlRow.issueCategory,
+      transition:sqlRow.transition,
+    });
+  }
   return { equipment,
     systems:Object.values(systems).sort((a,b)=>b.issueCount-a.issueCount),
-    matrix, unmatched:unmatchedArr, issueRows,
+    matrix, unmatched:unmatchedArr, issueRows, escalationRows, unmatchedEscalations,
     rootCauses:[...new Set(issueRows.map(r=>r.rootCause).filter(Boolean))].sort(),
     issueCategories:sortIssueCategories([...new Set(issueRows.map(r=>r.category).filter(Boolean))]),
+    escalationSteps:[...new Set(escalationRows.map(r=>r.cxStep).filter(Boolean))].sort(),
     totals:{ equipment:equipment.length, issues:equipment.reduce((a,e)=>a+e.issueCount,0),
       systems:Object.keys(systems).length, unmatchedIssues:unmatchedArr.reduce((a,u)=>a+u.count,0),
+      escalations:escalationRows.length, unmatchedEscalations:unmatchedEscalations.length,
       classifications:new Set(equipment.map(e=>e.classification)).size } };
 }
 function rollupBy(equipment, dim){
@@ -1807,25 +2034,31 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.1.10';
+const APP_VERSION='1.2.0';
 $('#version-label').textContent=APP_VERSION;
 
+const ESCALATION_FILTER_DIMENSIONS=['System','Discipline','Building','Milestone','Classification'];
 const state = {
   fileName:'', aoaBySheet:{}, sheetNames:[],
-  roleSheet:{esr:null,dd:null,iss:null,fx:null}, sheets:{esr:null,dd:null,iss:null,fx:null},
-  esr:null, dd:null, iss:null, model:null,
+  roleSheet:{esr:null,dd:null,iss:null,fx:null,sql:null}, sheets:{esr:null,dd:null,iss:null,fx:null,sql:null},
+  esr:null, dd:null, iss:null, fx:null, sql:null, model:null,
   dim:'System', focus:null, matrixDim:'Steps',
   riskDim:'System', riskMode:'auto', riskMetric:'risk', riskChart:null, riskFocus:null,
   riskCardSide:'standard', fatRiskDim:'System', fatRiskChart:null, fatRiskFocus:null, fatRiskSort:'desc',
   catSel:new Set(), catNone:false, catMode:'any',
   riskCatSel:new Set(), riskCatNone:false, riskCatMode:'any',
   fatCatSel:new Set(), fatCatNone:false, fatCatMode:'any',
-  catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{},
+  catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{}, sqlOverride:{},
   collapsed:new Set(), catInit:false, chart:null,
   excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
-  chartSearch:'', stepChartSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
-  issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System', rootCauses:new Set(), rootPickerOpen:null,
+  chartSearch:'', stepChartSearch:'', escalationSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
+  issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
+  escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
+  escalationSteps:new Set(), escalationStepPickerOpen:false,
+  escalationDimensionFilters:{System:[],Discipline:[],Building:[],Milestone:[],Classification:[]}, escalationDimensionPickerOpen:null,
+  escalationLegendOpen:false,
+  rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
   updateDismissedThisSession:false, updateCheckRunning:false,
@@ -1835,6 +2068,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.2.0',
+    date:'2026-07-17T14:43:02Z',
+    type:'feature',
+    stats:'Issue analysis updates',
+    notes:`### Updates
+- Added new issue analysis views
+- Expanded chart filtering and drill-down options
+- Refined category handling and exports`
+  },
   {
     version:'1.1.10',
     date:'2026-07-16T17:50:00Z',
@@ -2291,7 +2534,7 @@ async function parseWorkbook(buf, onProg){
 function activateTab(t){
   $$('#tabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
   $$('.view').forEach(v=>v.classList.remove('active')); $('#view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='dashboard' && state.model){ renderChart(); renderRisk(); }
+  if(t.dataset.view==='dashboard' && state.model){ renderDashboard(); }
   if(t.dataset.view==='hierarchy' && state.visible){ renderWindow(); }
 }
 $$('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{
@@ -2520,7 +2763,7 @@ function toggleDraftValue(dim,value,checked){
 function applyCustomViewChange(){
   updateCustomViewButton();
   if(!state.model) return;
-  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
   renderDashboard();
 }
 function saveCustomViewDraft(){
@@ -2648,8 +2891,9 @@ async function handleFile(file){
     state.roleSheet.dd =matchSheet(state.sheetNames,['Drop Downs- VF','drop downs vf','dropdowns vf','drop downs']);
     state.roleSheet.iss=matchSheet(state.sheetNames,['Issue Grid Report','issue grid']);
     state.roleSheet.fx =matchSheet(state.sheetNames,['Full Export','full export','fullexport']);
+    state.roleSheet.sql=matchSheet(state.sheetNames,['Issue SQL Table','issue sql']);
     loadRoleSheets();
-    state.catInit=false; state.catAssign={}; state.colOverride={};
+    state.catInit=false; state.catAssign={}; state.colOverride={}; state.fxOverride={}; state.sqlOverride={};
     await progressTo(84,'Building analysis…',6);
     // 4) recompute + first render (virtualized — instant regardless of size)
     await recompute(true);
@@ -2667,6 +2911,7 @@ function loadRoleSheets(){
   state.sheets.dd =state.roleSheet.dd ?aoaOf(state.roleSheet.dd) :[];
   state.sheets.iss=state.roleSheet.iss?aoaOf(state.roleSheet.iss):[];
   state.sheets.fx =state.roleSheet.fx ?aoaOf(state.roleSheet.fx) :[];
+  state.sheets.sql=state.roleSheet.sql?aoaOf(state.roleSheet.sql):[];
 }
 
 /* ---- recompute pipeline ---- */
@@ -2681,7 +2926,8 @@ function recompute(initFilters){
   state.dd=parseDropdowns(state.sheets.dd);
   state.iss=parseIssues(state.sheets.iss);
   state.fx=parseFullExport(state.sheets.fx, state.fxOverride);
-  state.model=buildModel(state.esr,state.dd,state.iss,state.fx);
+  state.sql=parseIssueSql(state.sheets.sql,state.sqlOverride);
+  state.model=buildModel(state.esr,state.dd,state.iss,state.fx,state.sql);
   precomputeOrder();
   if(initFilters) buildFilters();
   else fillRootCauseFilters();
@@ -2700,7 +2946,7 @@ function buildFilters(){
   fillRootCauseFilters();
 }
 function fill(sel,vals){ const cur=sel.value; sel.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); if([...sel.options].some(o=>o.value===cur)) sel.value=cur; }
-const ROOT_PICKER_IDS=['rootCauseFilter','stepRootCauseFilter','fatRootCauseFilter'];
+const ROOT_PICKER_IDS=['rootCauseFilter','stepRootCauseFilter','escalationRootCauseFilter','fatRootCauseFilter'];
 function rootCauseValues(){ return (state.model&&state.model.rootCauses)||[]; }
 function rootCauseList(){ return [...(state.rootCauses||new Set())]; }
 function rootCauseSummary(){
@@ -2732,9 +2978,10 @@ function syncRootCauseFilters(){
 }
 function applyRootCauseChange(){
   syncRootCauseFilters();
-  exitFocus(true); exitStepFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitFatRiskFocus(true);
   renderChart();
   if(state.issueCardSide==='step') renderStepChart();
+  if(state.issueCardSide==='escalation') renderEscalationChart();
   if(state.riskCardSide==='fat') renderFatRisk();
 }
 document.addEventListener('click',ev=>{
@@ -2742,7 +2989,9 @@ document.addEventListener('click',ev=>{
   if(toggle){
     const id=toggle.dataset.rootToggle;
     state.rootPickerOpen=state.rootPickerOpen===id?null:id;
+    state.escalationDimensionPickerOpen=null;
     syncRootCauseFilters();
+    syncEscalationDimensionFilters();
     ev.preventDefault();
     return;
   }
@@ -2764,6 +3013,117 @@ document.addEventListener('click',ev=>{
   if(state.rootPickerOpen && !ev.target.closest('.multi-select')){
     state.rootPickerOpen=null;
     syncRootCauseFilters();
+  }
+});
+function escalationDimensionFilterList(dim){ return [...((state.escalationDimensionFilters&&state.escalationDimensionFilters[dim])||[])]; }
+function escalationDimensionValues(dim){
+  if(!state.model) return [];
+  const equipment=filterEquipmentForChart(state.model.equipment,chartFilterOptions());
+  return uniq(equipment.map(e=>dimensionKey(e,dim)));
+}
+function escalationDimensionNoun(dim){ return dim==='Classification'?'classifications':dim.toLowerCase()+'s'; }
+function escalationDimensionSummary(dim){
+  const vals=escalationDimensionFilterList(dim);
+  if(!vals.length) return `All ${escalationDimensionNoun(dim)}`;
+  if(vals.length===1) return vals[0];
+  return `${vals.length} ${escalationDimensionNoun(dim)}`;
+}
+function escalationDimensionExportLabel(dim){
+  const vals=escalationDimensionFilterList(dim);
+  return vals.length?vals.join(' / '):`All ${escalationDimensionNoun(dim)}`;
+}
+function escalationDimensionFiltersForChart(){
+  const filters={};
+  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{filters[dim]=escalationDimensionFilterList(dim);});
+  return filters;
+}
+function escalationDimensionFilterId(dim){ return `escalationFilter${dim}`; }
+function syncEscalationDimensionFilters(){
+  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{
+    const el=$('#'+escalationDimensionFilterId(dim)); if(!el) return;
+    const vals=escalationDimensionValues(dim), selected=new Set(escalationDimensionFilterList(dim).filter(v=>vals.includes(v)));
+    state.escalationDimensionFilters[dim]=[...selected];
+    const summary=escalationDimensionSummary(dim), open=state.escalationDimensionPickerOpen===dim;
+    el.innerHTML=`<div class="multi-select ${open?'open':''}" data-escalation-dimension-picker="${esc(dim)}">
+      <button type="button" class="ms-button" data-escalation-dimension-toggle="${esc(dim)}" title="${esc(summary)}"><span class="ms-label">${esc(summary)}</span><span class="ms-caret">▾</span></button>
+      <div class="ms-menu">
+        <label class="ms-option"><input type="checkbox" data-escalation-dimension-all="${esc(dim)}" ${selected.size?'':'checked'} />All ${esc(escalationDimensionNoun(dim))}</label>
+        ${vals.map(v=>`<label class="ms-option"><input type="checkbox" data-escalation-dimension-value="${esc(v)}" data-escalation-dimension="${esc(dim)}" ${selected.has(v)?'checked':''} />${esc(v)}</label>`).join('')}
+      </div>
+    </div>`;
+  });
+}
+function applyEscalationDimensionChange(){
+  syncEscalationDimensionFilters(); exitEscalationFocus(true); renderEscalationChart();
+}
+document.addEventListener('click',ev=>{
+  const toggle=ev.target.closest('[data-escalation-dimension-toggle]');
+  if(toggle){
+    const dim=toggle.dataset.escalationDimensionToggle;
+    state.escalationDimensionPickerOpen=state.escalationDimensionPickerOpen===dim?null:dim;
+    state.escalationStepPickerOpen=false; state.rootPickerOpen=null;
+    syncEscalationDimensionFilters(); syncEscalationStepFilter(); syncRootCauseFilters();
+    ev.preventDefault(); return;
+  }
+  const all=ev.target.closest('[data-escalation-dimension-all]');
+  if(all){
+    state.escalationDimensionFilters[all.dataset.escalationDimensionAll]=[];
+    applyEscalationDimensionChange(); ev.stopPropagation(); return;
+  }
+  const item=ev.target.closest('[data-escalation-dimension-value]');
+  if(item){
+    const dim=item.dataset.escalationDimension, val=item.dataset.escalationDimensionValue;
+    const selected=new Set(escalationDimensionFilterList(dim));
+    selected.has(val)?selected.delete(val):selected.add(val);
+    state.escalationDimensionFilters[dim]=[...selected];
+    applyEscalationDimensionChange(); ev.stopPropagation(); return;
+  }
+  if(state.escalationDimensionPickerOpen&&!ev.target.closest('[data-escalation-dimension-picker]')){
+    state.escalationDimensionPickerOpen=null; syncEscalationDimensionFilters();
+  }
+});
+function escalationStepValues(){ return (state.model&&state.model.escalationSteps)||[]; }
+function escalationStepList(){ return [...(state.escalationSteps||new Set())]; }
+function escalationStepSummary(){
+  const vals=escalationStepList();
+  if(!vals.length) return 'All Cx steps';
+  if(vals.length===1) return vals[0];
+  return `${vals.length} Cx steps`;
+}
+function escalationStepExportLabel(){ const vals=escalationStepList(); return vals.length?vals.join(' / '):'All Cx steps'; }
+function syncEscalationStepFilter(){
+  const el=$('#escalationStepFilter'); if(!el) return;
+  const vals=escalationStepValues(), selected=new Set(escalationStepList());
+  state.escalationSteps=new Set([...selected].filter(v=>vals.includes(v)));
+  const summary=escalationStepSummary();
+  el.innerHTML=`<div class="multi-select ${state.escalationStepPickerOpen?'open':''}">
+    <button type="button" class="ms-button" data-escalation-step-toggle="1" title="${esc(summary)}"><span class="ms-label">${esc(summary)}</span><span class="ms-caret">▾</span></button>
+    <div class="ms-menu">
+      <label class="ms-option"><input type="checkbox" data-escalation-step-all="1" ${state.escalationSteps.size?'':'checked'} />All Cx steps</label>
+      ${vals.map(v=>`<label class="ms-option"><input type="checkbox" data-escalation-step-value="${esc(v)}" ${state.escalationSteps.has(v)?'checked':''} />${esc(v)}</label>`).join('')}
+    </div>
+  </div>`;
+}
+function applyEscalationStepChange(){
+  syncEscalationStepFilter(); exitEscalationFocus(true); renderEscalationChart();
+}
+document.addEventListener('click',ev=>{
+  if(ev.target.closest('[data-escalation-step-toggle]')){
+    state.escalationStepPickerOpen=!state.escalationStepPickerOpen;
+    state.escalationDimensionPickerOpen=null; state.rootPickerOpen=null;
+    syncEscalationStepFilter(); syncEscalationDimensionFilters(); syncRootCauseFilters(); ev.preventDefault(); return;
+  }
+  if(ev.target.closest('[data-escalation-step-all]')){
+    state.escalationSteps.clear(); applyEscalationStepChange(); ev.stopPropagation(); return;
+  }
+  const item=ev.target.closest('[data-escalation-step-value]');
+  if(item){
+    const val=item.dataset.escalationStepValue;
+    state.escalationSteps.has(val)?state.escalationSteps.delete(val):state.escalationSteps.add(val);
+    applyEscalationStepChange(); ev.stopPropagation(); return;
+  }
+  if(state.escalationStepPickerOpen&&!ev.target.closest('#escalationStepFilter')){
+    state.escalationStepPickerOpen=false; syncEscalationStepFilter();
   }
 });
 function debounce(fn,ms){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args),ms); }; }
@@ -2906,14 +3266,18 @@ function renderDashboard(){
   const alexToggle=$('#alexCustomView'); if(alexToggle) alexToggle.checked=state.alexCustomView;
   const chartSort=$('#sort-chart'); if(chartSort) chartSort.value=state.chartSort;
   const stepChartSort=$('#sort-step-chart'); if(stepChartSort) stepChartSort.value=state.chartSort;
+  const escalationSort=$('#sort-escalation'); if(escalationSort) escalationSort.value=state.escalationSort;
+  const escalationGroup=$('#escalation-group'); if(escalationGroup) escalationGroup.value=state.escalationGroup;
   const matrixSort=$('#sort-matrix'); if(matrixSort) matrixSort.value=state.matrixSort;
   const riskSort=$('#sort-risk'); if(riskSort) riskSort.value=state.riskSort;
   const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
   updateCustomViewButton();
   syncRootCauseFilters();
+  syncEscalationDimensionFilters();
+  syncEscalationStepFilter();
   syncChartSearchInputs();
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
-  $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
+  syncIssueViewUI();
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
   updateRiskMetricPills();
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
@@ -2925,7 +3289,12 @@ function renderDashboard(){
     ${kpi('Total issues',t.issues,'matched to equipment','Total issues from the Issue Grid Report that were matched to an equipment item. Each issue is counted once.')}
     ${kpi('Issues caught by steps',caught,'on units with a QAQC/DV/EHS step','Issues logged on equipment that have at least one QAQC, DV, or EHS step — each issue counted once, no duplicates.')}`;
   renderMatrix();
-  if($('#view-dashboard').classList.contains('active')){ renderChart(); if(state.issueCardSide==='step') renderStepChart(); renderRisk(); if(state.riskCardSide==='fat') renderFatRisk(); }
+  if($('#view-dashboard').classList.contains('active')){
+    if(state.issueCardSide==='distribution') renderChart();
+    else if(state.issueCardSide==='step') renderStepChart();
+    else renderEscalationChart();
+    renderRisk(); if(state.riskCardSide==='fat') renderFatRisk();
+  }
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
@@ -2939,9 +3308,9 @@ function objectKeysText(obj){ return Object.keys(obj||{}).join(' '); }
 function arrayValue(value){ return Array.isArray(value) ? value : []; }
 function chartRowSearchText(row){
   const parts=[row&&row.key,row&&row.label,row&&row.score,row&&row.risk,row&&row.issueCount,row&&row.equipmentCount,row&&row.n];
-  parts.push(objectKeysText(row&&row.categoryCounts),objectKeysText(row&&row.rootCauseCounts),objectKeysText(row&&row.cxStepCounts));
-  arrayValue(row&&row.segments).forEach(s=>parts.push(s.category,s.count));
-  arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause));
+  parts.push(objectKeysText(row&&row.categoryCounts),objectKeysText(row&&row.transitionCounts),objectKeysText(row&&row.rootCauseCounts),objectKeysText(row&&row.cxStepCounts));
+  arrayValue(row&&row.segments).forEach(s=>parts.push(s.category,s.transition,s.count));
+  arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause,issue.originalCategory,issue.issueCategory,issue.transition));
   arrayValue(row&&row.equipment).slice(0,80).forEach(e=>parts.push(e.name,e.systemName,e.discipline,e.building,e.milestone,e.classification,(e.categories||[]).join(' '),objectKeysText(e.categoryCounts),objectKeysText(e.rootCauseCounts)));
   return lc(parts.filter(v=>v!=null&&v!=='').join(' '));
 }
@@ -2959,6 +3328,7 @@ function syncChartSearchInputs(){
   const pairs=[
     ['#chart-search','chartSearch'],
     ['#step-chart-search','stepChartSearch'],
+    ['#escalation-search','escalationSearch'],
     ['#matrix-search','matrixSearch'],
     ['#risk-search','riskSearch'],
     ['#fat-risk-search','fatRiskSearch'],
@@ -3007,7 +3377,10 @@ function toggleStepSelection(which, c){
   else if(c==='None'){ if(state[noneKey]) state[noneKey]=false; else { state[noneKey]=true; sel.clear(); } }
   else { state[noneKey]=false; sel.has(c)?sel.delete(c):sel.add(c); }
 }
-function updateCatPills(){ updateStepPills('#catpills','#matchmode',state.catSel,state.catNone); }
+function updateCatPills(){
+  updateStepPills('#catpills','#matchmode',state.catSel,state.catNone);
+  $$('.mm-btn',$('#matchmode')).forEach(b=>b.classList.toggle('active',b.dataset.mode===state.catMode));
+}
 function updateRiskCatPills(){ updateStepPills('#riskcatpills','#riskmatchmode',state.riskCatSel,state.riskCatNone); }
 function updateFatCatPills(){ updateStepPills('#fatcatpills','#fatmatchmode',state.fatCatSel,state.fatCatNone); }
 $$('#catpills .pill').forEach(p=>p.addEventListener('click',()=>{
@@ -3043,6 +3416,7 @@ function catActive(){ return state.catNone || state.catSel.size>0; }
 function riskActive(){ return state.riskCatNone || state.riskCatSel.size>0; }
 function riskMetricIsEquipment(){ return state.riskMetric==='equipment'; }
 function issueChartOptions(){ return chartFilterOptions({stepSelection:catSelection(),rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
+function escalationChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),cxSteps:escalationStepList(),dimensionFilters:escalationDimensionFiltersForChart(),sortDirection:state.escalationSort}); }
 function issueChartEquipment(){
   const opts=issueChartOptions();
   const base=filterEquipmentForChart(state.model.equipment,opts);
@@ -3077,34 +3451,80 @@ function currentIssueRows(){
   const searched=filterRowsBySearch(rows,state.chartSearch);
   return searchQuery(state.chartSearch) ? issueShareRows(searched) : searched;
 }
+function currentEscalationRows(){
+  const rows=state.escalationGroup==='cxStep'
+    ? escalationCxStepRows(state.model.escalationRows,state.model.equipment,escalationChartOptions())
+    : escalationCategoryRows(state.model.escalationRows,state.model.equipment,escalationChartOptions());
+  return filterRowsBySearch(rows,state.escalationSearch);
+}
 $('#excludeRooms').addEventListener('change',e=>{
   state.excludeRooms=e.target.checked;
-  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
   renderDashboard();
 });
 $('#alexCustomView').addEventListener('change',e=>{
   state.alexCustomView=e.target.checked;
-  exitFocus(true); exitStepFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
   renderDashboard();
 });
 $('#sort-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; exitFocus(true); renderChart(); });
 $('#sort-step-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; $('#sort-chart').value=state.chartSort; exitStepFocus(true); renderStepChart(); });
+$('#sort-escalation').addEventListener('change',e=>{ state.escalationSort=e.target.value; exitEscalationFocus(true); renderEscalationChart(); });
+$('#escalation-group').addEventListener('change',e=>{
+  state.escalationGroup=e.target.value==='cxStep'?'cxStep':'original';
+  if(state.escalationGroup==='cxStep'&&state.escalationFocusDim==='Cx Step') state.escalationFocusDim='System';
+  exitEscalationFocus(true); renderEscalationChart();
+});
 $('#sort-matrix').addEventListener('change',e=>{ state.matrixSort=e.target.value; renderMatrix(); });
 $('#sort-risk').addEventListener('change',e=>{ state.riskSort=e.target.value; exitRiskFocus(true); renderRisk(); });
 $('#sort-fat-risk').addEventListener('change',e=>{ state.fatRiskSort=e.target.value; exitFatRiskFocus(true); renderFatRisk(); });
 $('#chart-search').addEventListener('input',debounce(e=>{ state.chartSearch=e.target.value; exitFocus(true); renderChart(); },120));
 $('#step-chart-search').addEventListener('input',debounce(e=>{ state.stepChartSearch=e.target.value; exitStepFocus(true); renderStepChart(); },120));
+$('#escalation-search').addEventListener('input',debounce(e=>{ state.escalationSearch=e.target.value; exitEscalationFocus(true); renderEscalationChart(); },120));
 $('#matrix-search').addEventListener('input',debounce(e=>{ state.matrixSearch=e.target.value; renderMatrix(); },120));
 $('#risk-search').addEventListener('input',debounce(e=>{ state.riskSearch=e.target.value; exitRiskFocus(true); renderRisk(); },120));
 $('#fat-risk-search').addEventListener('input',debounce(e=>{ state.fatRiskSearch=e.target.value; exitFatRiskFocus(true); renderFatRisk(); },120));
-function setIssueCardSide(side){
-  state.issueCardSide=side==='step'?'step':'distribution';
-  exitFocus(true); exitStepFocus(true);
-  $('#chartcard').classList.toggle('flipped',state.issueCardSide==='step');
-  requestAnimationFrame(()=>{ state.issueCardSide==='step' ? renderStepChart() : renderChart(); resizeChartsSoon(); });
+function renderIssueCardSide(){
+  if(state.issueCardSide==='step') renderStepChart();
+  else if(state.issueCardSide==='escalation') renderEscalationChart();
+  else renderChart();
 }
-$('#issue-flip-step').addEventListener('click',()=>setIssueCardSide('step'));
-$('#issue-flip-distribution').addEventListener('click',()=>setIssueCardSide('distribution'));
+function syncIssueViewUI(){
+  $$('.issue-view-select').forEach(sel=>{ sel.value=state.issueCardSide; });
+  $$('#chartcard .issue-face').forEach(face=>face.classList.toggle('active',face.dataset.issueView===state.issueCardSide));
+}
+let issueFlipTimer=null;
+function setIssueCardSide(side){
+  if(!['distribution','step','escalation'].includes(side)) side='distribution';
+  const inner=$('#chartcard .issue-card-inner');
+  if(!inner||inner.dataset.flipping==='1') return;
+  if(side===state.issueCardSide){ syncIssueViewUI(); renderIssueCardSide(); resizeChartsSoon(); return; }
+  const current=$('#chartcard .issue-face.active'), next=$(`#chartcard .issue-face[data-issue-view="${side}"]`);
+  if(!next) return;
+  state.issueCardSide=side;
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true);
+  $$('.issue-view-select').forEach(sel=>{ sel.value=side; sel.disabled=true; });
+  inner.dataset.flipping='1';
+  inner.classList.add('flipping-out');
+  clearTimeout(issueFlipTimer);
+  issueFlipTimer=setTimeout(()=>{
+    if(current) current.classList.remove('active');
+    next.classList.add('active');
+    inner.classList.remove('flipping-out');
+    inner.classList.add('flipping-in');
+    renderIssueCardSide(); resizeChartsSoon();
+    void inner.offsetWidth;
+    requestAnimationFrame(()=>{
+      inner.classList.remove('flipping-in');
+      issueFlipTimer=setTimeout(()=>{
+        inner.dataset.flipping='0';
+        $$('.issue-view-select').forEach(sel=>{ sel.disabled=false; sel.value=state.issueCardSide; });
+        resizeChartsSoon();
+      },300);
+    });
+  },275);
+}
+$$('.issue-view-select').forEach(sel=>sel.addEventListener('change',e=>setIssueCardSide(e.target.value)));
 function setRiskCardSide(side){
   state.riskCardSide=side==='fat'?'fat':'standard';
   exitRiskFocus(true); exitFatRiskFocus(true);
@@ -3114,7 +3534,7 @@ function setRiskCardSide(side){
 $('#risk-flip-fat').addEventListener('click',()=>setRiskCardSide('fat'));
 $('#risk-flip-standard').addEventListener('click',()=>setRiskCardSide('standard'));
 function resizeChartsSoon(){
-  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
+  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.escalationChart) state.escalationChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
   requestAnimationFrame(resize);
   [80,360,680].forEach(ms=>setTimeout(resize,ms));
 }
@@ -3179,7 +3599,7 @@ function setLabelText(selector, text){
   el.textContent=text;
   el.title=text;
 }
-const ROW_ACTION_CHARTS=new Set(['mainchart','stepchart','riskchart','fatriskchart']);
+const ROW_ACTION_CHARTS=new Set(['mainchart','stepchart','escalationchart','riskchart','fatriskchart']);
 function chartRowBounds(chart,index){
   const yScale=chart&&chart.scales&&chart.scales.y, area=chart&&chart.chartArea;
   const labels=chart&&chart.data&&chart.data.labels;
@@ -3260,6 +3680,7 @@ function issueCategoryColor(category){
   if(c==='DWN') return '#c25139';
   if(c==='NGI') return '#8b97a4';
   if(c==='WI') return '#2f83cc';
+  if(c==='OAS') return '#8b97a4';
   return hashColor(category);
 }
 function stepChartOptions(){ return chartFilterOptions({rootCauses:rootCauseList(),sortDirection:state.chartSort}); }
@@ -3308,9 +3729,87 @@ function renderStepChart(){
     }
   });
 }
+function transitionTargetCategory(transition){
+  const parts=String(transition||'').split('→');
+  return (parts[parts.length-1]||transition||'').trim();
+}
+function renderEscalationLegend(transitions){
+  $('#escalationLegend').innerHTML=transitions.length
+    ? transitions.map(t=>`<span class="lg"><span class="sw" style="background:${issueCategoryColor(transitionTargetCategory(t))}"></span>${esc(t)}</span>`).join('')
+    : '<span class="lg">No matching escalations</span>';
+  const dropdown=$('#escalationLegendDropdown'), toggle=$('#escalationLegendToggle'), count=$('#escalationLegendCount');
+  if(count) count.textContent=transitions.length.toLocaleString();
+  if(dropdown) dropdown.classList.toggle('open',state.escalationLegendOpen);
+  if(toggle) toggle.setAttribute('aria-expanded',state.escalationLegendOpen?'true':'false');
+}
+$('#escalationLegendToggle').addEventListener('click',ev=>{
+  state.escalationLegendOpen=!state.escalationLegendOpen;
+  const dropdown=$('#escalationLegendDropdown');
+  dropdown.classList.toggle('open',state.escalationLegendOpen);
+  ev.currentTarget.setAttribute('aria-expanded',state.escalationLegendOpen?'true':'false');
+  ev.stopPropagation();
+});
+document.addEventListener('click',ev=>{
+  if(!state.escalationLegendOpen||ev.target.closest('#escalationLegendDropdown')) return;
+  state.escalationLegendOpen=false;
+  $('#escalationLegendDropdown').classList.remove('open');
+  $('#escalationLegendToggle').setAttribute('aria-expanded','false');
+});
+function escalationGroupLabel(){ return state.escalationGroup==='cxStep'?'Cx Step':'Original Category'; }
+function escalationGroupNoun(){ return state.escalationGroup==='cxStep'?'Cx steps':'original categories'; }
+function renderEscalationChart(){
+  if(!state.model) return;
+  const allRows=state.escalationGroup==='cxStep'
+    ? escalationCxStepRows(state.model.escalationRows,state.model.equipment,escalationChartOptions())
+    : escalationCategoryRows(state.model.escalationRows,state.model.equipment,escalationChartOptions());
+  const rows=currentEscalationRows();
+  const transitions=sortEscalationTransitions([...new Set(rows.flatMap(r=>Object.keys(r.transitionCounts||{})))],rows.flatMap(r=>r.issues||[]));
+  renderEscalationLegend(transitions);
+  const filters=[];
+  const activeDimensionFilters=ESCALATION_FILTER_DIMENSIONS.filter(dim=>escalationDimensionFilterList(dim).length);
+  if(activeDimensionFilters.length) filters.push(`${activeDimensionFilters.length} dimension filter${activeDimensionFilters.length===1?'':'s'}`);
+  if(escalationStepList().length) filters.push(escalationStepSummary());
+  if(rootCauseList().length) filters.push(rootCauseSummary());
+  setLabelText('#escalation-chart-title',`Escalations by ${escalationGroupLabel()}${filters.length?' · '+filters.join(' · '):''}`);
+  const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
+  $('#escalationholder').style.height=holderH+'px';
+  const searchHint=searchQuery(state.escalationSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} ${escalationGroupNoun()}.`:'';
+  const sourceHint=!state.roleSheet.sql?'Issue SQL Table is not mapped. Select it on the Mapping tab.':'';
+  const scrollHint=holderH>CHART_VP?`All ${rows.length.toLocaleString()} ${escalationGroupNoun()} — scroll to see them. Chart PNG and Excel export include every one.`:'';
+  $('#escalationhint').textContent=[sourceHint,searchHint,scrollHint].filter(Boolean).join(' ');
+  if(state.escalationChart) state.escalationChart.destroy();
+  const ctx=$('#escalationchart').getContext('2d');
+  state.escalationChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:rows.map(r=>r.key),datasets:transitions.map(transition=>({
+      label:transition,
+      data:rows.map(r=>(r.transitionCounts&&r.transitionCounts[transition])||0),
+      backgroundColor:issueCategoryColor(transitionTargetCategory(transition)),
+      borderRadius:3,
+      maxBarThickness:26,
+      stack:'escalations'
+    }))},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
+      onClick:(evt,els)=>{
+        const i=chartRowIndexFromClick(state.escalationChart,evt,els);
+        const transition=els&&els.length?state.escalationChart.data.datasets[els[0].datasetIndex].label:'';
+        if(i>=0&&rows[i]) enterEscalationFocus(rows[i],transition);
+      },
+      plugins:{rowHover:{onRowClick:i=>{if(rows[i])enterEscalationFocus(rows[i],'');}},legend:{display:false},
+        tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex],count=Number(c.raw)||0,pct=r&&r.issueCount?Math.round(count/r.issueCount*100):0;return ` ${c.dataset.label}: ${count.toLocaleString()} escalations (${pct}%)`;}}}},
+      scales:{
+        x:{beginAtZero:true,stacked:true,grace:'8%',grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Escalated issues'}},
+        y:{stacked:true,grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)}
+      }
+    }
+  });
+}
 const FOCUS_CAP=250;
 let focusGroups=null;
 let stepFocusGroups=null;
+let escalationFocusGroups=null;
 let fatRiskFocusGroups=null;
 function rankOf(rows,key){ return rows.findIndex(r=>r.key===key)+1; }
 function enterFocus(dim,row,rows){
@@ -3477,6 +3976,90 @@ $('#stepchartfocus').addEventListener('click',ev=>{
 $('#stepchartfocus').addEventListener('change',ev=>{
   const sel=ev.target.closest('#stepfocus-dim'); if(!sel||!state.stepFocus) return;
   state.stepFocus.bdim=sel.value; state.stepFocusDim=sel.value; renderStepBreakdown();
+});
+function escalationStackMiniHTML(transitionCounts,total){
+  const transitions=sortEscalationTransitions(Object.keys(transitionCounts||{}),Object.keys(transitionCounts||{}).map(transition=>({transition,issueCategory:transitionTargetCategory(transition)})));
+  return `<span class="stack-mini" title="${transitions.map(t=>`${t}: ${transitionCounts[t]} (${total?Math.round(transitionCounts[t]/total*100):0}%)`).join(' · ')}">${transitions.map(t=>`<span style="width:${Math.max(total?Math.round(transitionCounts[t]/total*100):0,2)}%;background:${issueCategoryColor(transitionTargetCategory(t))}"></span>`).join('')}</span>`;
+}
+function enterEscalationFocus(row,transition){
+  const issues=(row.issues||[]).filter(issue=>!transition||issue.transition===transition);
+  const transitionCounts={}, cxStepCounts={}, originalCategoryCounts={};
+  issues.forEach(issue=>{
+    transitionCounts[issue.transition]=(transitionCounts[issue.transition]||0)+1;
+    cxStepCounts[issue.cxStep]=(cxStepCounts[issue.cxStep]||0)+1;
+    originalCategoryCounts[issue.originalCategory]=(originalCategoryCounts[issue.originalCategory]||0)+1;
+  });
+  const groupBy=state.escalationGroup, groupLabel=groupBy==='cxStep'?'Cx Step':'Original category';
+  const breakdownDimensions=groupBy==='cxStep'?['System','Discipline','Building','Milestone','Classification']:['System','Discipline','Building','Milestone','Classification','Cx Step'];
+  let breakdownDim=state.escalationFocusDim||'System';
+  if(!breakdownDimensions.includes(breakdownDim)) breakdownDim='System';
+  state.escalationFocusDim=breakdownDim;
+  state.escalationFocus={groupValue:row.key,groupBy,transition:transition||'',bdim:breakdownDim,row};
+  const f=$('#escalationfocus'), equipmentCount=new Set(issues.map(issue=>issue.equipmentKey)).size;
+  f.innerHTML=`
+    <button class="focus-back" id="escalationfocus-back">← All ${groupBy==='cxStep'?'Cx steps':'original categories'}</button>
+    <div class="focus-head">
+      <div class="focus-name">${esc(transition||row.key)}</div>
+      <div class="focus-sub">${transition?'Escalation path':groupLabel} · ${issues.length.toLocaleString()} escalations · ${equipmentCount.toLocaleString()} equipment${groupBy==='original'?' · '+esc(escalationStepSummary()):''}</div>
+    </div>
+    <div class="focus-stats">
+      <div class="fstat"><div class="l">Escalations</div><div class="v">${issues.length.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">Equipment</div><div class="v">${equipmentCount.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">Paths</div><div class="v" style="font-size:12px;font-weight:700">${countChips(transitionCounts)}</div></div>
+      <div class="fstat"><div class="l">${groupBy==='cxStep'?'Originals':'Cx Steps'}</div><div class="v" style="font-size:12px;font-weight:700">${countChips(groupBy==='cxStep'?originalCategoryCounts:cxStepCounts)}</div></div>
+    </div>
+    <div class="step-focus-controls">
+      <span class="subfilter-label">Break down by</span>
+      <select id="escalationfocus-dim">${breakdownDimensions.map(x=>`<option value="${x}" ${x===state.escalationFocus.bdim?'selected':''}>${x}</option>`).join('')}</select>
+      <span class="rf-hint" id="escalationfocus-hint"></span>
+    </div>
+    <div class="focus-list" id="escalationfocus-list"></div>`;
+  renderEscalationBreakdown();
+  $('#escalationscroll').classList.add('dive'); $('#escalationhint').classList.add('dive');
+  f.hidden=false; f.scrollTop=0; requestAnimationFrame(()=>f.classList.add('in'));
+}
+function renderEscalationBreakdown(){
+  if(!state.escalationFocus) return;
+  const focus=state.escalationFocus;
+  const groups=escalationBreakdown(state.model.escalationRows,state.model.equipment,focus.groupValue,focus.bdim,escalationChartOptions(),focus.transition,focus.groupBy);
+  escalationFocusGroups=groups;
+  const hint=$('#escalationfocus-hint'); if(hint) hint.textContent=`${groups.length.toLocaleString()} ${focus.bdim.toLowerCase()}${groups.length===1?'':'s'}`;
+  $('#escalationfocus-list').innerHTML=groups.length?groups.map((g,i)=>`
+    <div class="step-group">
+      <button class="step-row" data-egi="${i}" aria-expanded="false">
+        <span class="step-caret">▾</span>
+        <span class="step-name" title="${esc(g.key)}">${esc(g.key)}</span>
+        <span class="step-count">${g.issueCount.toLocaleString()} esc</span>
+        ${escalationStackMiniHTML(g.transitionCounts,g.issueCount)}
+      </button>
+      <div class="fc-body" id="escalationbody-${i}"><div class="fc-inner"></div></div>
+    </div>`).join(''):`<p class="empty">No matching escalations for this ${focus.groupBy==='cxStep'?'Cx step':'category'}.</p>`;
+}
+function escalationEquipmentTable(group){
+  const items=(group.equipment||[]).slice(0,FOCUS_CAP), hidden=(group.equipment||[]).length-items.length;
+  return `<table class="drilltable"><thead><tr><th>Equipment Name</th><th>System</th><th>Classification</th><th>Escalation path</th><th>Cx Step</th><th>Root Cause</th><th class="n">Issues</th></tr></thead>
+    <tbody>${items.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.systemName)||'—'}</td><td>${esc(e.classification)||'—'}</td>
+      <td>${countChips(e.transitionCounts)}</td><td>${countChips(e.cxStepCounts)}</td><td>${countChips(e.rootCauseCounts)}</td>
+      <td class="n"><span class="issue-flag has">${e.issueCount}</span></td></tr>`).join('')}</tbody></table>
+    ${hidden>0?`<p class="drillmore">Showing top ${FOCUS_CAP} by escalations · ${hidden.toLocaleString()} more not shown</p>`:''}`;
+}
+function exitEscalationFocus(instant){
+  const f=$('#escalationfocus'); state.escalationFocus=null;
+  if(!f||f.hidden) return;
+  $('#escalationscroll').classList.remove('dive'); $('#escalationhint').classList.remove('dive'); f.classList.remove('in');
+  if(instant){f.hidden=true;return;} setTimeout(()=>{f.hidden=true;},300);
+}
+$('#escalationfocus').addEventListener('click',ev=>{
+  if(ev.target.closest('#escalationfocus-back')){exitEscalationFocus();return;}
+  const row=ev.target.closest('.step-row'); if(!row||!escalationFocusGroups) return;
+  const idx=+row.dataset.egi, body=$('#escalationbody-'+idx), group=escalationFocusGroups[idx];
+  if(!body||!group) return;
+  if(!body.dataset.rendered){body.firstElementChild.innerHTML=escalationEquipmentTable(group);body.dataset.rendered='1';}
+  const open=body.classList.toggle('open'); row.setAttribute('aria-expanded',open?'true':'false');
+});
+$('#escalationfocus').addEventListener('change',ev=>{
+  const sel=ev.target.closest('#escalationfocus-dim'); if(!sel||!state.escalationFocus) return;
+  state.escalationFocus.bdim=sel.value; state.escalationFocusDim=sel.value; renderEscalationBreakdown();
 });
 
 /* risk color ramp 0(green)→1(red) */
@@ -3893,6 +4476,12 @@ function fxColSelect(which){
   const cur=which==='id'?state.fx.idCol:state.fx.clsCol;
   return `<select data-fxcol="${which}"><option value="-1">— not found —</option>${header.map((h,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(h)||('col '+(i+1))}</option>`).join('')}</select>`;
 }
+function sqlColSelect(which){
+  const header=(state.sql&&state.sql.header)||[];
+  const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol'}[which];
+  const cur=state.sql&&state.sql[key];
+  return `<select data-sqlcol="${which}"><option value="-1">— not found —</option>${header.map((h,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(h)||('col '+(i+1))}</option>`).join('')}</select>`;
+}
 function renderMapping(){
   // alerts (Full Export is optional — not part of the required-tab check)
   const missing=['esr','dd','iss'].filter(k=>!state.roleSheet[k]).map(k=>({esr:'Equipment Status Report',dd:'Drop Downs- VF',iss:'Issue Grid Report'}[k]));
@@ -3900,15 +4489,19 @@ function renderMapping(){
   const fxNote = state.roleSheet.fx
     ? ` Equipment Classification loaded from “${esc(state.roleSheet.fx)}”.`
     : ` No Full Export tab found — Equipment Classification shows as “(unclassified)”.`;
+  const sqlNote=state.roleSheet.sql
+    ? ` Issue escalations loaded from “${esc(state.roleSheet.sql)}”.`
+    : ` No Issue SQL Table found — Issue Escalation will be empty.`;
   al.innerHTML = missing.length
     ? `<div class="warnbox"><b>Heads up:</b> couldn't auto-match ${missing.join(', ')}. Pick the right tab below.</div>`
-    : `<div class="okbox">All three required tabs matched. ${state.model.totals.unmatchedIssues?`${state.model.totals.unmatchedIssues} issue line(s) reference an Equipment ID not in the status report — see below.`:'Every issue linked to equipment.'}${fxNote}</div>`;
+    : `<div class="okbox">All three required tabs matched. ${state.model.totals.unmatchedIssues?`${state.model.totals.unmatchedIssues} issue line(s) reference an Equipment ID not in the status report — see below.`:'Every issue linked to equipment.'}${fxNote}${sqlNote}</div>`;
 
   // sheet + column detection
   $('#map-sheets').innerHTML=`<table class="maptable"><thead><tr><th>Role</th><th>Matched tab</th></tr></thead><tbody>
     <tr><td>Equipment Status Report</td><td>${roleSelect('esr')}</td></tr>
     <tr><td>Drop Downs- VF</td><td>${roleSelect('dd')}</td></tr>
     <tr><td>Issue Grid Report</td><td>${roleSelect('iss')}</td></tr>
+    <tr><td>Issue SQL Table <span style="color:var(--ink-3);font-weight:400">(escalation, optional)</span></td><td>${roleSelect('sql')}</td></tr>
     <tr><td>Full Export <span style="color:var(--ink-3);font-weight:400">(classification, optional)</span></td><td>${roleSelect('fx')}</td></tr></tbody></table>`;
   $('#map-cols').innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Equipment Status columns</div>
     <table class="maptable"><tbody>
@@ -3917,6 +4510,7 @@ function renderMapping(){
   $$('#map-sheets select[data-role]').forEach(s=>s.addEventListener('change',()=>{
     state.roleSheet[s.dataset.role]=s.value||null;
     if(s.dataset.role==='fx') state.fxOverride={}; // columns differ per tab
+    if(s.dataset.role==='sql') state.sqlOverride={};
     loadRoleSheets(); state.catInit=false; state.catAssign={}; recompute(true);
   }));
   $$('#map-cols select[data-col]').forEach(s=>s.addEventListener('change',()=>{
@@ -3955,6 +4549,35 @@ function renderMapping(){
       `:''}`;
     $$('#map-fx select[data-fxcol]').forEach(s=>s.addEventListener('change',()=>{
       state.fxOverride[s.dataset.fxcol==='id'?'idCol':'clsCol']=+s.value; recompute(false);
+    }));
+  })();
+
+  // Issue SQL Table → Issue Grid diagnostics
+  (function(){
+    const el=$('#map-sql'); if(!el) return;
+    if(!state.roleSheet.sql){
+      el.innerHTML=`<p style="color:var(--ink-2);font-size:12.5px;margin:0">No <b>Issue SQL Table</b> tab is selected. The rest of the dashboard remains available, but Issue Escalation has no source data.</p>`;
+      return;
+    }
+    const sql=state.sql||{}, totals=state.model.totals;
+    const colsOk=sql.recordCol>=0&&sql.originalCategoryCol>=0&&sql.categoryCol>=0&&sql.cxStepCol>=0;
+    const matched=totals.escalations||0, escalated=sql.escalated||0, rate=escalated?Math.round(matched/escalated*100):100;
+    el.innerHTML=`
+      <div class="${colsOk&&rate>=80?'okbox':'warnbox'}" style="margin:0 0 12px">
+        ${colsOk
+          ? `Matched <b>${matched.toLocaleString()}</b> of <b>${escalated.toLocaleString()}</b> escalated SQL issues to Issue Grid Report (<b>${rate}%</b>). ${sql.total.toLocaleString()} SQL issue records were read.`
+          : `Couldn't find every required escalation column in “${esc(state.roleSheet.sql)}”. Pick the columns below.`}
+      </div>
+      <table class="maptable"><tbody>
+        <tr><td>Primary key <code>cxRecordNumber</code> <span style="color:var(--ink-3);font-weight:400">(matches Issue Grid Issue ID)</span></td><td>${sqlColSelect('record')}</td></tr>
+        <tr><td>Original issue category</td><td>${sqlColSelect('original')}</td></tr>
+        <tr><td>Current issue category</td><td>${sqlColSelect('category')}</td></tr>
+        <tr><td>Cx Step</td><td>${sqlColSelect('step')}</td></tr>
+      </tbody></table>
+      ${totals.unmatchedEscalations?`<p style="color:var(--ink-3);font-size:11.5px;margin:9px 0 0">${totals.unmatchedEscalations.toLocaleString()} escalated SQL issue(s) did not match an Issue ID in Issue Grid Report.</p>`:''}`;
+    $$('#map-sql select[data-sqlcol]').forEach(s=>s.addEventListener('change',()=>{
+      const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol'}[s.dataset.sqlcol];
+      state.sqlOverride[key]=+s.value; recompute(false);
     }));
   })();
 
@@ -4068,6 +4691,33 @@ function exportStepCaughtXlsx(){
   ];
   writeFilteredWorkbook(`issues_caught_by_step${chartFilterFileSuffix()}.xlsx`,[{name:'Issues by Step',aoa,widths:[28,10,11,...categories.map(()=>12),...categories.map(()=>9)]}]);
 }
+function escalationExportDetails(){
+  const details={'Group by':escalationGroupLabel()};
+  ESCALATION_FILTER_DIMENSIONS.forEach(dim=>{details[dim]=escalationDimensionExportLabel(dim);});
+  details['Cx Step']=escalationStepExportLabel();
+  details['Root cause']=rootCauseExportLabel();
+  details.Search=state.escalationSearch||'None';
+  return details;
+}
+function exportEscalationXlsx(){
+  const rows=currentEscalationRows();
+  const transitions=sortEscalationTransitions([...new Set(rows.flatMap(r=>Object.keys(r.transitionCounts||{})))],rows.flatMap(r=>r.issues||[]));
+  const visibleIssues=rows.flatMap(r=>r.issues||[]);
+  const summary=[
+    ...filterSummaryRows('Issue Escalation',escalationExportDetails()),
+    [escalationGroupLabel(),'Escalations','Equipment',...transitions.map(t=>`${t} count`),...transitions.map(t=>`${t} %`)],
+    ...rows.map(r=>[r.key,r.issueCount,r.equipmentCount,...transitions.map(t=>r.transitionCounts[t]||0),...transitions.map(t=>r.issueCount?Math.round((r.transitionCounts[t]||0)/r.issueCount*100):0)])
+  ];
+  const detail=[
+    ...filterSummaryRows('Issue Escalation Detail',escalationExportDetails()),
+    ['Issue ID','Equipment Name','System','Discipline','Building','Milestone','Classification','Original Category','Current Category','Escalation Path','SQL Cx Step','Issue Grid Cx Step','Root Cause'],
+    ...visibleIssues.map(issue=>[issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.originalCategory,issue.issueCategory,issue.transition,issue.cxStep,issue.gridCxStep,issue.rootCause])
+  ];
+  writeFilteredWorkbook(`issue_escalation_by_${state.escalationGroup==='cxStep'?'cx_step':'original_category'}${chartFilterFileSuffix()}.xlsx`,[
+    {name:'Escalation Summary',aoa:summary,widths:[20,12,11,...transitions.map(()=>20),...transitions.map(()=>12)]},
+    {name:'Escalation Detail',aoa:detail,widths:[16,22,24,16,12,12,20,18,18,24,20,20,18]}
+  ]);
+}
 function exportRiskXlsx(){
   const totalMode=riskMetricIsEquipment(), resolved=riskResolved(), rows=currentRiskRows();
   const filter=stepSelectionSummary(riskSelection(),'No filter');
@@ -4172,7 +4822,7 @@ $('#h-xlsx').addEventListener('click',async()=>{
 $('#dl-analysis').addEventListener('click',async()=>{
   OV.show('Building analysis workbook'); await yieldUI();
   const wb=XLSX.utils.book_new();
-  let built=0; const TOTAL_SHEETS=8;
+  let built=0; const TOTAL_SHEETS=9;
   const sheet=(name,aoa,widths)=>{ const ws=XLSX.utils.aoa_to_sheet(aoa);
     const r=XLSX.utils.decode_range(ws['!ref']);
     for(let C=r.s.c;C<=r.e.c;C++){const ad=XLSX.utils.encode_cell({r:0,c:C}); if(ws[ad])ws[ad].s=HEAD_STYLE;}
@@ -4200,6 +4850,8 @@ $('#dl-analysis').addEventListener('click',async()=>{
   // Equipment flat
   sheet('Equipment',[['System','Equipment','Description','Discipline','Building','Milestone','Classification','Score','Categories','Issues'],
     ...flatRows().map(r=>[r.system,r.name,r.description,r.discipline,r.building,r.milestone,r.classification,r.score,r.categories,r.issues])],[28,24,32,14,11,11,20,8,14,8]);
+  sheet('Issue Escalations',[['Issue ID','Equipment Name','System','Discipline','Building','Milestone','Classification','Original Category','Current Category','Escalation Path','SQL Cx Step','Issue Grid Cx Step','Root Cause'],
+    ...state.model.escalationRows.map(issue=>[issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.originalCategory,issue.issueCategory,issue.transition,issue.cxStep,issue.gridCxStep,issue.rootCause])],[16,22,24,16,12,12,20,18,18,24,20,20,18]);
   if(state.model.unmatched.length)
     sheet('Unmatched Issues',[['Equipment ID','Issues'],...state.model.unmatched.map(u=>[u.id,u.count])],[26,8]);
   OV.indet('Writing file…'); await raf();
@@ -4257,7 +4909,7 @@ Chart.register(
     ctx.restore();
   }},
   {id:'stackPercentLabels',afterDatasetsDraw(chart){
-    if(chart.canvas.id!=='stepchart') return;
+    if(!['stepchart','escalationchart'].includes(chart.canvas.id)) return;
     const ctx=chart.ctx, rows=chart.data.labels||[];
     ctx.save();
     ctx.font='800 10px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');
@@ -4272,11 +4924,24 @@ Chart.register(
         const pct=Math.round(count/total*100);
         const p=bar.getProps(['x','base','y'],true);
         const w=Math.abs(p.x-p.base); if(w<34) return;
-        const category=dataset.label||'';
+        const category=chart.canvas.id==='escalationchart'?transitionTargetCategory(dataset.label):dataset.label||'';
         const upper=String(category).toUpperCase();
         ctx.fillStyle=(upper==='COR'||upper==='NGI')?'#111820':'#fff';
         ctx.fillText(pct+'%', p.base+(p.x-p.base)/2, p.y);
       });
+    });
+    ctx.restore();
+  }},
+  {id:'stackTotalLabels',afterDatasetsDraw(chart){
+    if(chart.canvas.id!=='escalationchart') return;
+    const ctx=chart.ctx, xScale=chart.scales.x, firstMeta=chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.font='800 11px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');
+    ctx.fillStyle='#111820'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    (chart.data.labels||[]).forEach((_,i)=>{
+      const total=chart.data.datasets.reduce((sum,d)=>sum+(Number(d.data[i])||0),0);
+      const bar=firstMeta&&firstMeta.data&&firstMeta.data[i];
+      if(total&&bar) ctx.fillText(total.toLocaleString(),xScale.getPixelForValue(total)+7,bar.y);
     });
     ctx.restore();
   }}
@@ -4289,6 +4954,10 @@ $('#dl-step-chart').addEventListener('click',()=>{ if(!state.stepChart)return;
   clearChartRowHover(state.stepChart);
   const a=document.createElement('a'); a.href=state.stepChart.toBase64Image('image/png',1); a.download=`issues_caught_by_step${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-step-chart').addEventListener('click',exportStepCaughtXlsx);
+$('#dl-escalation').addEventListener('click',()=>{ if(!state.escalationChart)return;
+  clearChartRowHover(state.escalationChart);
+  const a=document.createElement('a'); a.href=state.escalationChart.toBase64Image('image/png',1); a.download=`issue_escalation_by_${state.escalationGroup==='cxStep'?'cx_step':'original_category'}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
+$('#xlsx-escalation').addEventListener('click',exportEscalationXlsx);
 $('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
   clearChartRowHover(state.fatRiskChart);
   const a=document.createElement('a'); a.href=state.fatRiskChart.toBase64Image('image/png',1); a.download=`fat_risk_by_${safeFilePart(state.fatRiskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
@@ -4308,7 +4977,7 @@ $('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypoth
 $('#xlsx-matrix').addEventListener('click',exportMatrixXlsx);
 $('#dl-dash').addEventListener('click',async()=>{
   // temporarily un-clip both charts so the PNG captures every bar, not just the viewport
-  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#riskscroll'),$('#fatriskscroll')].filter(Boolean);
+  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#escalationscroll'),$('#riskscroll'),$('#fatriskscroll')].filter(Boolean);
   const prev=scs.map(sc=>({sc,h:sc.style.height,o:sc.style.overflow}));
   scs.forEach(sc=>{ sc.style.height='auto'; sc.style.overflow='visible'; });
   try{ await pngOf($('#view-dashboard'),'cardinal_dashboard.png'); }

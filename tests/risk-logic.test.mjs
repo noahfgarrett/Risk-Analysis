@@ -320,6 +320,8 @@ test('issue parsing keeps Cx Step, Category, Root Cause, and UPN per issue row',
   assert.equal(parsed.categoryCol, 4)
   assert.equal(parsed.rootCauseCol, 5)
   assert.equal(JSON.stringify(parsed.rows[0]), JSON.stringify({
+    issueId: 'ISS-1',
+    issueKey: 'iss-1',
     equipmentName: 'Pump A',
     equipmentKey: 'pump a',
     upn: '1001',
@@ -328,6 +330,79 @@ test('issue parsing keeps Cx Step, Category, Root Cause, and UPN per issue row',
     category: 'COR',
     rootCause: 'Design',
   }))
+})
+
+test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as authoritative', () => {
+  const ctx = loadPipeline()
+  const issues = ctx.parseIssues([
+    ['Issue ID', 'Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Issue-1', 'Pump A', '1001', 'Functional Test', 'NCR-D', 'Design'],
+    ['Issue-2', 'Pump A', '1001', 'Startup', 'NCR-D', 'Install'],
+    ['Issue-3', 'Panel B', '2002', 'Startup', 'DWN', 'Materials'],
+  ])
+  const sql = ctx.parseIssueSql([
+    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep'],
+    ['Issue-1', 'COR', 'NCR-D', 'FAT'],
+    ['Issue-2', 'NCR-D', 'NCR-D', 'Startup'],
+    ['Issue-3', 'WI', 'DWN', 'Commissioning'],
+    ['Issue-4', 'COR', 'NCR-C', 'FAT'],
+  ])
+  const model = ctx.buildModel({
+    equipment: [
+      { name: 'Pump A', upn: '1001', upnRaw: '1001', systemName: 'Water', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', score: 1, present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'] },
+      { name: 'Panel B', upn: '2002', upnRaw: '2002', systemName: 'Power', discipline: 'Electrical', building: 'B2', milestone: 'M2', classification: 'Panel', score: 2, present: { QAQC: true, DV: true, EHS: false }, categories: ['QAQC', 'DV'] },
+    ],
+  }, { map: { 1001: '1001 - Water System', 2002: '2002 - Power System' } }, issues, { byId: new Map([['pump a', 'Pump'], ['panel b', 'Panel']]) }, sql)
+
+  assert.equal(sql.total, 4)
+  assert.equal(sql.escalated, 3)
+  assert.equal(model.escalationRows.length, 2)
+  assert.equal(model.unmatchedEscalations.length, 1)
+  assert.equal(model.escalationRows[0].transition, 'COR → NCR-D')
+  assert.equal(model.escalationRows[0].cxStep, 'FAT')
+  assert.equal(model.escalationRows[0].gridCxStep, 'Functional Test')
+
+  const rows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, {})
+  const fatRows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, { cxSteps: ['FAT'] })
+  const cxStepRows = ctx.escalationCxStepRows(model.escalationRows, model.equipment, {})
+  const mechanicalRows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, { dimensionFilters: { Discipline: ['Mechanical'] } })
+  const breakdown = ctx.escalationBreakdown(model.escalationRows, model.equipment, 'COR', 'System', {}, '')
+  const cxStepBreakdown = ctx.escalationBreakdown(model.escalationRows, model.equipment, 'FAT', 'System', {}, '', 'cxStep')
+
+  assert.equal(JSON.stringify(rows.map((row) => [row.key, row.issueCount])), JSON.stringify([['COR', 1], ['WI', 1]]))
+  assert.equal(JSON.stringify(fatRows.map((row) => row.key)), JSON.stringify(['COR']))
+  assert.equal(JSON.stringify(cxStepRows.map((row) => [row.key, row.issueCount])), JSON.stringify([['Commissioning', 1], ['FAT', 1]]))
+  assert.equal(JSON.stringify(mechanicalRows.map((row) => row.key)), JSON.stringify(['COR']))
+  assert.equal(breakdown[0].key, '1001 - Water System')
+  assert.equal(breakdown[0].equipment[0].name, 'Pump A')
+  assert.equal(cxStepBreakdown[0].key, '1001 - Water System')
+})
+
+test('issue chart selector exposes escalation filters, drilldown, and filtered exports', () => {
+  const html = loadHtml()
+  const ctx = loadPipeline()
+
+  assert.match(html, /<option value="escalation">Issue Escalation<\/option>/)
+  assert.match(html, /id="escalation-group"/)
+  assert.match(html, /<option value="cxStep">Cx Step<\/option>/)
+  assert.match(html, /id="escalationFilterSystem"/)
+  assert.match(html, /id="escalationFilterDiscipline"/)
+  assert.match(html, /id="escalationFilterBuilding"/)
+  assert.match(html, /id="escalationFilterMilestone"/)
+  assert.match(html, /id="escalationFilterClassification"/)
+  assert.doesNotMatch(html, /id="escalationcatpills"/)
+  assert.match(html, /id="escalationLegendToggle"/)
+  assert.match(html, /id="escalationLegendCount"/)
+  assert.match(html, /id="escalationStepFilter"/)
+  assert.match(html, /id="escalationfocus"/)
+  assert.match(html, /id="xlsx-escalation"/)
+  assert.match(html, /id="dl-escalation"/)
+  assert.match(html, /function exportEscalationXlsx\(\)/)
+  assert.match(html, /function escalationChartOptions\(\)\{ return chartFilterOptions\(\{rootCauses:rootCauseList\(\),cxSteps:escalationStepList\(\),dimensionFilters:/)
+  assert.match(html, /id:'stackTotalLabels'/)
+  assert.match(html, /state\.escalationChart\.toBase64Image\('image\/png',1\)/)
+  assert.match(html, /if\(c==='OAS'\) return '#8b97a4'/)
+  assert.equal(ctx.issueCategoryRank('OAS'), ctx.issueCategoryRank('WI'))
 })
 
 test('issue distribution can count issues by root cause from matched issue rows', () => {
