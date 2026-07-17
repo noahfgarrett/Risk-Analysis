@@ -2060,7 +2060,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.2.1';
+const APP_VERSION='1.2.2';
 $('#version-label').textContent=APP_VERSION;
 
 const state = {
@@ -2091,6 +2091,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.2.2',
+    date:'2026-07-17T15:43:01Z',
+    type:'fix',
+    stats:'Workbook loading improvements',
+    notes:`### Updates
+- Improved loading performance for large workbooks
+- Reduced unnecessary spreadsheet processing
+- Refined reliability for larger data sets`
+  },
   {
     version:'1.2.1',
     date:'2026-07-17T15:12:55Z',
@@ -2512,25 +2522,66 @@ function readFileWithProgress(file, onProg){
    reuse their embedded XLSX runtime inside the worker, so opening the HTML from
    disk stays responsive too. Sheet conversion is row-batched for real progress. */
 const XLSX_WORKER_SRC=new URL('vendor/xlsx.bundle.js', window.location.href).href;
+function worksheetCellText(ws,row,col){
+  const denseRow=Array.isArray(ws)?ws[row]:null;
+  const cell=denseRow?denseRow[col]:ws&&ws[XLSX.utils.encode_cell({r:row,c:col})];
+  if(cell==null) return '';
+  try{ return XLSX.utils.format_cell(cell); }
+  catch(_){ return cell.w!=null?String(cell.w):(cell.v!=null?String(cell.v):''); }
+}
+function issueSqlProjection(name,ws,range){
+  if(!range||!String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'').includes('issuesql')) return null;
+  const wanted=['cxrecordnumber','originalissuecategory','issuecategory','cxstep'];
+  const lastHeaderRow=Math.min(range.e.r,range.s.r+100);
+  for(let row=range.s.r;row<=lastHeaderRow;row++){
+    const found={};
+    for(let col=range.s.c;col<=range.e.c;col++){
+      const key=worksheetCellText(ws,row,col).trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(wanted.includes(key)&&found[key]==null) found[key]=col;
+    }
+    if(wanted.every(key=>found[key]!=null)) return {headerRow:row,cols:wanted.map(key=>found[key])};
+  }
+  return null;
+}
+function projectIssueSqlSheet(ws,projection,lastRow,onBatch){
+  const cols=projection.cols, out=[cols.map(col=>worksheetCellText(ws,projection.headerRow,col))];
+  const firstRow=projection.headerRow+1, totalRows=Math.max(0,lastRow-firstRow+1), rowsPerBatch=25000;
+  for(let start=firstRow;start<=lastRow;start+=rowsPerBatch){
+    const end=Math.min(lastRow,start+rowsPerBatch-1);
+    for(let row=start;row<=end;row++){
+      const values=cols.map(col=>worksheetCellText(ws,row,col));
+      if(values.some(value=>String(value).trim()!=='')) out.push(values);
+    }
+    if(onBatch) onBatch(totalRows?(end-firstRow+1)/totalRows:1,end-start+1);
+  }
+  if(!totalRows&&onBatch) onBatch(1,0);
+  return out;
+}
 function makeParseWorker(){
   const runtime=$('#xlsx-runtime');
   const embedded=runtime&&!runtime.getAttribute('src')?runtime.textContent:'';
-  const src=`${embedded}\n;self.onmessage=function(ev){var m=ev.data;
+  const src=`${embedded}\n;${worksheetCellText.toString()}\n${issueSqlProjection.toString()}\n${projectIssueSqlSheet.toString()}\n;self.onmessage=function(ev){var m=ev.data;
     if(m.type==='ping'){self.postMessage({type:'ack'});return;}
     if(m.type==='parse'){try{if(typeof XLSX==='undefined')importScripts(m.runtimeUrl);
       self.postMessage({type:'progress',pct:0.02,label:'Opening workbook\u2026'});
-      var wb=XLSX.read(new Uint8Array(m.buf),{type:'array'});
+      var wb=XLSX.read(new Uint8Array(m.buf),{type:'array',dense:true,cellHTML:false});
       self.postMessage({type:'progress',pct:0.28,label:'Workbook opened'});
       var names=wb.SheetNames.slice(),aoa={},ranges=[],totalCells=0;
       for(var i=0;i<names.length;i++){
         var ws=wb.Sheets[names[i]],ref=ws&&ws['!ref'],range=ref?XLSX.utils.decode_range(ref):null;
-        var cells=range?Math.max(1,(range.e.r-range.s.r+1)*(range.e.c-range.s.c+1)):1;
-        ranges.push({range:range,cells:cells});totalCells+=cells;
+        var projection=issueSqlProjection(names[i],ws,range);
+        var cells=range?Math.max(1,(range.e.r-(projection?projection.headerRow:range.s.r)+1)*(projection?projection.cols.length:(range.e.c-range.s.c+1))):1;
+        ranges.push({range:range,projection:projection,cells:cells});totalCells+=cells;
       }
       var completedCells=0;
       for(var i=0;i<names.length;i++){
         var name=names[i],ws=wb.Sheets[name],meta=ranges[i],range=meta.range,out=[];
-        if(range){
+        if(range&&meta.projection){
+          out=projectIssueSqlSheet(ws,meta.projection,range.e.r,function(frac){
+            self.postMessage({type:'progress',pct:0.28+0.72*Math.min(1,(completedCells+meta.cells*frac)/Math.max(1,totalCells)),label:'Reading '+name});
+          });
+          completedCells+=meta.cells;
+        }else if(range){
           var colCount=Math.max(1,range.e.c-range.s.c+1);
           var rowsPerBatch=Math.max(100,Math.floor(100000/colCount));
           for(var start=range.s.r;start<=range.e.r;start+=rowsPerBatch){
@@ -2574,10 +2625,12 @@ function parseInWorker(buf, onProg){
 }
 async function parseMainThread(buf, onProg){
   onProg&&onProg(0.1,'Parsing workbook\u2026'); await yieldUI();
-  const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+  const wb=XLSX.read(new Uint8Array(buf),{type:'array',dense:true,cellHTML:false});
   const names=wb.SheetNames.slice(), aoa={};
   for(let i=0;i<names.length;i++){
-    aoa[names[i]]=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,raw:false,defval:''});
+    const ws=wb.Sheets[names[i]], ref=ws&&ws['!ref'], range=ref?XLSX.utils.decode_range(ref):null;
+    const projection=issueSqlProjection(names[i],ws,range);
+    aoa[names[i]]=projection?projectIssueSqlSheet(ws,projection,range.e.r):XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
     onProg&&onProg(0.1+0.9*((i+1)/names.length),'Reading '+names[i]);
     await yieldUI();
   }

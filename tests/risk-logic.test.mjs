@@ -17,6 +17,23 @@ function loadHtml() {
   return readFileSync(new URL('../index.html', import.meta.url), 'utf8')
 }
 
+function loadWorkbookProjection() {
+  const html = loadHtml()
+  const match = html.match(/(function worksheetCellText[\s\S]*?)function makeParseWorker\(\)/)
+  assert.ok(match, 'workbook projection helpers are present')
+  const context = {
+    XLSX: {
+      utils: {
+        encode_cell: ({ r, c }) => `${r}:${c}`,
+        format_cell: (cell) => String(cell.w ?? cell.v ?? ''),
+      },
+    },
+  }
+  vm.createContext(context)
+  vm.runInContext(match[1], context)
+  return context
+}
+
 const equipment = [
   {
     systemName: 'Alpha',
@@ -220,9 +237,40 @@ test('standalone imports keep workbook parsing off the main thread with batched 
 
   assert.match(html, /<script id="xlsx-runtime" src="vendor\/xlsx\.bundle\.js"><\/script>/)
   assert.doesNotMatch(html, /if\(location\.protocol==='file:'\)/)
+  assert.match(html, /type:'array',dense:true,cellHTML:false/)
+  assert.doesNotMatch(html, /dense:true,cellFormula:false/)
+  assert.match(html, /function issueSqlProjection\(name,ws,range\)/)
+  assert.match(html, /wanted=\['cxrecordnumber','originalissuecategory','issuecategory','cxstep'\]/)
+  assert.match(html, /out=projectIssueSqlSheet\(ws,meta\.projection,range\.e\.r/)
   assert.match(html, /rowsPerBatch=Math\.max\(100,Math\.floor\(100000\/colCount\)\)/)
   assert.match(html, /completedCells\/Math\.max\(1,totalCells\)/)
   assert.match(html, /await recompute\(true,progressRange\(72,97,'Building analysis…'\)\)/)
+})
+
+test('recognized SQL sheets copy only the four escalation columns', () => {
+  const ctx = loadWorkbookProjection()
+  const ws = [
+    [
+      { v: 'Unused A' },
+      { v: 'issueCategory' },
+      { v: 'cxRecordNumber' },
+      { v: 'Unused B' },
+      { v: 'cxStep' },
+      { v: 'originalIssueCategory' },
+    ],
+    [{ v: 'discard' }, { v: 'NCR' }, { v: 'Issue-1' }, { v: 'discard' }, { v: 'FAT' }, { v: 'COR' }],
+    [{ v: 'discard' }, { v: '' }, { v: '' }, { v: 'discard' }, { v: '' }, { v: '' }],
+  ]
+  const range = { s: { r: 0, c: 0 }, e: { r: 2, c: 5 } }
+  const projection = ctx.issueSqlProjection('Issue SQL Table', ws, range)
+  const rows = ctx.projectIssueSqlSheet(ws, projection, range.e.r)
+
+  assert.deepEqual(Array.from(projection.cols), [2, 5, 1, 4])
+  assert.equal(JSON.stringify(rows), JSON.stringify([
+    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep'],
+    ['Issue-1', 'COR', 'NCR', 'FAT'],
+  ]))
+  assert.equal(ctx.issueSqlProjection('Unrelated Sheet', ws, range), null)
 })
 
 test('update dismissal remains temporary and startup checks bypass stale release caching', () => {
