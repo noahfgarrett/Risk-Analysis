@@ -144,6 +144,7 @@ button{font-family:inherit}
 .versionbtn.has-update .version-dot{display:inline-block}
 
 .main{flex:1;padding:20px;max-width:1360px;width:100%;margin:0 auto}
+body.dashboard-active .main{max-width:none;padding:16px 18px 20px}
 .view{display:none;animation:fade .18s ease}
 .view.active{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -198,7 +199,7 @@ body.chart-fullscreen{overflow:hidden}
 .filter-shelf{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px}
 .filter-group{display:inline-flex;align-items:center;gap:7px;min-height:34px;min-width:0}
 .filter-group.compact{flex:0 1 auto}
-.filter-group.grow{flex:1 1 260px}
+.filter-group.grow{flex:1 1 260px;min-width:max-content}
 .filter-title{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
 .filter-shelf .pills{gap:4px;flex-wrap:nowrap}
 .filter-shelf .pill{padding:5px 9px;border-radius:7px;font-size:12px;line-height:1.2}
@@ -359,6 +360,59 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .custom-view-btn{height:35px}
 .custom-view-btn .cv-current{font-size:11px;color:var(--ink-3);font-weight:700;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .custom-view-btn.active{border-color:#cfe4f5;background:var(--accent-wash);color:var(--accent)}
+.dashboard-shell{display:grid;grid-template-columns:214px minmax(0,1fr);gap:16px;align-items:start;transition:grid-template-columns .18s ease}
+.dashboard-shell.nav-collapsed{grid-template-columns:58px minmax(0,1fr)}
+.dashboard-sidebar{position:sticky;top:76px;height:calc(100vh - 94px);min-height:560px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.dashboard-side-head{height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px 0 15px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.dashboard-side-title{font-size:12px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden}
+.dashboard-nav-toggle{appearance:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink-3);cursor:pointer;flex:0 0 auto}
+.dashboard-nav-toggle:hover{border-color:var(--line);background:var(--paper);color:var(--ink)}
+.dashboard-nav-toggle svg{width:16px;height:16px}
+.dashboard-nav{padding:11px 8px 12px;overflow:auto;min-height:0}
+.dashboard-nav-section+.dashboard-nav-section{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.dashboard-nav-label{padding:0 8px 6px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap;overflow:hidden}
+.dashboard-nav-item{position:relative;appearance:none;width:100%;height:36px;display:flex;align-items:center;gap:10px;border:0;border-radius:7px;background:transparent;color:var(--ink-2);padding:0 9px;text-align:left;font-size:12.5px;font-weight:680;cursor:pointer;white-space:nowrap;overflow:hidden}
+.dashboard-nav-item:hover{background:var(--paper);color:var(--ink)}
+.dashboard-nav-item.active{background:var(--accent-wash);color:var(--accent)}
+.dashboard-nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.dashboard-nav-icon{width:18px;height:18px;display:grid;place-items:center;flex:0 0 18px;color:currentColor}
+.dashboard-nav-icon svg{width:16px;height:16px}
+.dashboard-nav-text{overflow:hidden;text-overflow:ellipsis}
+.dashboard-side-foot{margin-top:auto;padding:12px 14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink-3);line-height:1.35;white-space:nowrap;overflow:hidden}
+.dashboard-shell.nav-collapsed .dashboard-side-head{justify-content:center;padding:0}
+.dashboard-shell.nav-collapsed .dashboard-side-title,.dashboard-shell.nav-collapsed .dashboard-nav-label,.dashboard-shell.nav-collapsed .dashboard-nav-text,.dashboard-shell.nav-collapsed .dashboard-side-foot{display:none}
+.dashboard-shell.nav-collapsed .dashboard-nav{padding-inline:7px}
+.dashboard-shell.nav-collapsed .dashboard-nav-section+.dashboard-nav-section{margin-top:8px;padding-top:8px}
+.dashboard-shell.nav-collapsed .dashboard-nav-item{justify-content:center;padding:0}
+.dashboard-shell.nav-collapsed .dashboard-nav-item.active::before{left:1px}
+.dashboard-workspace{min-width:0}
+.dashboard-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.dashboard-summary-strip .kpi{padding:10px 13px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center}
+.dashboard-summary-strip .kpi .eyebrow{margin:0;grid-column:1;grid-row:1;font-size:9.5px}
+.dashboard-summary-strip .kpi .v{grid-column:2;grid-row:1 / span 2;font-size:21px;letter-spacing:0}
+.dashboard-summary-strip .kpi .s{grid-column:1;grid-row:2;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px}
+.dashboard-utility{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:38px}
+.dashboard-utility .dash-controls{margin:0 0 0 auto;flex-wrap:nowrap}
+.dashboard-utility-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
+.dashboard-panels{min-width:0}
+.dashboard-panel{display:none!important;min-width:0}
+.dashboard-panel.active{display:block!important}
+.dashboard-panel.issue-card.active{display:block!important}
+.dashboard-panel.matrix.active{display:block!important}
+.dashboard-panel.riskcard.active{display:block!important}
+.dashboard-workspace .dashboard-panel{min-height:calc(100vh - 226px)}
+.dashboard-workspace .issue-view-control{display:none}
+.dashboard-workspace .dashboard-panel .chartwrap{height:clamp(460px,calc(100vh - 390px),760px)}
+.dashboard-workspace .issue-card-inner,.dashboard-workspace .issue-face,.dashboard-workspace .risk-card-inner,.dashboard-workspace .risk-face{min-height:calc(100vh - 226px)}
+.dashboard-workspace .matrix{padding:18px}
+.dashboard-workspace .matrix #matrixbody{min-height:500px}
+.dashboard-export-bar{margin-top:10px!important;padding:0 2px}
+@media(max-width:1180px){
+  .dashboard-shell{grid-template-columns:184px minmax(0,1fr)}
+  .dashboard-summary-strip .kpi .s{display:none}
+  .dashboard-summary-strip .kpi{grid-template-rows:auto}
+  .dashboard-summary-strip .kpi .v{grid-row:1}
+}
 .custom-view-card{width:min(1040px,94vw);max-height:86vh;padding:0;overflow:hidden;display:flex;flex-direction:column}
 .custom-view-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
 .custom-view-title{font-size:18px;font-weight:760;letter-spacing:-.01em}
@@ -679,7 +733,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.2.0</span>
+      Risk Analysis v<span id="version-label">1.3.0</span>
     </button>
   </header>
 
@@ -746,23 +800,73 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 
     <!-- DASHBOARD -->
     <section class="view" id="view-dashboard">
-      <div class="kpis" id="kpis"></div>
-      <div class="dash-controls">
-        <label class="toggle-control" data-tip="Removes equipment whose System or UPN starts with RR from every dashboard chart and chart export.">
-          <input type="checkbox" id="excludeRooms" />
-          Remove rooms <span>RR systems / UPNs</span>
-        </label>
-        <label class="toggle-control" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB.">
-          <input type="checkbox" id="alexCustomView" />
-          Remove Devices <span>classification filter</span>
-        </label>
-        <button class="btn custom-view-btn" id="customViewBtn" title="Create and manage locally saved custom chart views">
-          Custom view <span class="cv-current" id="customViewCurrent">No saved view</span>
-        </button>
-      </div>
+      <div class="dashboard-shell" id="dashboardShell">
+        <aside class="dashboard-sidebar" aria-label="Dashboard charts">
+          <div class="dashboard-side-head">
+            <span class="dashboard-side-title">Analysis views</span>
+            <button class="dashboard-nav-toggle" id="dashboardNavToggle" type="button" aria-label="Collapse chart navigation" title="Collapse chart navigation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+            </button>
+          </div>
+          <nav class="dashboard-nav">
+            <div class="dashboard-nav-section">
+              <div class="dashboard-nav-label">Issues</div>
+              <button class="dashboard-nav-item active" type="button" data-dashboard-panel="distribution" title="Issue Distribution">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="dashboard-nav-text">Issue Distribution</span>
+              </button>
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="step" title="Issues by Step">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 6 6-3 6 5 5-4"/></svg></span><span class="dashboard-nav-text">Issues by Step</span>
+              </button>
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="escalation" title="Issue Escalation">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 4h8l-2 4 2 4H4"/><path d="M9 20h11"/></svg></span><span class="dashboard-nav-text">Issue Escalation</span>
+              </button>
+            </div>
+            <div class="dashboard-nav-section">
+              <div class="dashboard-nav-label">Risk</div>
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="hypothesis" title="Risk Hypothesis">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg></span><span class="dashboard-nav-text">Risk Hypothesis</span>
+              </button>
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="risk" title="Risk Analysis">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M5 17l4-5 4 2 6-8"/><path d="M15 6h4v4"/></svg></span><span class="dashboard-nav-text">Risk Analysis</span>
+              </button>
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="fat" title="FAT Risk">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v4M12 17h.01"/></svg></span><span class="dashboard-nav-text">FAT Risk</span>
+              </button>
+            </div>
+            <div class="dashboard-nav-section">
+              <div class="dashboard-nav-label">Data</div>
+              <button class="dashboard-nav-item" type="button" data-dashboard-view="hierarchy" title="Equipment Hierarchy">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v12M18 9v12M6 9h12"/><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></span><span class="dashboard-nav-text">Equipment Hierarchy</span>
+              </button>
+              <button class="dashboard-nav-item" type="button" data-dashboard-view="mapping" title="Data Mapping">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/></svg></span><span class="dashboard-nav-text">Data Mapping</span>
+              </button>
+            </div>
+          </nav>
+          <div class="dashboard-side-foot">Offline workspace · v<span id="dashboard-version"></span></div>
+        </aside>
 
-      <div class="grid-2">
-        <div class="card issue-card" id="chartcard">
+        <div class="dashboard-workspace">
+          <div class="dashboard-summary-strip" id="kpis"></div>
+          <div class="dashboard-utility">
+            <span class="dashboard-utility-label">Global view</span>
+            <div class="dash-controls">
+              <label class="toggle-control" data-tip="Removes equipment whose System or UPN starts with RR from every dashboard chart and chart export.">
+                <input type="checkbox" id="excludeRooms" />
+                Remove rooms <span>RR systems / UPNs</span>
+              </label>
+              <label class="toggle-control" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB.">
+                <input type="checkbox" id="alexCustomView" />
+                Remove Devices <span>classification filter</span>
+              </label>
+              <button class="btn custom-view-btn" id="customViewBtn" title="Create and manage locally saved custom chart views">
+                Custom view <span class="cv-current" id="customViewCurrent">No saved view</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="dashboard-panels">
+        <div class="card issue-card dashboard-panel active" id="chartcard">
           <div class="issue-card-inner">
             <div class="issue-face issue-face-front active" data-issue-view="distribution">
               <div class="section-head">
@@ -908,7 +1012,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
           </div>
         </div>
 
-        <div class="card matrix" id="matrixcard">
+        <div class="card matrix dashboard-panel" id="matrixcard">
           <div class="section-head">
             <div>
               <div class="eyebrow">Risk hypothesis</div>
@@ -942,9 +1046,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
           </div>
           <div id="matrixbody"></div>
         </div>
-      </div>
-
-      <div class="card riskcard risk-flip-card" id="riskcard" style="margin-top:18px">
+      <div class="card riskcard risk-flip-card dashboard-panel" id="riskcard">
         <div class="risk-card-inner">
           <div class="risk-face risk-face-front">
             <div class="section-head">
@@ -1080,9 +1182,13 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
         </div>
       </div>
 
-      <div class="toolbar" style="margin-top:18px;justify-content:flex-end">
+          </div>
+
+      <div class="toolbar dashboard-export-bar" style="justify-content:flex-end">
         <button class="btn" id="dl-dash">Export dashboard PNG</button>
         <button class="btn primary" id="dl-analysis">Export analysis (Excel)</button>
+      </div>
+        </div>
       </div>
     </section>
 
@@ -2062,8 +2168,9 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.2.4';
+const APP_VERSION='1.3.0';
 $('#version-label').textContent=APP_VERSION;
+$('#dashboard-version').textContent=APP_VERSION;
 
 const state = {
   fileName:'', aoaBySheet:{}, sheetNames:[],
@@ -2081,6 +2188,7 @@ const state = {
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
   chartSearch:'', stepChartSearch:'', escalationSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
+  dashboardPanel:'distribution', dashboardNavCollapsed:false,
   escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
   escalationLegendOpen:false, escalationTypes:new Set(), escalationTypeGroupsOpen:new Set(),
   rootCauses:new Set(), rootPickerOpen:null,
@@ -2093,6 +2201,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.3.0',
+    date:'2026-07-20T12:39:30Z',
+    type:'feature',
+    stats:'Focused dashboard workspace',
+    notes:`### Updates
+- Added a streamlined dashboard workspace
+- Improved chart navigation and layout
+- Refined export and view consistency`
+  },
   {
     version:'1.2.4',
     date:'2026-07-17T18:51:26Z',
@@ -2667,6 +2785,7 @@ async function parseWorkbook(buf, onProg){
 function activateTab(t){
   $$('#tabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
   $$('.view').forEach(v=>v.classList.remove('active')); $('#view-'+t.dataset.view).classList.add('active');
+  document.body.classList.toggle('dashboard-active',t.dataset.view==='dashboard');
   if(t.dataset.view==='dashboard' && state.model){ renderDashboard(); }
   if(t.dataset.view==='hierarchy' && state.visible){ renderWindow(); }
 }
@@ -3308,6 +3427,7 @@ function renderDashboard(){
   syncIssueViewUI();
   syncRiskViewUI();
   $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
+  syncDashboardWorkspace();
   updateRiskMetricPills();
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
   // counted once (no double-count across multiple step types).
@@ -3317,13 +3437,7 @@ function renderDashboard(){
     ${kpi('Equipment',t.equipment,'','The total number of equipment items analyzed from the Equipment Status Report.')}
     ${kpi('Total issues',t.issues,'matched to equipment','Total issues from the Issue Grid Report that were matched to an equipment item. Each issue is counted once.')}
     ${kpi('Issues caught by steps',caught,'on units with a QAQC/DV/EHS step','Issues logged on equipment that have at least one QAQC, DV, or EHS step — each issue counted once, no duplicates.')}`;
-  renderMatrix();
-  if($('#view-dashboard').classList.contains('active')){
-    if(state.issueCardSide==='distribution') renderChart();
-    else if(state.issueCardSide==='step') renderStepChart();
-    else renderEscalationChart();
-    renderRisk(); if(state.riskCardSide==='fat') renderFatRisk();
-  }
+  if($('#view-dashboard').classList.contains('active')) renderActiveDashboardPanel();
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
@@ -3528,29 +3642,66 @@ function renderIssueCardSide(){
   else if(state.issueCardSide==='escalation') renderEscalationChart();
   else renderChart();
 }
+const DASHBOARD_ISSUE_PANELS=new Set(['distribution','step','escalation']);
+const DASHBOARD_RISK_PANELS=new Set(['risk','fat']);
+const DASHBOARD_PANELS=new Set([...DASHBOARD_ISSUE_PANELS,'hypothesis',...DASHBOARD_RISK_PANELS]);
+function syncDashboardWorkspace(){
+  let panel=DASHBOARD_PANELS.has(state.dashboardPanel)?state.dashboardPanel:'distribution';
+  state.dashboardPanel=panel;
+  if(DASHBOARD_ISSUE_PANELS.has(panel)) state.issueCardSide=panel;
+  if(DASHBOARD_RISK_PANELS.has(panel)) state.riskCardSide=panel==='fat'?'fat':'standard';
+  $$('.dashboard-nav-item[data-dashboard-panel]').forEach(btn=>{
+    const active=btn.dataset.dashboardPanel===panel;
+    btn.classList.toggle('active',active);
+    active?btn.setAttribute('aria-current','page'):btn.removeAttribute('aria-current');
+  });
+  $('#chartcard').classList.toggle('active',DASHBOARD_ISSUE_PANELS.has(panel));
+  $('#matrixcard').classList.toggle('active',panel==='hypothesis');
+  $('#riskcard').classList.toggle('active',DASHBOARD_RISK_PANELS.has(panel));
+  syncIssueViewUI();
+  syncRiskViewUI();
+  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
+}
+function renderActiveDashboardPanel(){
+  if(!state.model) return;
+  if(DASHBOARD_ISSUE_PANELS.has(state.dashboardPanel)) renderIssueCardSide();
+  else if(state.dashboardPanel==='hypothesis') renderMatrix();
+  else if(state.dashboardPanel==='fat') renderFatRisk();
+  else renderRisk();
+  resizeChartsSoon();
+}
+function setDashboardPanel(panel){
+  if(!DASHBOARD_PANELS.has(panel)) return;
+  state.dashboardPanel=panel;
+  syncDashboardWorkspace();
+  requestAnimationFrame(renderActiveDashboardPanel);
+}
 function syncIssueViewUI(){
   $$('#chartcard .issue-view-select').forEach(sel=>{ sel.value=state.issueCardSide; });
   $$('#chartcard .issue-face').forEach(face=>face.classList.toggle('active',face.dataset.issueView===state.issueCardSide));
 }
 function setIssueCardSide(side){
   if(!['distribution','step','escalation'].includes(side)) side='distribution';
-  if(side===state.issueCardSide){ syncIssueViewUI(); renderIssueCardSide(); resizeChartsSoon(); return; }
   state.issueCardSide=side;
-  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true);
-  syncIssueViewUI();
-  renderIssueCardSide();
-  resizeChartsSoon();
+  setDashboardPanel(side);
 }
 $$('#chartcard .issue-view-select').forEach(sel=>sel.addEventListener('change',e=>setIssueCardSide(e.target.value)));
 function syncRiskViewUI(){ $$('.risk-view-select').forEach(sel=>{ sel.value=state.riskCardSide; }); }
 function setRiskCardSide(side){
   state.riskCardSide=side==='fat'?'fat':'standard';
-  exitRiskFocus(true); exitFatRiskFocus(true);
-  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
-  syncRiskViewUI();
-  requestAnimationFrame(()=>{ state.riskCardSide==='fat' ? renderFatRisk() : renderRisk(); resizeChartsSoon(); });
+  setDashboardPanel(state.riskCardSide==='fat'?'fat':'risk');
 }
 $$('.risk-view-select').forEach(sel=>sel.addEventListener('change',e=>setRiskCardSide(e.target.value)));
+$$('.dashboard-nav-item[data-dashboard-panel]').forEach(btn=>btn.addEventListener('click',()=>setDashboardPanel(btn.dataset.dashboardPanel)));
+$$('.dashboard-nav-item[data-dashboard-view]').forEach(btn=>btn.addEventListener('click',()=>goto(btn.dataset.dashboardView)));
+$('#dashboardNavToggle').addEventListener('click',()=>{
+  state.dashboardNavCollapsed=!state.dashboardNavCollapsed;
+  $('#dashboardShell').classList.toggle('nav-collapsed',state.dashboardNavCollapsed);
+  const btn=$('#dashboardNavToggle'), expanded=!state.dashboardNavCollapsed;
+  btn.setAttribute('aria-label',expanded?'Collapse chart navigation':'Expand chart navigation');
+  btn.title=expanded?'Collapse chart navigation':'Expand chart navigation';
+  resizeChartsSoon();
+});
 function resizeChartsSoon(){
   const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.escalationChart) state.escalationChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
   requestAnimationFrame(resize);

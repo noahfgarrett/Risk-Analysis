@@ -506,13 +506,20 @@ test('issue chart selector exposes escalation filters, drilldown, and filtered e
   assert.equal(ctx.issueCategoryRank('OAS'), ctx.issueCategoryRank('WI'))
 })
 
-test('chart view selectors switch directly and risk views share the same dropdown style', () => {
+test('chart selectors and dashboard sidebar share one state-preserving workspace', () => {
   const html = loadHtml()
 
   assert.match(html, /class="issue-view-select risk-view-select"[^>]*>[\s\S]*Risk Analysis[\s\S]*FAT Risk/)
   assert.doesNotMatch(html, /id="risk-flip-fat"|id="risk-flip-standard"/)
   assert.doesNotMatch(html, /flipping-out|flipping-in|issueFlipTimer/)
-  assert.match(html, /function setIssueCardSide\(side\)\{[\s\S]*syncIssueViewUI\(\);[\s\S]*renderIssueCardSide\(\);/)
+  assert.match(html, /data-dashboard-panel="distribution"/)
+  assert.match(html, /data-dashboard-panel="hypothesis"/)
+  assert.match(html, /data-dashboard-panel="fat"/)
+  assert.match(html, /function setIssueCardSide\(side\)\{[\s\S]*setDashboardPanel\(side\);/)
+  assert.match(html, /function setRiskCardSide\(side\)\{[\s\S]*setDashboardPanel\(state\.riskCardSide==='fat'\?'fat':'risk'\);/)
+  assert.match(html, /function syncDashboardWorkspace\(\)/)
+  assert.doesNotMatch(html, /function setIssueCardSide\(side\)\{[\s\S]{0,260}exitFocus/)
+  assert.doesNotMatch(html, /function setRiskCardSide\(side\)\{[\s\S]{0,220}exitRiskFocus/)
 })
 
 test('issue distribution can count issues by root cause from matched issue rows', () => {
