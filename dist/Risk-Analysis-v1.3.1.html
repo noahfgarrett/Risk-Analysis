@@ -321,23 +321,16 @@ body.chart-fullscreen{overflow:hidden}
 .ms-option{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--ink);cursor:pointer}
 .ms-option:hover{background:var(--paper)}
 .ms-option input{margin:0;accent-color:var(--accent)}
-.risk-flip-card{padding:0!important;perspective:1400px;overflow:hidden}
-.risk-card-inner{position:relative;min-height:650px;transform-style:preserve-3d;transition:transform .56s cubic-bezier(.2,.7,.2,1)}
-.risk-flip-card.flipped .risk-card-inner{transform:rotateY(180deg)}
-.risk-face{min-height:650px;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface)}
-.risk-face-front{pointer-events:auto}
-.risk-face-back{position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;pointer-events:none}
-.risk-flip-card.flipped .risk-face-front{pointer-events:none}
-.risk-flip-card.flipped .risk-face-back{pointer-events:auto}
+.risk-flip-card{padding:0!important;overflow:hidden}
+.risk-card-inner{position:relative;min-height:650px}
+.risk-face{display:none;min-height:650px;padding:18px;background:var(--surface);flex-direction:column}
+.risk-face.active{display:flex}
 .risk-flip-card.fullscreen .risk-card-inner,.risk-flip-card.fullscreen .risk-face{min-height:100%}
-body.export-capture .issue-card .issue-card-inner,
-body.export-capture .risk-flip-card.flipped .risk-card-inner{transform:none!important}
+body.export-capture .issue-card .issue-card-inner{transform:none!important}
 body.export-capture .issue-card .issue-face{display:none!important}
 body.export-capture .issue-card .issue-face.active{display:flex!important;position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
-body.export-capture .risk-flip-card.flipped .risk-face-front{display:none!important}
-body.export-capture .risk-flip-card.flipped .risk-face-back{position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
-body.export-capture .issue-card,
-body.export-capture .risk-flip-card{perspective:none!important}
+body.export-capture .risk-face{display:none!important}
+body.export-capture .risk-face.active{display:flex!important;position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
 body.export-capture #overlay,
 body.export-capture #toast,
 body.export-capture #app-tooltip{display:none!important}
@@ -410,9 +403,14 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .dashboard-nav-toggle{appearance:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink-3);cursor:pointer;flex:0 0 auto}
 .dashboard-nav-toggle:hover{border-color:var(--line);background:var(--paper);color:var(--ink)}
 .dashboard-nav-toggle svg{width:16px;height:16px}
-.dashboard-nav{padding:11px 8px 12px;overflow:auto;min-height:0}
+.dashboard-nav{padding:11px 8px 12px;overflow:auto;min-height:0;flex:1 1 auto}
 .dashboard-nav-section+.dashboard-nav-section{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
-.dashboard-nav-label{padding:0 8px 6px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap;overflow:hidden}
+.dashboard-nav-section-head{appearance:none;width:100%;height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;border:0;background:transparent;color:var(--ink-3);padding:0 8px 6px;cursor:pointer;text-align:left}
+.dashboard-nav-section-head:hover{color:var(--ink-2)}
+.dashboard-nav-label{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;white-space:nowrap;overflow:hidden}
+.dashboard-nav-section-caret{font-size:9px;transition:transform .15s ease;flex:0 0 auto}
+.dashboard-nav-section.collapsed .dashboard-nav-section-caret,.dashboard-global-section.collapsed .dashboard-nav-section-caret{transform:rotate(-90deg)}
+.dashboard-nav-section.collapsed .dashboard-nav-items,.dashboard-global-section.collapsed .dashboard-global-body{display:none}
 .dashboard-nav-item{position:relative;appearance:none;width:100%;height:36px;display:flex;align-items:center;gap:10px;border:0;border-radius:7px;background:transparent;color:var(--ink-2);padding:0 9px;text-align:left;font-size:12.5px;font-weight:680;cursor:pointer;white-space:nowrap;overflow:hidden}
 .dashboard-nav-item:hover{background:var(--paper);color:var(--ink)}
 .dashboard-nav-item.active{background:var(--accent-wash);color:var(--accent)}
@@ -420,22 +418,41 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .dashboard-nav-icon{width:18px;height:18px;display:grid;place-items:center;flex:0 0 18px;color:currentColor}
 .dashboard-nav-icon svg{width:16px;height:16px}
 .dashboard-nav-text{overflow:hidden;text-overflow:ellipsis}
-.dashboard-side-foot{margin-top:auto;padding:12px 14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink-3);line-height:1.35;white-space:nowrap;overflow:hidden}
+.dashboard-global-section{margin-top:auto;border-top:1px solid var(--line);padding:10px 8px 8px;flex:0 0 auto;background:var(--surface-2)}
+.dashboard-global-section .dashboard-nav-section-head{height:26px;padding-bottom:7px}
+.dashboard-global-body{display:flex;flex-direction:column;gap:5px}
+.dashboard-filter-toggle,.dashboard-custom-view{position:relative;width:100%;min-width:0;height:38px;display:flex;align-items:center;gap:9px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink-2);padding:0 8px;cursor:pointer;text-align:left}
+.dashboard-filter-toggle:hover,.dashboard-custom-view:hover{border-color:var(--line);background:var(--surface);color:var(--ink)}
+.dashboard-filter-toggle:has(input:checked),.dashboard-custom-view.active{border-color:#cfe4f5;background:var(--accent-wash);color:var(--accent)}
+.dashboard-filter-toggle input{position:absolute;opacity:0;pointer-events:none}
+.dashboard-filter-icon{width:18px;height:18px;display:grid;place-items:center;flex:0 0 18px}
+.dashboard-filter-icon svg{width:16px;height:16px}
+.dashboard-filter-text{min-width:0;flex:1;font-size:12px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-switch{position:relative;width:28px;height:16px;flex:0 0 28px;border-radius:999px;background:var(--line-2);transition:background .15s ease}
+.dashboard-switch::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(17,24,32,.2);transition:transform .15s ease}
+.dashboard-filter-toggle input:checked~.dashboard-switch{background:var(--accent)}
+.dashboard-filter-toggle input:checked~.dashboard-switch::after{transform:translateX(12px)}
+.dashboard-custom-view{appearance:none;height:44px;font:inherit}
+.dashboard-custom-view-copy{min-width:0;flex:1;display:flex;flex-direction:column;line-height:1.2}
+.dashboard-custom-view-copy b{font-size:12px;font-weight:750}
+.dashboard-custom-view .cv-current{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-3);font-size:10px;font-weight:650;margin-top:2px}
+.dashboard-custom-view-caret{font-size:12px;color:var(--ink-3);flex:0 0 auto}
+.dashboard-side-foot{padding:8px 14px;border-top:1px solid var(--line);font-size:10px;color:var(--ink-3);line-height:1.35;white-space:nowrap;overflow:hidden;flex:0 0 auto}
 .dashboard-shell.nav-collapsed .dashboard-side-head{justify-content:center;padding:0}
-.dashboard-shell.nav-collapsed .dashboard-side-title,.dashboard-shell.nav-collapsed .dashboard-nav-label,.dashboard-shell.nav-collapsed .dashboard-nav-text,.dashboard-shell.nav-collapsed .dashboard-side-foot{display:none}
+.dashboard-shell.nav-collapsed .dashboard-side-title,.dashboard-shell.nav-collapsed .dashboard-nav-section-head,.dashboard-shell.nav-collapsed .dashboard-nav-text,.dashboard-shell.nav-collapsed .dashboard-filter-text,.dashboard-shell.nav-collapsed .dashboard-switch,.dashboard-shell.nav-collapsed .dashboard-custom-view-copy,.dashboard-shell.nav-collapsed .dashboard-custom-view-caret,.dashboard-shell.nav-collapsed .dashboard-side-foot{display:none}
 .dashboard-shell.nav-collapsed .dashboard-nav{padding-inline:7px}
 .dashboard-shell.nav-collapsed .dashboard-nav-section+.dashboard-nav-section{margin-top:8px;padding-top:8px}
 .dashboard-shell.nav-collapsed .dashboard-nav-item{justify-content:center;padding:0}
 .dashboard-shell.nav-collapsed .dashboard-nav-item.active::before{left:1px}
+.dashboard-shell.nav-collapsed .dashboard-global-section{padding:8px 7px}
+.dashboard-shell.nav-collapsed .dashboard-global-body{gap:4px}
+.dashboard-shell.nav-collapsed .dashboard-filter-toggle,.dashboard-shell.nav-collapsed .dashboard-custom-view{justify-content:center;width:42px;padding:0}
 .dashboard-workspace{min-width:0}
 .dashboard-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
 .dashboard-summary-strip .kpi{padding:10px 13px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center}
 .dashboard-summary-strip .kpi .eyebrow{margin:0;grid-column:1;grid-row:1;font-size:9.5px}
 .dashboard-summary-strip .kpi .v{grid-column:2;grid-row:1 / span 2;font-size:21px;letter-spacing:0}
 .dashboard-summary-strip .kpi .s{grid-column:1;grid-row:2;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px}
-.dashboard-utility{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:38px}
-.dashboard-utility .dash-controls{margin:0 0 0 auto;flex-wrap:nowrap}
-.dashboard-utility-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:800;white-space:nowrap}
 .dashboard-panels{min-width:0}
 .dashboard-panel{display:none!important;min-width:0}
 .dashboard-panel.active{display:block!important}
@@ -775,7 +792,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.3.0</span>
+      Risk Analysis v<span id="version-label">1.3.1</span>
     </button>
   </header>
 
@@ -851,8 +868,9 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             </button>
           </div>
           <nav class="dashboard-nav">
-            <div class="dashboard-nav-section">
-              <div class="dashboard-nav-label">Issues</div>
+            <div class="dashboard-nav-section" data-dashboard-section="issues">
+              <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="issues" aria-expanded="true"><span class="dashboard-nav-label">Issues</span><span class="dashboard-nav-section-caret">▾</span></button>
+              <div class="dashboard-nav-items">
               <button class="dashboard-nav-item active" type="button" data-dashboard-panel="distribution" title="Issue Distribution">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="dashboard-nav-text">Issue Distribution</span>
               </button>
@@ -862,9 +880,11 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               <button class="dashboard-nav-item" type="button" data-dashboard-panel="escalation" title="Issue Escalation">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 4h8l-2 4 2 4H4"/><path d="M9 20h11"/></svg></span><span class="dashboard-nav-text">Issue Escalation</span>
               </button>
+              </div>
             </div>
-            <div class="dashboard-nav-section">
-              <div class="dashboard-nav-label">Risk</div>
+            <div class="dashboard-nav-section" data-dashboard-section="risk">
+              <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="risk" aria-expanded="true"><span class="dashboard-nav-label">Risk</span><span class="dashboard-nav-section-caret">▾</span></button>
+              <div class="dashboard-nav-items">
               <button class="dashboard-nav-item" type="button" data-dashboard-panel="hypothesis" title="Risk Hypothesis">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg></span><span class="dashboard-nav-text">Risk Hypothesis</span>
               </button>
@@ -874,39 +894,47 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               <button class="dashboard-nav-item" type="button" data-dashboard-panel="fat" title="FAT Risk">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v4M12 17h.01"/></svg></span><span class="dashboard-nav-text">FAT Risk</span>
               </button>
+              </div>
             </div>
-            <div class="dashboard-nav-section">
-              <div class="dashboard-nav-label">Data</div>
+            <div class="dashboard-nav-section" data-dashboard-section="data">
+              <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="data" aria-expanded="true"><span class="dashboard-nav-label">Data</span><span class="dashboard-nav-section-caret">▾</span></button>
+              <div class="dashboard-nav-items">
               <button class="dashboard-nav-item" type="button" data-dashboard-view="hierarchy" title="Equipment Hierarchy">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v12M18 9v12M6 9h12"/><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></span><span class="dashboard-nav-text">Equipment Hierarchy</span>
               </button>
               <button class="dashboard-nav-item" type="button" data-dashboard-view="mapping" title="Data Mapping">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/></svg></span><span class="dashboard-nav-text">Data Mapping</span>
               </button>
+              </div>
             </div>
           </nav>
+          <div class="dashboard-global-section" data-dashboard-section="global">
+            <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="global" aria-expanded="true"><span class="dashboard-nav-label">Global filters</span><span class="dashboard-nav-section-caret">▾</span></button>
+            <div class="dashboard-global-body">
+              <label class="dashboard-filter-toggle" data-tip="Removes equipment whose System or UPN starts with RR from every dashboard chart and chart export." title="Remove rooms">
+                <span class="dashboard-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V5h10v16M15 9h4v12M8 9h3M8 13h3M8 17h3"/></svg></span>
+                <span class="dashboard-filter-text">Remove rooms</span>
+                <input type="checkbox" id="excludeRooms" />
+                <span class="dashboard-switch" aria-hidden="true"></span>
+              </label>
+              <label class="dashboard-filter-toggle" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB." title="Remove devices">
+                <span class="dashboard-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+                <span class="dashboard-filter-text">Remove devices</span>
+                <input type="checkbox" id="alexCustomView" />
+                <span class="dashboard-switch" aria-hidden="true"></span>
+              </label>
+              <button class="custom-view-btn dashboard-custom-view" id="customViewBtn" type="button" title="Create and manage locally saved custom chart views">
+                <span class="dashboard-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M7 12h10M10 19h4"/></svg></span>
+                <span class="dashboard-custom-view-copy"><b>Custom view</b><span class="cv-current" id="customViewCurrent">No saved view</span></span>
+                <span class="dashboard-custom-view-caret">›</span>
+              </button>
+            </div>
+          </div>
           <div class="dashboard-side-foot">Offline workspace · v<span id="dashboard-version"></span></div>
         </aside>
 
         <div class="dashboard-workspace">
           <div class="dashboard-summary-strip" id="kpis"></div>
-          <div class="dashboard-utility">
-            <span class="dashboard-utility-label">Global view</span>
-            <div class="dash-controls">
-              <label class="toggle-control" data-tip="Removes equipment whose System or UPN starts with RR from every dashboard chart and chart export.">
-                <input type="checkbox" id="excludeRooms" />
-                Remove rooms <span>RR systems / UPNs</span>
-              </label>
-              <label class="toggle-control" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB.">
-                <input type="checkbox" id="alexCustomView" />
-                Remove Devices <span>classification filter</span>
-              </label>
-              <button class="btn custom-view-btn" id="customViewBtn" title="Create and manage locally saved custom chart views">
-                Custom view <span class="cv-current" id="customViewCurrent">No saved view</span>
-              </button>
-            </div>
-          </div>
-
           <div class="dashboard-panels">
         <div class="card issue-card dashboard-panel active" id="chartcard">
           <div class="issue-card-inner">
@@ -1090,7 +1118,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
         </div>
       <div class="card riskcard risk-flip-card dashboard-panel" id="riskcard">
         <div class="risk-card-inner">
-          <div class="risk-face risk-face-front">
+          <div class="risk-face risk-face-front active">
             <div class="section-head">
               <div>
                 <div class="eyebrow">Risk analysis</div>
@@ -2210,7 +2238,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.3.1';
 $('#version-label').textContent=APP_VERSION;
 $('#dashboard-version').textContent=APP_VERSION;
 
@@ -2230,7 +2258,7 @@ const state = {
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
   chartSearch:'', stepChartSearch:'', escalationSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
-  dashboardPanel:'distribution', dashboardNavCollapsed:false,
+  dashboardPanel:'distribution', dashboardNavCollapsed:false, dashboardNavSectionsOpen:new Set(['issues','risk','data','global']),
   escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
   escalationLegendOpen:false, escalationTypes:new Set(), escalationTypeGroupsOpen:new Set(),
   rootCauses:new Set(), rootPickerOpen:null,
@@ -2243,6 +2271,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.3.1',
+    date:'2026-07-20T12:53:35Z',
+    type:'fix',
+    stats:'Dashboard navigation refinements',
+    notes:`### Updates
+- Refined global dashboard controls
+- Improved sidebar navigation behavior
+- Simplified risk view switching`
+  },
   {
     version:'1.3.0',
     date:'2026-07-20T12:39:30Z',
@@ -3468,7 +3506,6 @@ function renderDashboard(){
   updateCatPills(); updateRiskCatPills(); updateFatCatPills();
   syncIssueViewUI();
   syncRiskViewUI();
-  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
   syncDashboardWorkspace();
   updateRiskMetricPills();
   // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
@@ -3702,7 +3739,6 @@ function syncDashboardWorkspace(){
   $('#riskcard').classList.toggle('active',DASHBOARD_RISK_PANELS.has(panel));
   syncIssueViewUI();
   syncRiskViewUI();
-  $('#riskcard').classList.toggle('flipped',state.riskCardSide==='fat');
 }
 function renderActiveDashboardPanel(){
   if(!state.model) return;
@@ -3728,7 +3764,11 @@ function setIssueCardSide(side){
   setDashboardPanel(side);
 }
 $$('#chartcard .issue-view-select').forEach(sel=>sel.addEventListener('change',e=>setIssueCardSide(e.target.value)));
-function syncRiskViewUI(){ $$('.risk-view-select').forEach(sel=>{ sel.value=state.riskCardSide; }); }
+function syncRiskViewUI(){
+  $$('.risk-view-select').forEach(sel=>{ sel.value=state.riskCardSide; });
+  $('#riskcard .risk-face-front').classList.toggle('active',state.riskCardSide==='standard');
+  $('#riskcard .risk-face-back').classList.toggle('active',state.riskCardSide==='fat');
+}
 function setRiskCardSide(side){
   state.riskCardSide=side==='fat'?'fat':'standard';
   setDashboardPanel(state.riskCardSide==='fat'?'fat':'risk');
@@ -3736,6 +3776,17 @@ function setRiskCardSide(side){
 $$('.risk-view-select').forEach(sel=>sel.addEventListener('change',e=>setRiskCardSide(e.target.value)));
 $$('.dashboard-nav-item[data-dashboard-panel]').forEach(btn=>btn.addEventListener('click',()=>setDashboardPanel(btn.dataset.dashboardPanel)));
 $$('.dashboard-nav-item[data-dashboard-view]').forEach(btn=>btn.addEventListener('click',()=>goto(btn.dataset.dashboardView)));
+function setDashboardNavSection(section,open){
+  const root=$(`[data-dashboard-section="${section}"]`), btn=$(`[data-dashboard-section-toggle="${section}"]`);
+  if(!root||!btn) return;
+  open?state.dashboardNavSectionsOpen.add(section):state.dashboardNavSectionsOpen.delete(section);
+  root.classList.toggle('collapsed',!open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+}
+$$('[data-dashboard-section-toggle]').forEach(btn=>btn.addEventListener('click',()=>{
+  const section=btn.dataset.dashboardSectionToggle;
+  setDashboardNavSection(section,!state.dashboardNavSectionsOpen.has(section));
+}));
 $('#dashboardNavToggle').addEventListener('click',()=>{
   state.dashboardNavCollapsed=!state.dashboardNavCollapsed;
   $('#dashboardShell').classList.toggle('nav-collapsed',state.dashboardNavCollapsed);

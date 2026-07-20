@@ -172,7 +172,7 @@ test('risk total equipment mode keeps no filter broad and applies selected step 
 
 test('risk metric selector sits in the title header instead of a subfilter pill row', () => {
   const html = loadHtml()
-  const riskFace = html.match(/<div class="risk-face risk-face-front">([\s\S]*?)<div class="riskbanner"/)
+  const riskFace = html.match(/<div class="risk-face risk-face-front(?: active)?">([\s\S]*?)<div class="riskbanner"/)
 
   assert.ok(riskFace, 'risk analysis face markup is present')
   assert.match(riskFace[1], /<div class="risk-title-row">[\s\S]*<h3 id="risk-title">Highest Risk Areas<\/h3>[\s\S]*<select id="riskmetric"/)
@@ -518,6 +518,14 @@ test('chart selectors and dashboard sidebar share one state-preserving workspace
   assert.match(html, /function setIssueCardSide\(side\)\{[\s\S]*setDashboardPanel\(side\);/)
   assert.match(html, /function setRiskCardSide\(side\)\{[\s\S]*setDashboardPanel\(state\.riskCardSide==='fat'\?'fat':'risk'\);/)
   assert.match(html, /function syncDashboardWorkspace\(\)/)
+  assert.match(html, /data-dashboard-section-toggle="issues"/)
+  assert.match(html, /data-dashboard-section-toggle="risk"/)
+  assert.match(html, /data-dashboard-section-toggle="data"/)
+  assert.match(html, /data-dashboard-section-toggle="global"/)
+  assert.match(html, /<div class="dashboard-global-section"[\s\S]*id="excludeRooms"[\s\S]*id="alexCustomView"[\s\S]*id="customViewBtn"[\s\S]*<div class="dashboard-side-foot"/)
+  assert.doesNotMatch(html, /class="dashboard-utility"/)
+  assert.doesNotMatch(html, /rotateY\(/)
+  assert.match(html, /function syncRiskViewUI\(\)[\s\S]*risk-face-front'[\s\S]*classList\.toggle\('active'/)
   assert.doesNotMatch(html, /function setIssueCardSide\(side\)\{[\s\S]{0,260}exitFocus/)
   assert.doesNotMatch(html, /function setRiskCardSide\(side\)\{[\s\S]{0,220}exitRiskFocus/)
 })
