@@ -506,6 +506,64 @@ test('issue chart selector exposes escalation filters, drilldown, and filtered e
   assert.equal(ctx.issueCategoryRank('OAS'), ctx.issueCategoryRank('WI'))
 })
 
+test('repeat issues count only matching Equipment + Root Cause occurrences beyond the first', () => {
+  const ctx = loadPipeline()
+  const repeatEquipment = [
+    { name: 'Pump A', systemName: 'Alpha', discipline: 'Mechanical', building: 'B1', milestone: 'M1', classification: 'Pump', present: { QAQC: true, DV: false, EHS: false }, categories: ['QAQC'], score: 1 },
+    { name: 'Panel B', systemName: 'Alpha', discipline: 'Electrical', building: 'B1', milestone: 'M1', classification: 'Panel', present: { QAQC: false, DV: false, EHS: false }, categories: [], score: 0 },
+  ]
+  const issue = (id, equipmentName, rootCause, cxStep, category = 'DWN') => ({
+    issueId: id, issueKey: id.toLowerCase(), equipmentName, equipmentKey: equipmentName.toLowerCase(), rootCause,
+    cxStep, category, systemName: 'Alpha', discipline: equipmentName === 'Pump A' ? 'Mechanical' : 'Electrical',
+    building: 'B1', milestone: 'M1', classification: equipmentName === 'Pump A' ? 'Pump' : 'Panel', score: 1,
+  })
+  const issues = [
+    issue('Issue-1', 'Pump A', 'Design', 'FAT'),
+    issue('Issue-2', 'Pump A', 'Design', 'Startup'),
+    issue('Issue-3', 'Pump A', 'Design', 'Startup'),
+    issue('Issue-3', 'Pump A', 'Design', 'Startup'),
+    issue('Issue-4', 'Pump A', '', 'FAT'),
+    issue('Issue-5', 'Pump A', null, 'Commissioning'),
+    issue('Issue-6', 'Panel B', 'Design', 'FAT'),
+  ]
+
+  const rows = ctx.repeatIssueRows(issues, repeatEquipment, 'System', { minimumOccurrences: 2 })
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].repeatCount, 3)
+  assert.equal(rows[0].affectedEquipmentCount, 1)
+  assert.equal(rows[0].totalEquipment, 2)
+  assert.equal(rows[0].affectedPct, 50)
+  assert.equal(rows[0].rootCauseCounts.Design, 2)
+  assert.equal(rows[0].rootCauseCounts['No Root Cause'], 1)
+
+  const minimumThree = ctx.repeatIssueRows(issues, repeatEquipment, 'System', { minimumOccurrences: 3 })
+  assert.equal(minimumThree[0].repeatCount, 2)
+  assert.equal(Object.keys(minimumThree[0].rootCauseCounts).join(','), 'Design')
+
+  const blankOnly = ctx.repeatIssueRows(issues, repeatEquipment, 'System', { minimumOccurrences: 2, repeatRootCauses: ['No Root Cause'] })
+  assert.equal(blankOnly[0].repeatCount, 1)
+  assert.equal(blankOnly[0].rootCauseCounts['No Root Cause'], 1)
+
+  const byStep = ctx.repeatIssueRows(issues, repeatEquipment, 'Cx Step', { minimumOccurrences: 2 })
+  assert.equal(JSON.stringify(byStep.map((row) => [row.key, row.repeatCount])), JSON.stringify([['Startup', 2], ['Commissioning', 1]]))
+})
+
+test('repeat issues chart is nested with issue views and exposes filters, drilldown, and exports', () => {
+  const html = loadHtml()
+  assert.match(html, /data-dashboard-panel="repeat"/)
+  assert.match(html, /<option value="repeat">Repeat Issues<\/option>/)
+  assert.match(html, /data-issue-view="repeat"/)
+  assert.match(html, /id="repeatdimpills"/)
+  assert.match(html, /data-repeat-dim="Cx Step"/)
+  assert.match(html, /id="repeat-minimum"/)
+  assert.match(html, /id="repeatRootToggle"/)
+  assert.match(html, /id="repeat-root-search"/)
+  assert.match(html, /id="repeatfocus"/)
+  assert.match(html, /function exportRepeatXlsx\(\)/)
+  assert.match(html, /state\.repeatChart\.toBase64Image\('image\/png',1\)/)
+  assert.match(html, /new Set\(\['distribution','step','escalation','repeat'\]\)/)
+})
+
 test('chart selectors and dashboard sidebar share one state-preserving workspace', () => {
   const html = loadHtml()
 
@@ -513,6 +571,7 @@ test('chart selectors and dashboard sidebar share one state-preserving workspace
   assert.doesNotMatch(html, /id="risk-flip-fat"|id="risk-flip-standard"/)
   assert.doesNotMatch(html, /flipping-out|flipping-in|issueFlipTimer/)
   assert.match(html, /data-dashboard-panel="distribution"/)
+  assert.match(html, /data-dashboard-panel="repeat"/)
   assert.match(html, /data-dashboard-panel="hypothesis"/)
   assert.match(html, /data-dashboard-panel="fat"/)
   assert.match(html, /function setIssueCardSide\(side\)\{[\s\S]*setDashboardPanel\(side\);/)
