@@ -589,6 +589,34 @@ test('chart selectors and dashboard sidebar share one state-preserving workspace
   assert.doesNotMatch(html, /function setRiskCardSide\(side\)\{[\s\S]{0,220}exitRiskFocus/)
 })
 
+test('equipment hierarchy lives inside the persistent dashboard workspace', () => {
+  const html = loadHtml()
+  assert.doesNotMatch(html, /class="tab" data-view="hierarchy"/)
+  assert.doesNotMatch(html, /id="view-hierarchy"/)
+  assert.match(html, /data-dashboard-panel="hierarchy"[^>]*title="Equipment Hierarchy"/)
+  assert.match(html, /class="dashboard-panels">[\s\S]*id="hierarchycard"[\s\S]*id="hscroll"/)
+  assert.match(html, /DASHBOARD_PANELS=new Set\(\[\.\.\.DASHBOARD_ISSUE_PANELS,'hypothesis',\.\.\.DASHBOARD_RISK_PANELS,'hierarchy'\]\)/)
+  assert.match(html, /if\(state\.dashboardPanel==='hierarchy'\) renderHierarchy\(false\)/)
+  assert.match(html, /state\.dashboardPanel='hierarchy';\s*goto\('dashboard'\);/)
+  assert.match(html, /\$\('#dashboard-export-bar'\)\.hidden=panel==='hierarchy'/)
+})
+
+test('dashboard KPI cards follow filters and preserve drilldown context per panel', () => {
+  const html = loadHtml()
+  assert.match(html, /dashboardKpiContexts:\{\}/)
+  assert.match(html, /function dashboardPanelKpiCards\(\)/)
+  assert.match(html, /function renderDashboardKpis\(\)/)
+  assert.match(html, /function setDashboardKpiContext\(panel,cards\)/)
+  assert.match(html, /function clearDashboardKpiContext\(panel\)/)
+  assert.match(html, /setDashboardKpiContext\('distribution',distributionFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('step',stepFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('escalation',escalationFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('repeat',repeatFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('risk',riskFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('fat',fatFocusKpis/)
+  assert.match(html, /@keyframes kpi-refresh/)
+})
+
 test('issue distribution can count issues by root cause from matched issue rows', () => {
   const ctx = loadPipeline()
   const model = ctx.buildModel({

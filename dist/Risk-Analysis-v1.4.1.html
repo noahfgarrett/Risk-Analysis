@@ -464,7 +464,8 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .dashboard-shell.nav-collapsed .dashboard-filter-toggle,.dashboard-shell.nav-collapsed .dashboard-custom-view{justify-content:center;width:42px;padding:0}
 .dashboard-workspace{min-width:0}
 .dashboard-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
-.dashboard-summary-strip .kpi{padding:10px 13px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center}
+@keyframes kpi-refresh{from{opacity:.45}to{opacity:1}}
+.dashboard-summary-strip .kpi{padding:10px 13px;box-shadow:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;animation:kpi-refresh .16s ease-out}
 .dashboard-summary-strip .kpi .eyebrow{margin:0;grid-column:1;grid-row:1;font-size:9.5px}
 .dashboard-summary-strip .kpi .v{grid-column:2;grid-row:1 / span 2;font-size:21px;letter-spacing:0}
 .dashboard-summary-strip .kpi .s{grid-column:1;grid-row:2;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px}
@@ -475,12 +476,16 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .dashboard-panel.matrix.active{display:block!important}
 .dashboard-panel.riskcard.active{display:block!important}
 .dashboard-workspace .dashboard-panel{min-height:calc(100vh - 226px)}
+.dashboard-workspace .hierarchy-panel{min-height:0}
+.dashboard-workspace .hierarchy-panel .section-head{margin-bottom:10px;padding:0 2px}
+.dashboard-workspace .hierarchy-panel #hscroll{height:calc(100vh - 274px);min-height:420px}
 .dashboard-workspace .issue-view-control{display:none}
 .dashboard-workspace .dashboard-panel .chartwrap{height:clamp(460px,calc(100vh - 390px),760px)}
 .dashboard-workspace .issue-card-inner,.dashboard-workspace .issue-face,.dashboard-workspace .risk-card-inner,.dashboard-workspace .risk-face{min-height:calc(100vh - 226px)}
 .dashboard-workspace .matrix{padding:18px}
 .dashboard-workspace .matrix #matrixbody{min-height:500px}
 .dashboard-export-bar{margin-top:10px!important;padding:0 2px}
+.dashboard-export-bar[hidden]{display:none!important}
 @media(max-width:1180px){
   .dashboard-shell{grid-template-columns:184px minmax(0,1fr)}
   .dashboard-summary-strip .kpi .s{display:none}
@@ -810,13 +815,12 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     <div class="topbar-spacer"></div>
     <nav class="tabs" id="tabs">
       <button class="tab active" data-view="upload">Upload</button>
-      <button class="tab" data-view="hierarchy" disabled>Hierarchy</button>
       <button class="tab" data-view="dashboard" disabled>Dashboard</button>
       <button class="tab" data-view="mapping" disabled>Mapping</button>
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.4.0</span>
+      Risk Analysis v<span id="version-label">1.4.1</span>
     </button>
   </header>
 
@@ -837,48 +841,6 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
       </div>
       <input type="file" id="fileinput" accept=".xlsx,.xlsm,.xls" style="display:none" />
       <p class="hint">Everything runs locally in your browser. No file leaves this machine.</p>
-    </section>
-
-    <!-- HIERARCHY -->
-    <section class="view" id="view-hierarchy">
-      <div class="toolbar">
-        <button class="btn ghost" id="h-expand">Expand all</button>
-        <button class="btn ghost" id="h-collapse">Collapse all</button>
-        <button class="btn ghost" id="h-clear">Clear filters</button>
-        <div style="flex:1"></div>
-        <button class="btn" id="h-csv">Export CSV</button>
-        <button class="btn primary" id="h-xlsx">Export Excel</button>
-      </div>
-      <div class="card" id="hscroll">
-        <table class="htable" id="htable">
-          <colgroup>
-            <col style="width:24%"><col style="width:11%"><col style="width:9%"><col style="width:10%">
-            <col style="width:14%"><col style="width:16%"><col style="width:7%"><col style="width:9%">
-          </colgroup>
-          <thead>
-            <tr class="hcols">
-              <th>System / Equipment</th><th>Discipline</th><th>Building</th><th>Milestone</th>
-              <th>Classification</th><th>Steps</th><th class="n">Score</th><th class="n">Issues</th>
-            </tr>
-            <tr class="hfilters">
-              <th><input type="text" id="h-search" placeholder="Search name or description…" /></th>
-              <th><select id="h-disc"></select></th>
-              <th><select id="h-bld"></select></th>
-              <th><select id="h-ms"></select></th>
-              <th><select id="h-cls"></select></th>
-              <th></th>
-              <th><select id="h-score">
-                <option value="">Any</option><option value="0">0/3</option><option value="1">1/3</option><option value="2">2/3</option><option value="3">3/3</option>
-              </select></th>
-              <th><select id="h-iss">
-                <option value="">Any</option><option value="has">Has issues</option><option value="none">No issues</option>
-              </select></th>
-            </tr>
-          </thead>
-          <tbody id="hbody"></tbody>
-        </table>
-      </div>
-      <div class="hcount" id="hcount"></div>
     </section>
 
     <!-- DASHBOARD -->
@@ -926,7 +888,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             <div class="dashboard-nav-section" data-dashboard-section="data">
               <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="data" aria-expanded="true"><span class="dashboard-nav-label">Data</span><span class="dashboard-nav-section-caret">▾</span></button>
               <div class="dashboard-nav-items">
-              <button class="dashboard-nav-item" type="button" data-dashboard-view="hierarchy" title="Equipment Hierarchy">
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="hierarchy" title="Equipment Hierarchy">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v12M18 9v12M6 9h12"/><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/></svg></span><span class="dashboard-nav-text">Equipment Hierarchy</span>
               </button>
               <button class="dashboard-nav-item" type="button" data-dashboard-view="mapping" title="Data Mapping">
@@ -963,6 +925,48 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
         <div class="dashboard-workspace">
           <div class="dashboard-summary-strip" id="kpis"></div>
           <div class="dashboard-panels">
+        <div class="dashboard-panel hierarchy-panel" id="hierarchycard">
+          <div class="section-head">
+            <div><div class="eyebrow">Data</div><h3>Equipment Hierarchy</h3></div>
+            <div class="section-actions">
+              <button class="btn ghost" id="h-expand">Expand all</button>
+              <button class="btn ghost" id="h-collapse">Collapse all</button>
+              <button class="btn ghost" id="h-clear">Clear filters</button>
+              <button class="btn" id="h-csv">Export CSV</button>
+              <button class="btn primary" id="h-xlsx">Export Excel</button>
+            </div>
+          </div>
+          <div class="card" id="hscroll">
+            <table class="htable" id="htable">
+              <colgroup>
+                <col style="width:24%"><col style="width:11%"><col style="width:9%"><col style="width:10%">
+                <col style="width:14%"><col style="width:16%"><col style="width:7%"><col style="width:9%">
+              </colgroup>
+              <thead>
+                <tr class="hcols">
+                  <th>System / Equipment</th><th>Discipline</th><th>Building</th><th>Milestone</th>
+                  <th>Classification</th><th>Steps</th><th class="n">Score</th><th class="n">Issues</th>
+                </tr>
+                <tr class="hfilters">
+                  <th><input type="text" id="h-search" placeholder="Search name or description…" /></th>
+                  <th><select id="h-disc"></select></th>
+                  <th><select id="h-bld"></select></th>
+                  <th><select id="h-ms"></select></th>
+                  <th><select id="h-cls"></select></th>
+                  <th></th>
+                  <th><select id="h-score">
+                    <option value="">Any</option><option value="0">0/3</option><option value="1">1/3</option><option value="2">2/3</option><option value="3">3/3</option>
+                  </select></th>
+                  <th><select id="h-iss">
+                    <option value="">Any</option><option value="has">Has issues</option><option value="none">No issues</option>
+                  </select></th>
+                </tr>
+              </thead>
+              <tbody id="hbody"></tbody>
+            </table>
+          </div>
+          <div class="hcount" id="hcount"></div>
+        </div>
         <div class="card issue-card dashboard-panel active" id="chartcard">
           <div class="issue-card-inner">
             <div class="issue-face issue-face-front active" data-issue-view="distribution">
@@ -1328,7 +1332,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 
           </div>
 
-      <div class="toolbar dashboard-export-bar" style="justify-content:flex-end">
+      <div class="toolbar dashboard-export-bar" id="dashboard-export-bar" style="justify-content:flex-end">
         <button class="btn" id="dl-dash">Export dashboard PNG</button>
         <button class="btn primary" id="dl-analysis">Export analysis (Excel)</button>
       </div>
@@ -2415,7 +2419,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.1';
 $('#version-label').textContent=APP_VERSION;
 $('#dashboard-version').textContent=APP_VERSION;
 
@@ -2440,6 +2444,7 @@ const state = {
   escalationLegendOpen:false, escalationTypes:new Set(), escalationTypeGroupsOpen:new Set(),
   repeatDim:'System', repeatMinimum:2, repeatSort:'desc', repeatChart:null, repeatFocus:null,
   repeatRootCauses:new Set(), repeatLegendOpen:false, repeatRootSearch:'',
+  dashboardKpiContexts:{},
   rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
   updateInfo:null, updateModalTab:'changelog', downloadingUpdate:false, downloadError:null, downloadedUpdate:false,
@@ -2450,6 +2455,16 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.4.1',
+    date:'2026-07-21T19:56:30Z',
+    type:'feature',
+    stats:'Workspace context refinements',
+    notes:`### Updates
+- Improved hierarchy navigation
+- Added context-aware dashboard summaries
+- Refined filtered and drilldown views`
+  },
   {
     version:'1.4.0',
     date:'2026-07-21T18:45:29Z',
@@ -3056,7 +3071,6 @@ function activateTab(t){
   $$('.view').forEach(v=>v.classList.remove('active')); $('#view-'+t.dataset.view).classList.add('active');
   document.body.classList.toggle('dashboard-active',t.dataset.view==='dashboard');
   if(t.dataset.view==='dashboard' && state.model){ renderDashboard(); }
-  if(t.dataset.view==='hierarchy' && state.visible){ renderWindow(); }
 }
 $$('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.disabled) return;
@@ -3420,7 +3434,8 @@ async function handleFile(file){
     $('#filepill').style.display='flex'; $('#filepillname').textContent=file.name;
     $$('#tabs .tab').forEach(t=>t.disabled=false);
     await progressTo(100,'Done',2);
-    goto('hierarchy');
+    state.dashboardPanel='hierarchy';
+    goto('dashboard');
     toast('Loaded '+state.model.totals.equipment+' equipment across '+state.model.totals.systems+' systems');
   }catch(err){ console.error(err); toast('Could not read this workbook. Is it a valid .xlsx?'); }
   finally{ OV.hide(); }
@@ -3669,6 +3684,7 @@ function renderHierarchy(resetScroll){
     else { const maxTop=Math.max(0,state.visible.length*ROWH-(vp.clientHeight||640)); if(vp.scrollTop>maxTop) vp.scrollTop=maxTop; }
   }
   renderWindow();
+  if(state.model&&state.dashboardPanel==='hierarchy') renderDashboardKpis();
   return Promise.resolve();
 }
 /* scroll → repaint window (rAF-throttled so we render at most once per frame) */
@@ -3679,7 +3695,6 @@ window.addEventListener('resize',debounce(()=>{ if(state.visible) renderWindow()
 
 /* ---- dashboard ---- */
 function renderDashboard(){
-  const t=state.model.totals;
   const roomToggle=$('#excludeRooms'); if(roomToggle) roomToggle.checked=state.excludeRooms;
   const alexToggle=$('#alexCustomView'); if(alexToggle) alexToggle.checked=state.alexCustomView;
   const chartSort=$('#sort-chart'); if(chartSort) chartSort.value=state.chartSort;
@@ -3701,17 +3716,178 @@ function renderDashboard(){
   syncRiskViewUI();
   syncDashboardWorkspace();
   updateRiskMetricPills();
-  // issues caught by equipment that has at least one QAQC/DV/EHS step — each issue
-  // counted once (no double-count across multiple step types).
-  const caught=state.model.equipment.reduce((a,e)=>a+(e.score>=1?e.issueCount:0),0);
-  $('#kpis').innerHTML=`
-    ${kpi('Systems',t.systems,'','The number of distinct systems found in the Equipment Status Report (from matching each UPN to its System Name).')}
-    ${kpi('Equipment',t.equipment,'','The total number of equipment items analyzed from the Equipment Status Report.')}
-    ${kpi('Total issues',t.issues,'matched to equipment','Total issues from the Issue Grid Report that were matched to an equipment item. Each issue is counted once.')}
-    ${kpi('Issues caught by steps',caught,'on units with a QAQC/DV/EHS step','Issues logged on equipment that have at least one QAQC, DV, or EHS step — each issue counted once, no duplicates.')}`;
+  renderDashboardKpis();
   if($('#view-dashboard').classList.contains('active')) renderActiveDashboardPanel();
 }
 function kpi(label,val,sub,tip,warn){ const v=typeof val==='number'?val.toLocaleString():val; return `<div class="card kpi ${warn?'warn':''}"${tip?` data-tip="${esc(tip)}"`:''}><div class="eyebrow${tip?' hastip':''}">${label}</div><div class="v">${v}</div><div class="s">${sub||'&nbsp;'}</div></div>`; }
+function kpiCardsHTML(cards){ return cards.map(card=>kpi(card.label,card.value,card.sub,card.tip,card.warn)).join(''); }
+function distinctCount(rows,keyFn){ return new Set((rows||[]).map(keyFn).filter(Boolean)).size; }
+function equipmentAverageCoverage(equipment){ return equipment&&equipment.length?Math.round(equipment.reduce((sum,e)=>sum+(Number(e.score)||0),0)/(equipment.length*3)*100):0; }
+function equipmentSummaryCards(equipment,issues,sub='Active filters'){
+  const issueRows=issues||[], byKey=new Map((equipment||[]).map(e=>[String(e.name||'').toLowerCase(),e]));
+  const caught=issueRows.reduce((sum,issue)=>sum+((byKey.get(issue.equipmentKey)||{}).score>=1?1:0),0);
+  return [
+    {label:'Systems',value:distinctCount(equipment,e=>e.systemName),sub},
+    {label:'Equipment',value:(equipment||[]).length,sub},
+    {label:'Total issues',value:issueRows.length,sub},
+    {label:'Issues caught by steps',value:caught,sub:'QAQC / DV / EHS coverage'}
+  ];
+}
+function globalDashboardScope(){
+  const equipment=baseChartEquipment();
+  const issues=issueRowsForChart(state.model.equipment,state.model.issueRows,chartFilterOptions());
+  return {equipment,issues};
+}
+function hierarchyKpiCards(){
+  const global=globalDashboardScope(), filters=readFilters();
+  const equipment=global.equipment.filter(e=>passFilters(e,filters));
+  const keys=new Set(equipment.map(e=>String(e.name||'').toLowerCase()));
+  return equipmentSummaryCards(equipment,global.issues.filter(issue=>keys.has(issue.equipmentKey)),'Hierarchy filters');
+}
+function issueDistributionKpiCards(){
+  const rows=currentIssueRows(), keys=new Set(rows.map(row=>row.key));
+  const equipment=issueChartEquipment().filter(e=>keys.has(dimensionKey(e,state.dim)));
+  const issues=rows.reduce((sum,row)=>sum+(row.issueCount||0),0);
+  const caught=equipment.reduce((sum,e)=>sum+(e.score>=1?(e.issueCount||0):0),0);
+  return [
+    {label:'Systems',value:distinctCount(equipment,e=>e.systemName),sub:'Visible issue groups'},
+    {label:'Equipment',value:equipment.length,sub:'Visible issue groups'},
+    {label:'Total issues',value:issues,sub:'Current chart filters'},
+    {label:'Issues caught by steps',value:caught,sub:'QAQC / DV / EHS coverage'}
+  ];
+}
+function stepKpiCards(){
+  const rows=currentStepRows(), issues=rows.flatMap(row=>row.issues||[]);
+  return [
+    {label:'Cx Steps',value:rows.length,sub:'Visible steps'},
+    {label:'Equipment',value:distinctCount(issues,issue=>issue.equipmentKey),sub:'With caught issues'},
+    {label:'Issues caught',value:issues.length,sub:'Current chart filters'},
+    {label:'Categories',value:distinctCount(issues,issue=>issue.category),sub:'Issue types'}
+  ];
+}
+function escalationKpiCards(){
+  const rows=currentEscalationRows(), issues=rows.flatMap(row=>row.issues||[]);
+  return [
+    {label:escalationGroupLabel()+' groups',value:rows.length,sub:'Visible groups'},
+    {label:'Equipment',value:distinctCount(issues,issue=>issue.equipmentKey),sub:'With escalations'},
+    {label:'Escalations',value:issues.length,sub:'Current chart filters'},
+    {label:'Escalation paths',value:distinctCount(issues,issue=>issue.transition),sub:'Distinct paths'}
+  ];
+}
+function repeatKpiCards(){
+  const rows=currentRepeatRows(), entries=rows.flatMap(row=>row.entries||[]), clusters=new Map();
+  entries.forEach(entry=>clusters.set(entry.cluster.key,entry.cluster));
+  return [
+    {label:'Affected equipment',value:distinctCount(entries,entry=>entry.cluster.equipmentKey),sub:'With repeat issues'},
+    {label:'Repeat occurrences',value:rows.reduce((sum,row)=>sum+(row.repeatCount||0),0),sub:'Beyond the first'},
+    {label:'Root causes',value:distinctCount(entries,entry=>entry.cluster.rootCause),sub:'Repeated causes'},
+    {label:'Matching issues',value:[...clusters.values()].reduce((sum,cluster)=>sum+(cluster.issueCount||0),0),sub:`Minimum ${state.repeatMinimum}+`}
+  ];
+}
+function riskKpiCards(){
+  const rows=currentRiskRows(), equipment=rows.reduce((sum,row)=>sum+(row.n||0),0);
+  const weightedCoverage=equipment?Math.round(rows.reduce((sum,row)=>sum+(row.covFrac||0)*(row.n||0),0)/equipment*100):0;
+  return [
+    {label:state.riskDim+' areas',value:rows.length,sub:'Visible areas'},
+    {label:'Equipment',value:equipment,sub:'Current risk filters'},
+    {label:'Issues found',value:rows.reduce((sum,row)=>sum+(row.issues||0),0),sub:'Across visible areas'},
+    {label:'Avg coverage',value:weightedCoverage+'%',sub:'QAQC / DV / EHS'}
+  ];
+}
+function fatKpiCards(){
+  const rows=currentFatRiskRows();
+  return [
+    {label:state.fatRiskDim+' areas',value:rows.length,sub:'Visible FAT areas'},
+    {label:'FAT equipment',value:rows.reduce((sum,row)=>sum+(row.equipmentCount||0),0),sub:'With FAT issues'},
+    {label:'FAT issues',value:rows.reduce((sum,row)=>sum+(row.fatIssueCount||0),0),sub:'Current chart filters'},
+    {label:'No-step FAT issues',value:rows.reduce((sum,row)=>sum+(row.unprotectedIssueCount||0),0),sub:'Highest exposure'}
+  ];
+}
+function hypothesisKpiCards(){
+  const equipment=matrixEquipment(), issues=equipment.reduce((sum,e)=>sum+(e.issueCount||0),0);
+  return [
+    {label:'Coverage tiers',value:scoreMatrix(equipment).filter(row=>row.equipmentCount).length,sub:'QAQC / DV / EHS'},
+    {label:'Equipment',value:equipment.length,sub:'Global filters'},
+    {label:'Issues found',value:issues,sub:'Across filtered equipment'},
+    {label:'Avg coverage',value:equipmentAverageCoverage(equipment)+'%',sub:'QAQC / DV / EHS'}
+  ];
+}
+function dashboardPanelKpiCards(){
+  if(state.dashboardPanel==='hierarchy') return hierarchyKpiCards();
+  if(state.dashboardPanel==='distribution') return issueDistributionKpiCards();
+  if(state.dashboardPanel==='step') return stepKpiCards();
+  if(state.dashboardPanel==='escalation') return escalationKpiCards();
+  if(state.dashboardPanel==='repeat') return repeatKpiCards();
+  if(state.dashboardPanel==='hypothesis') return hypothesisKpiCards();
+  if(state.dashboardPanel==='risk') return riskKpiCards();
+  if(state.dashboardPanel==='fat') return fatKpiCards();
+  const scope=globalDashboardScope(); return equipmentSummaryCards(scope.equipment,scope.issues);
+}
+function renderDashboardKpis(){
+  if(!state.model) return;
+  const context=state.dashboardKpiContexts&&state.dashboardKpiContexts[state.dashboardPanel];
+  $('#kpis').innerHTML=kpiCardsHTML(context||dashboardPanelKpiCards());
+}
+function setDashboardKpiContext(panel,cards){
+  state.dashboardKpiContexts={...(state.dashboardKpiContexts||{}),[panel]:cards};
+  if(state.dashboardPanel===panel) renderDashboardKpis();
+}
+function clearDashboardKpiContext(panel){
+  if(state.dashboardKpiContexts) delete state.dashboardKpiContexts[panel];
+  if(state.dashboardPanel===panel&&state.model) renderDashboardKpis();
+}
+function distributionFocusKpis(equipment,issueCount,label){
+  const all=equipment||[], withIssues=all.filter(e=>e.hasIssues).length;
+  return [
+    {label:'Equipment',value:all.length,sub:label},
+    {label:'Total issues',value:issueCount,sub:label},
+    {label:'With issues',value:withIssues,sub:all.length?Math.round(withIssues/all.length*100)+'% of equipment':'No equipment'},
+    {label:'Avg coverage',value:equipmentAverageCoverage(all)+'%',sub:'QAQC / DV / EHS'}
+  ];
+}
+function stepFocusKpis(row,label){
+  const issues=(row&&row.issues)||[];
+  return [
+    {label:'Equipment',value:row.equipmentCount||distinctCount(issues,issue=>issue.equipmentKey),sub:label},
+    {label:'Issues caught',value:row.issueCount||issues.length,sub:label},
+    {label:'Categories',value:Object.keys(row.categoryCounts||{}).length,sub:'Issue types'},
+    {label:'Root causes',value:distinctCount(issues,issue=>normalizeRepeatRootCause(issue.rootCause)),sub:'Distinct causes'}
+  ];
+}
+function escalationFocusKpis(issues,label){
+  const rows=issues||[];
+  return [
+    {label:'Equipment',value:distinctCount(rows,issue=>issue.equipmentKey),sub:label},
+    {label:'Escalations',value:rows.length,sub:label},
+    {label:'Escalation paths',value:distinctCount(rows,issue=>issue.transition),sub:'Distinct paths'},
+    {label:'Cx Steps',value:distinctCount(rows,issue=>normalizeCxStep(issue.cxStep)),sub:'Where escalated'}
+  ];
+}
+function repeatFocusKpis(row,label){
+  const entries=(row&&row.entries)||[], clusters=new Map(); entries.forEach(entry=>clusters.set(entry.cluster.key,entry.cluster));
+  return [
+    {label:'Affected equipment',value:row.affectedEquipmentCount||distinctCount(entries,entry=>entry.cluster.equipmentKey),sub:label},
+    {label:'Repeat occurrences',value:row.repeatCount||0,sub:'Beyond the first'},
+    {label:'Root causes',value:Object.keys(row.rootCauseCounts||{}).length,sub:'Repeated causes'},
+    {label:'Matching issues',value:[...clusters.values()].reduce((sum,cluster)=>sum+(cluster.issueCount||0),0),sub:label}
+  ];
+}
+function riskFocusKpis(row,label){
+  return [
+    {label:'Equipment',value:row.n||0,sub:label},
+    {label:'Issues found',value:row.issues||0,sub:label},
+    {label:'Avg coverage',value:Math.round((row.covFrac||0)*100)+'%',sub:'QAQC / DV / EHS'},
+    {label:'Risk index',value:row.risk==null?'—':row.risk+'/100',sub:state.riskMetric==='equipment'?'Total equipment view':'Selected area'}
+  ];
+}
+function fatFocusKpis(row,label){
+  return [
+    {label:'Equipment',value:row.equipmentCount||0,sub:label},
+    {label:'FAT issues',value:row.fatIssueCount||0,sub:label},
+    {label:'No-step equipment',value:row.unprotectedEquipmentCount||0,sub:'No QAQC / DV / EHS'},
+    {label:'No-step FAT issues',value:row.unprotectedIssueCount||0,sub:'Highest exposure'}
+  ];
+}
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
 function alexCustomViewText(){ return state.alexCustomView ? 'Remove Devices enabled' : 'Remove Devices off'; }
 function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,savedView:activeSavedView(),...(extra||{})}; }
@@ -3951,7 +4127,7 @@ function renderIssueCardSide(){
 }
 const DASHBOARD_ISSUE_PANELS=new Set(['distribution','step','escalation','repeat']);
 const DASHBOARD_RISK_PANELS=new Set(['risk','fat']);
-const DASHBOARD_PANELS=new Set([...DASHBOARD_ISSUE_PANELS,'hypothesis',...DASHBOARD_RISK_PANELS]);
+const DASHBOARD_PANELS=new Set([...DASHBOARD_ISSUE_PANELS,'hypothesis',...DASHBOARD_RISK_PANELS,'hierarchy']);
 function syncDashboardWorkspace(){
   let panel=DASHBOARD_PANELS.has(state.dashboardPanel)?state.dashboardPanel:'distribution';
   state.dashboardPanel=panel;
@@ -3965,12 +4141,15 @@ function syncDashboardWorkspace(){
   $('#chartcard').classList.toggle('active',DASHBOARD_ISSUE_PANELS.has(panel));
   $('#matrixcard').classList.toggle('active',panel==='hypothesis');
   $('#riskcard').classList.toggle('active',DASHBOARD_RISK_PANELS.has(panel));
+  $('#hierarchycard').classList.toggle('active',panel==='hierarchy');
+  $('#dashboard-export-bar').hidden=panel==='hierarchy';
   syncIssueViewUI();
   syncRiskViewUI();
 }
 function renderActiveDashboardPanel(){
   if(!state.model) return;
-  if(DASHBOARD_ISSUE_PANELS.has(state.dashboardPanel)) renderIssueCardSide();
+  if(state.dashboardPanel==='hierarchy') renderHierarchy(false);
+  else if(DASHBOARD_ISSUE_PANELS.has(state.dashboardPanel)) renderIssueCardSide();
   else if(state.dashboardPanel==='hypothesis') renderMatrix();
   else if(state.dashboardPanel==='fat') renderFatRisk();
   else renderRisk();
@@ -3980,6 +4159,7 @@ function setDashboardPanel(panel){
   if(!DASHBOARD_PANELS.has(panel)) return;
   state.dashboardPanel=panel;
   syncDashboardWorkspace();
+  renderDashboardKpis();
   requestAnimationFrame(renderActiveDashboardPanel);
 }
 function syncIssueViewUI(){
@@ -4157,6 +4337,7 @@ function renderChart(){
         y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} },
     }
   });
+  if(state.dashboardPanel==='distribution') renderDashboardKpis();
 }
 function hashColor(text){
   const palette=['#4b7fb6','#7d65a9','#5b9279','#b28b39','#9d6b5f','#5b7b8e','#8a7a43'];
@@ -4218,6 +4399,7 @@ function renderStepChart(){
         y:{stacked:true,grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} },
     }
   });
+  if(state.dashboardPanel==='step') renderDashboardKpis();
 }
 function renderEscalationLegend(transitions){
   const selected=new Set(escalationTypeList()), filtering=selected.size>0;
@@ -4393,6 +4575,7 @@ function renderEscalationChart(){
       }
     }
   });
+  if(state.dashboardPanel==='escalation') renderDashboardKpis();
 }
 function repeatDimensionNoun(dim){
   if(dim==='Cx Step') return 'Cx steps';
@@ -4437,6 +4620,7 @@ function renderRepeatChart(){
       }
     }
   });
+  if(state.dashboardPanel==='repeat') renderDashboardKpis();
 }
 const FOCUS_CAP=250;
 let focusGroups=null;
@@ -4460,6 +4644,8 @@ function enterFocus(dim,row,rows){
     if(!g){g={cls:c,equip:[],issues:0};gmap.set(c,g);} g.equip.push(e); g.issues+=e.issueCount; }
   focusGroups=[...gmap.values()].sort((a,b)=>b.issues-a.issues);
   focusGroups.forEach(g=>g.equip.sort((a,b)=>b.issueCount-a.issueCount));
+  state.focus={dim,key:row.key,row,all};
+  setDashboardKpiContext('distribution',distributionFocusKpis(all,row.issueCount,row.key));
   const f=$('#chartfocus');
   f.innerHTML=`
     <button class="focus-back" id="focus-back">← All ${esc(dim.toLowerCase())}s</button>
@@ -4493,7 +4679,6 @@ function enterFocus(dim,row,rows){
     const pct=Math.max(8,Math.round(row.issueCount/max*100));
     if(wrap&&fbIn){ const targetPx=wrap.clientWidth*pct/100; wrap.classList.toggle('outside', targetPx < fbIn.scrollWidth+18); }
     requestAnimationFrame(()=>{ if(bar) bar.style.width=pct+'%'; }); });
-  state.focus={dim,key:row.key};
 }
 // focus panel: back button + lazy expand of each classification's equipment tags
 $('#chartfocus').addEventListener('click',ev=>{
@@ -4520,10 +4705,15 @@ $('#chartfocus').addEventListener('click',ev=>{
   }
   const open=body.classList.toggle('open');
   rowbtn.setAttribute('aria-expanded',open?'true':'false');
+  const g=focusGroups[gi];
+  setDashboardKpiContext('distribution',open
+    ? distributionFocusKpis(g.equip,g.issues,g.cls)
+    : distributionFocusKpis(state.focus.all,state.focus.row.issueCount,state.focus.row.key));
 });
 function exitFocus(instant){
   const f=$('#chartfocus'); const cw=$('#chartscroll'), hint=$('#charthint');
   state.focus=null;
+  clearDashboardKpiContext('distribution');
   if(f.hidden){ return; }
   cw.classList.remove('dive'); hint.classList.remove('dive'); f.classList.remove('in');
   if(instant){ f.hidden=true; return; }
@@ -4541,6 +4731,7 @@ function countChips(counts){
 }
 function enterStepFocus(row){
   state.stepFocus={step:row.key, bdim:state.stepFocusDim||'System', row};
+  setDashboardKpiContext('step',stepFocusKpis(row,row.key));
   const f=$('#stepchartfocus');
   f.innerHTML=`
     <button class="focus-back" id="stepfocus-back">← All Cx steps</button>
@@ -4592,6 +4783,7 @@ function stepEquipmentTable(group){
 }
 function exitStepFocus(instant){
   const f=$('#stepchartfocus'); state.stepFocus=null;
+  clearDashboardKpiContext('step');
   if(!f || f.hidden) return;
   $('#stepchartscroll').classList.remove('dive'); $('#stepcharthint').classList.remove('dive'); f.classList.remove('in');
   if(instant){ f.hidden=true; return; }
@@ -4605,10 +4797,20 @@ $('#stepchartfocus').addEventListener('click',ev=>{
   if(!body.dataset.rendered){ body.firstElementChild.innerHTML=stepEquipmentTable(group); body.dataset.rendered='1'; }
   const open=body.classList.toggle('open');
   row.setAttribute('aria-expanded',open?'true':'false');
+  if(open){
+    const roots=new Set(); (group.equipment||[]).forEach(e=>Object.keys(e.rootCauseCounts||{}).forEach(root=>roots.add(root)));
+    setDashboardKpiContext('step',[
+      {label:'Equipment',value:(group.equipment||[]).length,sub:group.key},
+      {label:'Issues caught',value:group.issueCount||0,sub:group.key},
+      {label:'Categories',value:Object.keys(group.categoryCounts||{}).length,sub:'Issue types'},
+      {label:'Root causes',value:roots.size,sub:'Distinct causes'}
+    ]);
+  }else setDashboardKpiContext('step',stepFocusKpis(state.stepFocus.row,state.stepFocus.row.key));
 });
 $('#stepchartfocus').addEventListener('change',ev=>{
   const sel=ev.target.closest('#stepfocus-dim'); if(!sel||!state.stepFocus) return;
   state.stepFocus.bdim=sel.value; state.stepFocusDim=sel.value; renderStepBreakdown();
+  setDashboardKpiContext('step',stepFocusKpis(state.stepFocus.row,state.stepFocus.row.key));
 });
 function escalationStackMiniHTML(transitionCounts,total){
   const transitions=sortEscalationTransitions(Object.keys(transitionCounts||{}),Object.keys(transitionCounts||{}).map(transition=>({transition,issueCategory:transitionTargetCategory(transition)})));
@@ -4630,6 +4832,8 @@ function enterEscalationFocus(row,transition){
   if(!breakdownDimensions.includes(breakdownDim)) breakdownDim=breakdownDimensions[0];
   state.escalationFocusDim=breakdownDim;
   state.escalationFocus={groupValue:row.key,groupBy,transition:transition||'',bdim:breakdownDim,row};
+  state.escalationFocus.issues=issues;
+  setDashboardKpiContext('escalation',escalationFocusKpis(issues,transition||row.key));
   const f=$('#escalationfocus'), equipmentCount=new Set(issues.map(issue=>issue.equipmentKey)).size;
   f.innerHTML=`
     <button class="focus-back" id="escalationfocus-back">← All ${esc(escalationGroupNoun(groupBy))}</button>
@@ -4680,6 +4884,7 @@ function escalationEquipmentTable(group){
 }
 function exitEscalationFocus(instant){
   const f=$('#escalationfocus'); state.escalationFocus=null;
+  clearDashboardKpiContext('escalation');
   if(!f||f.hidden) return;
   $('#escalationscroll').classList.remove('dive'); $('#escalationhint').classList.remove('dive'); f.classList.remove('in');
   if(instant){f.hidden=true;return;} setTimeout(()=>{f.hidden=true;},300);
@@ -4691,10 +4896,20 @@ $('#escalationfocus').addEventListener('click',ev=>{
   if(!body||!group) return;
   if(!body.dataset.rendered){body.firstElementChild.innerHTML=escalationEquipmentTable(group);body.dataset.rendered='1';}
   const open=body.classList.toggle('open'); row.setAttribute('aria-expanded',open?'true':'false');
+  if(open){
+    const steps=new Set(); (group.equipment||[]).forEach(e=>Object.keys(e.cxStepCounts||{}).forEach(step=>steps.add(step)));
+    setDashboardKpiContext('escalation',[
+      {label:'Equipment',value:(group.equipment||[]).length,sub:group.key},
+      {label:'Escalations',value:group.issueCount||0,sub:group.key},
+      {label:'Escalation paths',value:Object.keys(group.transitionCounts||{}).length,sub:'Distinct paths'},
+      {label:'Cx Steps',value:steps.size,sub:'Where escalated'}
+    ]);
+  }else setDashboardKpiContext('escalation',escalationFocusKpis(state.escalationFocus.issues,state.escalationFocus.transition||state.escalationFocus.groupValue));
 });
 $('#escalationfocus').addEventListener('change',ev=>{
   const sel=ev.target.closest('#escalationfocus-dim'); if(!sel||!state.escalationFocus) return;
   state.escalationFocus.bdim=sel.value; state.escalationFocusDim=sel.value; renderEscalationBreakdown();
+  setDashboardKpiContext('escalation',escalationFocusKpis(state.escalationFocus.issues,state.escalationFocus.transition||state.escalationFocus.groupValue));
 });
 function repeatCountMap(items,keyFn){
   const counts={};
@@ -4723,6 +4938,7 @@ function enterRepeatFocus(row,rows){
   repeatFocusGroups=[...rootMap.values()].sort((a,b)=>b.repeatCount-a.repeatCount || String(a.rootCause).localeCompare(String(b.rootCause)));
   repeatFocusGroups.forEach(group=>{ group.equipment=repeatEquipmentRows(group); });
   state.repeatFocus={key:row.key,dim:state.repeatDim,row};
+  setDashboardKpiContext('repeat',repeatFocusKpis(row,row.key));
   const f=$('#repeatfocus');
   f.innerHTML=`
     <button class="focus-back" id="repeatfocus-back">← All ${esc(repeatDimensionNoun(state.repeatDim))}</button>
@@ -4770,6 +4986,7 @@ function repeatEquipmentTable(group,groupIndex){
 }
 function exitRepeatFocus(instant){
   const f=$('#repeatfocus'); state.repeatFocus=null; repeatFocusGroups=null;
+  clearDashboardKpiContext('repeat');
   if(!f||f.hidden) return;
   $('#repeatscroll').classList.remove('dive'); $('#repeathint').classList.remove('dive'); f.classList.remove('in');
   if(instant){ f.hidden=true; return; }
@@ -4782,6 +4999,16 @@ $('#repeatfocus').addEventListener('click',ev=>{
     const gi=+equipmentRow.dataset.repeatGroupIndex, ei=+equipmentRow.dataset.repeatEquipmentIndex;
     const detail=$(`#repeat-equipment-detail-${gi}-${ei}`); if(!detail) return;
     const open=detail.hidden; detail.hidden=!open; equipmentRow.setAttribute('aria-expanded',open?'true':'false');
+    const group=repeatFocusGroups&&repeatFocusGroups[gi], item=group&&group.equipment[ei];
+    if(item){
+      if(open) setDashboardKpiContext('repeat',[
+        {label:'Equipment',value:1,sub:item.name},
+        {label:'Repeat occurrences',value:item.repeatCount,sub:'Beyond the first'},
+        {label:'Root causes',value:1,sub:group.rootCause},
+        {label:'Matching issues',value:item.matchingIssueCount,sub:item.name}
+      ]);
+      else setDashboardKpiContext('repeat',repeatFocusKpis({entries:group.entries,affectedEquipmentCount:group.equipment.length,repeatCount:group.repeatCount,rootCauseCounts:{[group.rootCause]:group.repeatCount}},group.rootCause));
+    }
     return;
   }
   const rootRow=ev.target.closest('[data-repeat-root-index]'); if(!rootRow||!repeatFocusGroups) return;
@@ -4789,6 +5016,9 @@ $('#repeatfocus').addEventListener('click',ev=>{
   if(!body||!group) return;
   if(!body.dataset.rendered){ body.firstElementChild.innerHTML=repeatEquipmentTable(group,index); body.dataset.rendered='1'; }
   const open=body.classList.toggle('open'); rootRow.setAttribute('aria-expanded',open?'true':'false');
+  setDashboardKpiContext('repeat',open
+    ? repeatFocusKpis({entries:group.entries,affectedEquipmentCount:group.equipment.length,repeatCount:group.repeatCount,rootCauseCounts:{[group.rootCause]:group.repeatCount}},group.rootCause)
+    : repeatFocusKpis(state.repeatFocus.row,state.repeatFocus.row.key));
 });
 
 /* risk color ramp 0(green)→1(red) */
@@ -4864,6 +5094,7 @@ function renderMatrix(){
   if(query && shownTiers) html+=`<div class="search-note">Showing <b>${shownTiers.toLocaleString()}</b> of ${m.length.toLocaleString()} coverage tiers matching “${esc(state.matrixSearch)}”.</div>`;
   html+=`<div class="axis">Bar = avg issues caught per equipment · <b>longer &amp; greener = steps catching more</b></div>`;
   $('#matrixbody').innerHTML=html;
+  if(state.dashboardPanel==='hypothesis') renderDashboardKpis();
 }
 
 /* shared read of the hypothesis: does more step coverage surface MORE issues? */
@@ -4953,6 +5184,7 @@ function renderRisk(){
       scales:{ x:xScale,
         y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} } }
   });
+  if(state.dashboardPanel==='risk') renderDashboardKpis();
 }
 function currentFatRiskRows(){
   return filterRowsBySearch(fatRiskRows(state.model.issueRows,state.model.equipment,state.fatRiskDim,fatRiskOptions()),state.fatRiskSearch);
@@ -4986,10 +5218,12 @@ function renderFatRisk(){
       scales:{ x:{beginAtZero:true,max:100,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'FAT risk index (0–100)'}},
         y:{grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)} } }
   });
+  if(state.dashboardPanel==='fat') renderDashboardKpis();
 }
 function enterFatRiskFocus(dim,row,rows){
   const bdim = dim==='Classification' ? 'System' : 'Classification';
   state.fatRiskFocus={dim,key:row.key,bdim,row,rank:rows.findIndex(r=>r.key===row.key)+1,n:rows.length};
+  setDashboardKpiContext('fat',fatFocusKpis(row,row.key));
   const others=RISK_DIMS.filter(x=>x!==dim);
   const f=$('#fatriskfocus');
   f.innerHTML=`
@@ -5052,6 +5286,7 @@ function fatRiskEquipmentTable(group){
 function exitFatRiskFocus(instant){
   const f=$('#fatriskfocus'); const cw=$('#fatriskscroll'), hint=$('#fatriskhint');
   state.fatRiskFocus=null;
+  clearDashboardKpiContext('fat');
   if(!f||f.hidden){ return; }
   cw.classList.remove('dive'); hint.classList.remove('dive'); f.classList.remove('in');
   if(instant){ f.hidden=true; return; }
@@ -5065,10 +5300,12 @@ $('#fatriskfocus').addEventListener('click',ev=>{
   if(!body.dataset.rendered){ body.firstElementChild.innerHTML=fatRiskEquipmentTable(group); body.dataset.rendered='1'; }
   const open=body.classList.toggle('open');
   row.setAttribute('aria-expanded',open?'true':'false');
+  setDashboardKpiContext('fat',open?fatFocusKpis(group,group.key):fatFocusKpis(state.fatRiskFocus.row,state.fatRiskFocus.row.key));
 });
 $('#fatriskfocus').addEventListener('change',ev=>{
   const sel=ev.target.closest('#fatriskfocus-dim'); if(!sel||!state.fatRiskFocus) return;
   state.fatRiskFocus.bdim=sel.value; renderFatRiskBreakdown();
+  setDashboardKpiContext('fat',fatFocusKpis(state.fatRiskFocus.row,state.fatRiskFocus.row.key));
 });
 $$('#riskdim .pill').forEach(p=>p.addEventListener('click',()=>{
   $$('#riskdim .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
@@ -5099,6 +5336,7 @@ function enterRiskFocus(dim,row,areas,resolved,metric){
   const all=riskChartEquipment().filter(e=>DIM_KEYFN[dim](e)===row.key);
   const bdim = dim==='Classification' ? 'System' : 'Classification'; // default breakdown
   state.riskFocus={dim,key:row.key,resolved,metric,all,bdim,rank:areas.findIndex(a=>a.key===row.key)+1,n:areas.length,area:row,groups:[]};
+  setDashboardKpiContext('risk',riskFocusKpis(row,row.key));
   const others=RISK_DIMS.filter(x=>x!==dim);
   const f=$('#riskfocus');
   f.innerHTML=`
@@ -5172,6 +5410,7 @@ function riskEquipmentTable(group){
 }
 function exitRiskFocus(instant){
   const f=$('#riskfocus'); state.riskFocus=null;
+  clearDashboardKpiContext('risk');
   if(!f || f.hidden) return;
   $('#riskscroll').classList.remove('dive'); $('#riskhint').classList.remove('dive'); f.classList.remove('in');
   if(instant){ f.hidden=true; return; }
@@ -5185,10 +5424,12 @@ $('#riskfocus').addEventListener('click',ev=>{
   if(!body.dataset.rendered){ body.firstElementChild.innerHTML=riskEquipmentTable(group); body.dataset.rendered='1'; }
   const open=body.classList.toggle('open');
   row.setAttribute('aria-expanded',open?'true':'false');
+  setDashboardKpiContext('risk',open?riskFocusKpis(group,group.key):riskFocusKpis(state.riskFocus.area,state.riskFocus.area.key));
 });
 $('#riskfocus').addEventListener('change',ev=>{
   const sel=ev.target.closest('#riskfocus-dim'); if(!sel||!state.riskFocus) return;
   state.riskFocus.bdim=sel.value; renderRiskBreakdown();
+  setDashboardKpiContext('risk',riskFocusKpis(state.riskFocus.area,state.riskFocus.area.key));
 });
 
 /* ---- mapping ---- */
