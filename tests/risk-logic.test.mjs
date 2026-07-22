@@ -240,14 +240,14 @@ test('standalone imports keep workbook parsing off the main thread with batched 
   assert.match(html, /type:'array',dense:true,cellHTML:false/)
   assert.doesNotMatch(html, /dense:true,cellFormula:false/)
   assert.match(html, /function issueSqlProjection\(name,ws,range\)/)
-  assert.match(html, /wanted=\['cxrecordnumber','originalissuecategory','issuecategory','cxstep'\]/)
+  assert.match(html, /required=\['cxrecordnumber','originalissuecategory','issuecategory','cxstep'\], optional=\['createdby'\]/)
   assert.match(html, /out=projectIssueSqlSheet\(ws,meta\.projection,range\.e\.r/)
   assert.match(html, /rowsPerBatch=Math\.max\(100,Math\.floor\(100000\/colCount\)\)/)
   assert.match(html, /completedCells\/Math\.max\(1,totalCells\)/)
   assert.match(html, /await recompute\(true,progressRange\(72,97,'Building analysis…'\)\)/)
 })
 
-test('recognized SQL sheets copy only the four escalation columns', () => {
+test('recognized SQL sheets copy only the escalation and creator columns', () => {
   const ctx = loadWorkbookProjection()
   const ws = [
     [
@@ -257,18 +257,19 @@ test('recognized SQL sheets copy only the four escalation columns', () => {
       { v: 'Unused B' },
       { v: 'cxStep' },
       { v: 'originalIssueCategory' },
+      { v: 'createdBy' },
     ],
-    [{ v: 'discard' }, { v: 'NCR' }, { v: 'Issue-1' }, { v: 'discard' }, { v: 'FAT' }, { v: 'COR' }],
-    [{ v: 'discard' }, { v: '' }, { v: '' }, { v: 'discard' }, { v: '' }, { v: '' }],
+    [{ v: 'discard' }, { v: 'NCR' }, { v: 'Issue-1' }, { v: 'discard' }, { v: 'FAT' }, { v: 'COR' }, { v: 'Jordan Lee' }],
+    [{ v: 'discard' }, { v: '' }, { v: '' }, { v: 'discard' }, { v: '' }, { v: '' }, { v: '' }],
   ]
-  const range = { s: { r: 0, c: 0 }, e: { r: 2, c: 5 } }
+  const range = { s: { r: 0, c: 0 }, e: { r: 2, c: 6 } }
   const projection = ctx.issueSqlProjection('Issue SQL Table', ws, range)
   const rows = ctx.projectIssueSqlSheet(ws, projection, range.e.r)
 
-  assert.deepEqual(Array.from(projection.cols), [2, 5, 1, 4])
+  assert.deepEqual(Array.from(projection.cols), [2, 5, 1, 4, 6])
   assert.equal(JSON.stringify(rows), JSON.stringify([
-    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep'],
-    ['Issue-1', 'COR', 'NCR', 'FAT'],
+    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep', 'createdBy'],
+    ['Issue-1', 'COR', 'NCR', 'FAT', 'Jordan Lee'],
   ]))
   assert.equal(ctx.issueSqlProjection('Unrelated Sheet', ws, range), null)
 })
@@ -425,11 +426,11 @@ test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as au
     ['Issue-3', 'Panel B', '2002', 'Startup', 'DWN', 'Materials'],
   ])
   const sql = ctx.parseIssueSql([
-    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep'],
-    ['Issue-1', 'COR', 'NCR-D', 'FAT'],
-    ['Issue-2', 'NCR-D', 'NCR-D', 'Startup'],
-    ['Issue-3', 'WI', 'DWN', 'Commissioning'],
-    ['Issue-4', 'COR', 'NCR-C', 'FAT'],
+    ['cxRecordNumber', 'originalIssueCategory', 'issueCategory', 'cxStep', 'createdBy'],
+    ['Issue-1', 'COR', 'NCR-D', 'FAT', 'Jordan Lee'],
+    ['Issue-2', 'NCR-D', 'NCR-D', 'Startup', 'Casey Smith'],
+    ['Issue-3', 'WI', 'DWN', 'Commissioning', 'Taylor Reed'],
+    ['Issue-4', 'COR', 'NCR-C', 'FAT', 'Morgan Chen'],
   ])
   const model = ctx.buildModel({
     equipment: [
@@ -445,6 +446,9 @@ test('issue SQL parsing and escalation joins use Issue ID with SQL Cx Step as au
   assert.equal(model.escalationRows[0].transition, 'COR → NCR-D')
   assert.equal(model.escalationRows[0].cxStep, 'FAT')
   assert.equal(model.escalationRows[0].gridCxStep, 'Functional Test')
+  assert.equal(model.issueRows[0].createdBy, 'Jordan Lee')
+  assert.equal(model.issueRows[1].createdBy, 'Casey Smith')
+  assert.equal(model.escalationRows[0].createdBy, 'Jordan Lee')
 
   const rows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, {})
   const fatRows = ctx.escalationCategoryRows(model.escalationRows, model.equipment, { cxSteps: ['FAT'] })
@@ -560,6 +564,9 @@ test('repeat issues chart is nested with issue views and exposes filters, drilld
   assert.match(html, /id="repeat-root-search"/)
   assert.match(html, /id="repeatfocus"/)
   assert.match(html, /function exportRepeatXlsx\(\)/)
+  assert.match(html, /<th>Created By<\/th>/)
+  assert.match(html, /'Issue ID','Created By','Occurrence'/)
+  assert.match(html, /issue\.issueId,issue\.createdBy,issue\.equipmentName/)
   assert.match(html, /state\.repeatChart\.toBase64Image\('image\/png',1\)/)
   assert.match(html, /new Set\(\['distribution','step','escalation','repeat'\]\)/)
 })

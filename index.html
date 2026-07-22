@@ -652,7 +652,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .repeat-equipment-row[aria-expanded="false"] .repeat-equipment-caret{transform:rotate(-90deg)}
 .repeat-issue-row>td{padding:0 10px 10px 28px!important;background:var(--surface-2)}
 .repeat-issue-detail{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
-.repeat-issue-table{width:100%;min-width:940px!important;margin:0!important;background:var(--surface);border-collapse:collapse}
+.repeat-issue-table{width:100%;min-width:1060px!important;margin:0!important;background:var(--surface);border-collapse:collapse}
 .repeat-issue-table th,.repeat-issue-table td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 .repeat-issue-table th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 
@@ -778,7 +778,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.4.1</span>
+      Risk Analysis v<span id="version-label">1.4.2</span>
     </button>
   </header>
 
@@ -2217,6 +2217,7 @@ function parseIssueSql(aoa, opts){
   const originalCategoryCol=resolve('originalCategoryCol',['originalissuecategory','original issue category']);
   const categoryCol=resolve('categoryCol',['issuecategory','issue category']);
   const cxStepCol=resolve('cxStepCol',['cxstep','cx step','commissioning step']);
+  const createdByCol=resolve('createdByCol',['createdby','created by','creator']);
   const rows=[]; let total=0, escalated=0;
   if(recordCol>=0){
     for(let r=headerIdx+1;r<aoa.length;r++){
@@ -2225,6 +2226,7 @@ function parseIssueSql(aoa, opts){
       const originalCategory=originalCategoryCol>=0?norm(row[originalCategoryCol]):'';
       const issueCategory=categoryCol>=0?norm(row[categoryCol]):'';
       const cxStep=normalizeCxStep(cxStepCol>=0?row[cxStepCol]:'');
+      const createdBy=createdByCol>=0?norm(row[createdByCol]):'';
       const isEscalated=!!originalCategory&&!!issueCategory&&lc(originalCategory)!==lc(issueCategory);
       total++; if(isEscalated) escalated++;
       rows.push({
@@ -2233,12 +2235,13 @@ function parseIssueSql(aoa, opts){
         originalCategory:originalCategory||'(blank)',
         issueCategory:issueCategory||'(blank)',
         cxStep,
+        createdBy,
         transition:isEscalated?`${originalCategory} → ${issueCategory}`:'',
         escalated:isEscalated,
       });
     }
   }
-  return {rows,total,escalated,recordCol,originalCategoryCol,categoryCol,cxStepCol,headerIdx,header};
+  return {rows,total,escalated,recordCol,originalCategoryCol,categoryCol,cxStepCol,createdByCol,headerIdx,header};
 }
 // Full Export tab: match ESR Equipment Name → this tab's Equipment ID → Equipment Classification
 function parseFullExport(aoa, opts){
@@ -2271,6 +2274,10 @@ function buildModel(esr, dropdowns, issues, fullExport, issueSql){
     return {...eq, systemName, classification};
   });
   const equipmentByKey=new Map(baseEquipment.map(eq=>[eq.name.toLowerCase(),eq]));
+  const sqlRowsById=new Map();
+  for(const row of (sql.rows||[])){
+    if(row.issueKey&&!sqlRowsById.has(row.issueKey)) sqlRowsById.set(row.issueKey,row);
+  }
   const issueRows=[], unmatchedMap=new Map();
   for(const issue of (issues.rows||[])){
     const eq=equipmentByKey.get(issue.equipmentKey);
@@ -2280,8 +2287,10 @@ function buildModel(esr, dropdowns, issues, fullExport, issueSql){
       continue;
     }
     const issueSystemName=issue.upn ? (dropdowns.map[issue.upn] || issue.upnRaw || eq.systemName) : eq.systemName;
+    const sqlIssue=sqlRowsById.get(issue.issueKey);
     issueRows.push({
       ...issue,
+      createdBy:sqlIssue&&sqlIssue.createdBy?sqlIssue.createdBy:'',
       matched:true,
       systemName:issueSystemName,
       equipmentSystemName:eq.systemName,
@@ -2332,6 +2341,7 @@ function buildModel(esr, dropdowns, issues, fullExport, issueSql){
       cxStep:sqlRow.cxStep,
       originalCategory:sqlRow.originalCategory,
       issueCategory:sqlRow.issueCategory,
+      createdBy:sqlRow.createdBy||issue.createdBy||'',
       transition:sqlRow.transition,
     });
   }
@@ -2377,7 +2387,7 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.4.1';
+const APP_VERSION='1.4.2';
 $('#version-label').textContent=APP_VERSION;
 $('#dashboard-version').textContent=APP_VERSION;
 
@@ -2413,6 +2423,15 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.4.2',
+    date:'2026-07-22T11:52:08Z',
+    type:'feature',
+    stats:'Repeat issue detail refinements',
+    notes:`### Updates
+- Added issue creator details to repeat issue drilldowns
+- Expanded repeat issue search and audit exports`
+  },
   {
     version:'1.4.1',
     date:'2026-07-21T19:56:30Z',
@@ -2913,15 +2932,18 @@ function worksheetCellText(ws,row,col){
 }
 function issueSqlProjection(name,ws,range){
   if(!range||!String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'').includes('issuesql')) return null;
-  const wanted=['cxrecordnumber','originalissuecategory','issuecategory','cxstep'];
+  const required=['cxrecordnumber','originalissuecategory','issuecategory','cxstep'], optional=['createdby'];
   const lastHeaderRow=Math.min(range.e.r,range.s.r+100);
   for(let row=range.s.r;row<=lastHeaderRow;row++){
     const found={};
     for(let col=range.s.c;col<=range.e.c;col++){
       const key=worksheetCellText(ws,row,col).trim().toLowerCase().replace(/[^a-z0-9]/g,'');
-      if(wanted.includes(key)&&found[key]==null) found[key]=col;
+      if((required.includes(key)||optional.includes(key))&&found[key]==null) found[key]=col;
     }
-    if(wanted.every(key=>found[key]!=null)) return {headerRow:row,cols:wanted.map(key=>found[key])};
+    if(required.every(key=>found[key]!=null)){
+      const selected=required.concat(optional.filter(key=>found[key]!=null));
+      return {headerRow:row,cols:selected.map(key=>found[key])};
+    }
   }
   return null;
 }
@@ -3859,12 +3881,12 @@ function chartRowSearchText(row){
   const parts=[row&&row.key,row&&row.label,row&&row.score,row&&row.risk,row&&row.issueCount,row&&row.equipmentCount,row&&row.n];
   parts.push(objectKeysText(row&&row.categoryCounts),objectKeysText(row&&row.transitionCounts),objectKeysText(row&&row.rootCauseCounts),objectKeysText(row&&row.cxStepCounts));
   arrayValue(row&&row.segments).forEach(s=>parts.push(s.category,s.transition,s.count));
-  arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause,issue.originalCategory,issue.issueCategory,issue.transition));
+  arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.issueId,issue.createdBy,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause,issue.originalCategory,issue.issueCategory,issue.transition));
   arrayValue(row&&row.equipment).slice(0,80).forEach(e=>parts.push(e.name,e.systemName,e.discipline,e.building,e.milestone,e.classification,(e.categories||[]).join(' '),objectKeysText(e.categoryCounts),objectKeysText(e.rootCauseCounts)));
   arrayValue(row&&row.entries).slice(0,120).forEach(entry=>{
     const cluster=entry.cluster||{};
     parts.push(cluster.equipmentName,cluster.rootCause,cluster.issueCount,entry.repeatCount);
-    arrayValue(cluster.issues).slice(0,40).forEach(issue=>parts.push(issue.issueId,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause));
+    arrayValue(cluster.issues).slice(0,40).forEach(issue=>parts.push(issue.issueId,issue.createdBy,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause));
   });
   return lc(parts.filter(v=>v!=null&&v!=='').join(' '));
 }
@@ -4930,9 +4952,9 @@ function repeatIssueDetailTable(item){
     : item.cluster.issues;
   const seen=new Set(), issues=relevant.filter(issue=>{ const key=issue.issueKey||issue.issueId; if(seen.has(key)) return false; seen.add(key); return true; });
   const repeatKeys=new Set((item.entry.repeatIssues||[]).map(issue=>issue.issueKey||issue.issueId));
-  return `<div class="repeat-issue-detail"><table class="repeat-issue-table"><thead><tr><th>Issue ID</th><th>Occurrence</th><th>Category</th><th>Cx Step</th><th>Root Cause</th><th>Discipline</th><th>Building</th><th>Milestone</th></tr></thead><tbody>${issues.map(issue=>{
+  return `<div class="repeat-issue-detail"><table class="repeat-issue-table"><thead><tr><th>Issue ID</th><th>Created By</th><th>Occurrence</th><th>Category</th><th>Cx Step</th><th>Root Cause</th><th>Discipline</th><th>Building</th><th>Milestone</th></tr></thead><tbody>${issues.map(issue=>{
     const key=issue.issueKey||issue.issueId, status=repeatKeys.has(key)?'Repeat':'Baseline';
-    return `<tr><td><b>${esc(issue.issueId)||'—'}</b></td><td>${status}</td><td>${esc(issue.category)||'—'}</td><td>${esc(normalizeCxStep(issue.cxStep))}</td><td>${esc(item.cluster.rootCause)}</td><td>${esc(issue.discipline)||'—'}</td><td>${esc(issue.building)||'—'}</td><td>${esc(issue.milestone)||'—'}</td></tr>`;
+    return `<tr><td><b>${esc(issue.issueId)||'—'}</b></td><td>${esc(issue.createdBy)||'—'}</td><td>${status}</td><td>${esc(issue.category)||'—'}</td><td>${esc(normalizeCxStep(issue.cxStep))}</td><td>${esc(item.cluster.rootCause)}</td><td>${esc(issue.discipline)||'—'}</td><td>${esc(issue.building)||'—'}</td><td>${esc(issue.milestone)||'—'}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function repeatEquipmentTable(group,groupIndex){
@@ -5406,7 +5428,7 @@ function fxColSelect(which){
 }
 function sqlColSelect(which){
   const header=(state.sql&&state.sql.header)||[];
-  const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol'}[which];
+  const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol',creator:'createdByCol'}[which];
   const cur=state.sql&&state.sql[key];
   return `<select data-sqlcol="${which}"><option value="-1">— not found —</option>${header.map((h,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(h)||('col '+(i+1))}</option>`).join('')}</select>`;
 }
@@ -5501,10 +5523,11 @@ function renderMapping(){
         <tr><td>Original issue category</td><td>${sqlColSelect('original')}</td></tr>
         <tr><td>Current issue category</td><td>${sqlColSelect('category')}</td></tr>
         <tr><td>Cx Step</td><td>${sqlColSelect('step')}</td></tr>
+        <tr><td>Created by <span style="color:var(--ink-3);font-weight:400">(Repeat Issues detail)</span></td><td>${sqlColSelect('creator')}</td></tr>
       </tbody></table>
       ${totals.unmatchedEscalations?`<p style="color:var(--ink-3);font-size:11.5px;margin:9px 0 0">${totals.unmatchedEscalations.toLocaleString()} escalated SQL issue(s) did not match an Issue ID in Issue Grid Report.</p>`:''}`;
     $$('#map-sql select[data-sqlcol]').forEach(s=>s.addEventListener('change',()=>{
-      const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol'}[s.dataset.sqlcol];
+      const key={record:'recordCol',original:'originalCategoryCol',category:'categoryCol',step:'cxStepCol',creator:'createdByCol'}[s.dataset.sqlcol];
       state.sqlOverride[key]=+s.value; recompute(false);
     }));
   })();
@@ -5667,17 +5690,17 @@ function exportRepeatXlsx(){
   ];
   const issueDetail=[
     ...filterSummaryRows('Repeat Issues Audit Detail',repeatExportDetails()),
-    [state.repeatDim,'Equipment Name','Issue ID','Occurrence','Root Cause','Category','Cx Step','System','Discipline','Building','Milestone','Classification'],
+    [state.repeatDim,'Equipment Name','Issue ID','Created By','Occurrence','Root Cause','Category','Cx Step','System','Discipline','Building','Milestone','Classification'],
     ...entries.flatMap(({group,entry})=>{
       const repeatKeys=new Set((entry.repeatIssues||[]).map(issue=>issue.issueKey||issue.issueId));
-      return (entry.cluster.issues||[]).map(issue=>[group,entry.cluster.equipmentName,issue.issueId,repeatKeys.has(issue.issueKey||issue.issueId)?'Repeat':'Baseline',entry.cluster.rootCause,issue.category,normalizeCxStep(issue.cxStep),issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification]);
+      return (entry.cluster.issues||[]).map(issue=>[group,entry.cluster.equipmentName,issue.issueId,issue.createdBy||'',repeatKeys.has(issue.issueKey||issue.issueId)?'Repeat':'Baseline',entry.cluster.rootCause,issue.category,normalizeCxStep(issue.cxStep),issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification]);
     })
   ];
   const suffix=`_${safeFilePart(state.repeatDim)}_min_${state.repeatMinimum}${chartFilterFileSuffix()}`;
   writeFilteredWorkbook(`repeat_issues${suffix}.xlsx`,[
     {name:'Repeat Summary',aoa:summary,widths:[28,18,18,16,20,12,...roots.map(()=>18)]},
     {name:'Equipment Detail',aoa:equipmentDetail,widths:[24,24,24,16,14,14,20,24,15,18,32,28,28]},
-    {name:'Issue Audit',aoa:issueDetail,widths:[24,24,18,12,24,14,22,24,16,14,14,20]}
+    {name:'Issue Audit',aoa:issueDetail,widths:[24,24,18,22,12,24,14,22,24,16,14,14,20]}
   ]);
 }
 function exportRiskXlsx(){
