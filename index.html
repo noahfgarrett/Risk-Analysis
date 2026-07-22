@@ -174,6 +174,17 @@ body.dashboard-active .main{max-width:none;padding:16px 18px 20px}
 .riskmetric-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
 .riskmetric-control select{height:28px;min-width:148px;padding:4px 28px 4px 8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface)}
 .chart-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chart-eyebrow-line{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%}
+.chart-eyebrow-line .eyebrow{margin:0}
+.chart-help{appearance:none;width:17px;height:17px;flex:none;display:inline-grid;place-items:center;padding:0;border:1px solid var(--line-2);border-radius:50%;background:var(--surface);color:var(--ink-3);font-size:10.5px;font-weight:800;line-height:1;cursor:help;transition:border-color .12s,color .12s,background .12s}
+.chart-help:hover,.chart-help:focus-visible,.chart-help[aria-expanded="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-wash);outline:none}
+#chart-help-popover{position:fixed;z-index:210;width:min(340px,calc(100vw - 16px));padding:13px 14px;background:var(--ink);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:8px;box-shadow:0 12px 30px rgba(17,24,32,.24);opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s;pointer-events:auto}
+#chart-help-popover.show{opacity:1;transform:none}
+#chart-help-popover[hidden]{display:none}
+.chart-help-label{margin:0 0 3px;color:#a9c6dc;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.chart-help-copy{margin:0;color:#fff;font-size:12px;line-height:1.45}
+.chart-help-label.read{margin-top:10px}
+.chart-help-note{margin:10px 0 0;padding-top:9px;border-top:1px solid rgba(255,255,255,.14);color:#c9d2da;font-size:10.5px;line-height:1.4}
 .chart-group-control{display:inline-flex;align-items:center;gap:6px;margin-top:1px}
 .chart-group-control span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:750}
 .chart-group-control select{height:28px;min-width:152px;padding:4px 28px 4px 8px;border-radius:7px;font-size:12px;font-weight:700;color:var(--ink-2);background:var(--surface)}
@@ -306,7 +317,7 @@ body.export-capture .risk-face{display:none!important}
 body.export-capture .risk-face.active{display:flex!important;position:relative!important;inset:auto!important;transform:none!important;pointer-events:auto!important}
 body.export-capture #overlay,
 body.export-capture #toast,
-body.export-capture #app-tooltip{display:none!important}
+body.export-capture #app-tooltip,body.export-capture #chart-help-popover{display:none!important}
 body.export-capture *,
 body.export-freeze *{animation:none!important;transition:none!important}
 body.export-capture .view.active{opacity:1!important;transform:none!important}
@@ -778,7 +789,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.4.2</span>
+      Risk Analysis v<span id="version-label">1.4.3</span>
     </button>
   </header>
 
@@ -930,7 +941,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             <div class="issue-face issue-face-front active" data-issue-view="distribution">
               <div class="section-head">
                 <div>
-                  <div class="eyebrow">Issue distribution</div>
+                  <div class="chart-eyebrow-line"><div class="eyebrow">Issue distribution</div><button type="button" class="chart-help" data-chart-help="distribution" aria-label="Explain Issue Distribution" aria-expanded="false">?</button></div>
                   <h3 id="chart-title">Issues by System</h3>
                 </div>
                 <div class="section-actions">
@@ -988,7 +999,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             <div class="issue-face issue-face-step" data-issue-view="step">
               <div class="section-head">
                 <div>
-                  <div class="eyebrow">Issues caught by Step</div>
+                  <div class="chart-eyebrow-line"><div class="eyebrow">Issues caught by Step</div><button type="button" class="chart-help" data-chart-help="step" aria-label="Explain Issues by Step" aria-expanded="false">?</button></div>
                   <h3 id="step-chart-title">Issues by Cx Step</h3>
                 </div>
                 <div class="section-actions">
@@ -1021,7 +1032,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             <div class="issue-face issue-face-escalation" data-issue-view="escalation">
               <div class="section-head">
                 <div>
-                  <div class="eyebrow">Issue Escalation</div>
+                  <div class="chart-eyebrow-line"><div class="eyebrow">Issue Escalation</div><button type="button" class="chart-help" data-chart-help="escalation" aria-label="Explain Issue Escalation" aria-expanded="false">?</button></div>
                   <h3 id="escalation-chart-title">Escalations by Issue Type</h3>
                 </div>
                 <div class="section-actions">
@@ -1071,7 +1082,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             <div class="issue-face issue-face-repeat" data-issue-view="repeat">
               <div class="section-head">
                 <div>
-                  <div class="eyebrow">Repeat Issues</div>
+                  <div class="chart-eyebrow-line"><div class="eyebrow">Repeat Issues</div><button type="button" class="chart-help" data-chart-help="repeat" aria-label="Explain Repeat Issues" aria-expanded="false">?</button></div>
                   <h3 id="repeat-chart-title">Repeat Issues by System</h3>
                 </div>
                 <div class="section-actions">
@@ -1121,7 +1132,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
         <div class="card matrix dashboard-panel" id="matrixcard">
           <div class="section-head">
             <div>
-              <div class="eyebrow">Risk hypothesis</div>
+              <div class="chart-eyebrow-line"><div class="eyebrow">Risk hypothesis</div><button type="button" class="chart-help" data-chart-help="hypothesis" aria-label="Explain Risk Hypothesis" aria-expanded="false">?</button></div>
               <h3>Are QAQC · DV · EHS steps catching issues?</h3>
             </div>
             <div class="section-actions">
@@ -1157,7 +1168,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
           <div class="risk-face risk-face-front active">
             <div class="section-head">
               <div>
-                <div class="eyebrow">Risk analysis</div>
+                <div class="chart-eyebrow-line"><div class="eyebrow">Risk analysis</div><button type="button" class="chart-help" data-chart-help="risk" aria-label="Explain Risk Analysis" aria-expanded="false">?</button></div>
                 <div class="risk-title-row">
                   <h3 id="risk-title">Highest Risk Areas</h3>
                   <label class="riskmetric-control" data-tip="Risk Assessment ranks areas with the selected risk model. In Total Equipment, No filter shows every item, and the step filter narrows counts by QAQC / DV / EHS coverage.">
@@ -1229,7 +1240,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
           <div class="risk-face risk-face-back">
             <div class="section-head">
               <div>
-                <div class="eyebrow">FAT risk exposure</div>
+                <div class="chart-eyebrow-line"><div class="eyebrow">FAT risk exposure</div><button type="button" class="chart-help" data-chart-help="fat" aria-label="Explain FAT Risk" aria-expanded="false">?</button></div>
                 <h3 id="fat-risk-title">FAT Risk by System</h3>
               </div>
               <div class="section-actions">
@@ -2371,8 +2382,8 @@ const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 /* ---- hover tooltips: one shared bubble, delegated so it covers rendered content,
    clamped to the viewport so it never clips at an edge ---- */
 const TT=document.createElement('div'); TT.id='app-tooltip'; document.body.appendChild(TT);
-let _curTip=null;
-function showTip(el){ const txt=el.getAttribute('data-tip'); if(!txt) return;
+let _curTip=null,_helpPinned=null;
+function showTip(el){ const txt=el.getAttribute('data-tip'); if(!txt||_helpPinned) return;
   TT.textContent=txt; TT.classList.add('show');
   const r=el.getBoundingClientRect(), tw=TT.offsetWidth, th=TT.offsetHeight, pad=8;
   let left=r.left+r.width/2-tw/2; left=Math.max(pad,Math.min(left,window.innerWidth-tw-pad));
@@ -2387,7 +2398,52 @@ document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.cl
 document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el){_curTip=el;showTip(el);} });
 document.addEventListener('focusout',hideTip);
 const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const APP_VERSION='1.4.2';
+const CHART_HELP={
+  distribution:{show:'Where issues are concentrated across your selected breakdown.',read:'A longer bar means more issues were found in that area.'},
+  step:{show:'Which Cx Steps caught the issues.',read:'A longer bar means that step caught more issues. Colors show the issue categories.'},
+  escalation:{show:'Issues that changed from one category to another, such as COR to NCR.',read:'A longer bar means more escalations occurred. Colors show the different escalation paths.'},
+  repeat:{show:'Equipment receiving the same root cause more than once.',read:'The chart counts repeat occurrences after the first matching issue. A longer bar means more repeats.'},
+  hypothesis:{show:'Whether QAQC, DV, and EHS coverage is helping find issues.',read:'Compare the issue results for equipment with zero, one, two, or all three steps.'},
+  risk:()=>state.riskMetric==='equipment'
+    ? {show:'How much equipment belongs to each area.',read:'A longer bar means more equipment matches your selected filters.'}
+    : {show:'Which areas may need the most attention.',read:'Blind Spots show where issues may be going undiscovered. Hotspots show where many issues are already being found.'},
+  fat:{show:'Where equipment experienced issues during FAT.',read:'Areas with FAT issues and missing QAQC, DV, or EHS coverage appear as higher risk.'}
+};
+const HELP_POPOVER=document.createElement('div'); HELP_POPOVER.id='chart-help-popover'; HELP_POPOVER.hidden=true; HELP_POPOVER.setAttribute('role','dialog'); HELP_POPOVER.setAttribute('aria-label','Chart explanation'); document.body.appendChild(HELP_POPOVER);
+$$('.chart-help').forEach(el=>{ el.setAttribute('aria-controls','chart-help-popover'); el.setAttribute('aria-haspopup','dialog'); });
+let _helpTarget=null;
+function chartHelpContent(key){ const value=CHART_HELP[key]; return typeof value==='function'?value():value; }
+function positionChartHelp(el){
+  const r=el.getBoundingClientRect(),pw=HELP_POPOVER.offsetWidth,ph=HELP_POPOVER.offsetHeight,pad=8;
+  let left=r.left+r.width/2-pw/2; left=Math.max(pad,Math.min(left,window.innerWidth-pw-pad));
+  let top=r.bottom+8; if(top+ph>window.innerHeight-pad) top=Math.max(pad,r.top-ph-8);
+  HELP_POPOVER.style.left=left+'px'; HELP_POPOVER.style.top=top+'px';
+}
+function showChartHelp(el,pinned){
+  const content=chartHelpContent(el.dataset.chartHelp); if(!content) return;
+  hideTip();
+  if(_helpTarget&&_helpTarget!==el) _helpTarget.setAttribute('aria-expanded','false');
+  _helpTarget=el; _helpPinned=pinned?el:null; el.setAttribute('aria-expanded','true');
+  HELP_POPOVER.innerHTML=`<div class="chart-help-label">What this shows</div><p class="chart-help-copy">${esc(content.show)}</p><div class="chart-help-label read">How to read it</div><p class="chart-help-copy">${esc(content.read)}</p><p class="chart-help-note">Uses your current filters. Click a row to see more detail.</p>`;
+  HELP_POPOVER.hidden=false; HELP_POPOVER.classList.add('show'); positionChartHelp(el);
+}
+function hideChartHelp(){
+  if(_helpTarget) _helpTarget.setAttribute('aria-expanded','false');
+  HELP_POPOVER.classList.remove('show'); HELP_POPOVER.hidden=true; _helpTarget=null; _helpPinned=null;
+}
+document.addEventListener('mouseover',e=>{ const el=e.target.closest&&e.target.closest('.chart-help'); if(el&&!_helpPinned&&el!==_helpTarget) showChartHelp(el,false); });
+document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.closest('.chart-help'); if(!el||_helpPinned) return; const to=e.relatedTarget; if(to&&(el.contains(to)||HELP_POPOVER.contains(to))) return; if(el===_helpTarget) hideChartHelp(); });
+document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('.chart-help'); if(el&&!_helpPinned) showChartHelp(el,false); });
+document.addEventListener('focusout',e=>{ if(!_helpPinned&&e.target===_helpTarget) hideChartHelp(); });
+document.addEventListener('click',e=>{
+  const el=e.target.closest&&e.target.closest('.chart-help');
+  if(el){ e.preventDefault(); _helpPinned===el?hideChartHelp():showChartHelp(el,true); return; }
+  if(_helpPinned&&!HELP_POPOVER.contains(e.target)) hideChartHelp();
+});
+HELP_POPOVER.addEventListener('mouseleave',()=>{ if(!_helpPinned) hideChartHelp(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&_helpTarget) hideChartHelp(); });
+window.addEventListener('resize',()=>{ if(_helpTarget) positionChartHelp(_helpTarget); });
+const APP_VERSION='1.4.3';
 $('#version-label').textContent=APP_VERSION;
 $('#dashboard-version').textContent=APP_VERSION;
 
@@ -2423,6 +2479,15 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.4.3',
+    date:'2026-07-22T12:46:54Z',
+    type:'feature',
+    stats:'Chart guidance refinements',
+    notes:`### Updates
+- Added simple explanations across dashboard charts
+- Improved chart title guidance and interactions`
+  },
   {
     version:'1.4.2',
     date:'2026-07-22T11:52:08Z',
@@ -5959,7 +6024,7 @@ async function pngOf(el,name){ if(!window.html2canvas){toast('PNG library not lo
   resizeChartsSoon();
   await raf(); await raf();
   try{ const c=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,logging:false,
-    ignoreElements:node=>['overlay','toast','app-tooltip'].includes(node.id),
+    ignoreElements:node=>['overlay','toast','app-tooltip','chart-help-popover'].includes(node.id),
     onclone:doc=>doc.body.classList.add('export-freeze','export-capture')});
     c.toBlob(b=>{download(b,name);toast('PNG saved');}); }
   catch(err){ console.error(err); toast('Could not render PNG'); }

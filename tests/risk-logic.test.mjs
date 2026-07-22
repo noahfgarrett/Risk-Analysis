@@ -219,6 +219,18 @@ test('risk hypothesis keeps breakdown pills separate from the search row', () =>
   assert.match(matrixShelf[1], /<div class="filter-group grow">[\s\S]*id="matrixdim"[\s\S]*<\/div>\s*<\/div>\s*<label class="filter-search">/)
 })
 
+test('every dashboard chart has simple hover and click help', () => {
+  const html = loadHtml()
+  const helpKeys = [...html.matchAll(/data-chart-help="([^"]+)"/g)].map((match) => match[1])
+
+  assert.deepEqual(helpKeys, ['distribution', 'step', 'escalation', 'repeat', 'hypothesis', 'risk', 'fat'])
+  assert.match(html, /What this shows/)
+  assert.match(html, /How to read it/)
+  assert.match(html, /Uses your current filters\. Click a row to see more detail\./)
+  assert.match(html, /_helpPinned===el\?hideChartHelp\(\):showChartHelp\(el,true\)/)
+  assert.match(html, /state\.riskMetric==='equipment'/)
+})
+
 test('update asset selection prefers the versioned plain HTML asset for simple downloads', () => {
   const ctx = loadPipeline()
   const selected = ctx.selectUpdateAsset([
