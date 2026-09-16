@@ -223,7 +223,7 @@ test('every dashboard chart has simple hover and click help', () => {
   const html = loadHtml()
   const helpKeys = [...html.matchAll(/data-chart-help="([^"]+)"/g)].map((match) => match[1])
 
-  assert.deepEqual(helpKeys, ['distribution', 'step', 'escalation', 'repeat', 'hypothesis', 'risk', 'fat'])
+  assert.deepEqual(helpKeys, ['ahj', 'distribution', 'step', 'escalation', 'repeat', 'hypothesis', 'risk', 'fat'])
   assert.match(html, /What this shows/)
   assert.match(html, /How to read it/)
   assert.match(html, /Uses your current filters\. Click a row to see more detail\./)
@@ -614,7 +614,7 @@ test('equipment hierarchy lives inside the persistent dashboard workspace', () =
   assert.doesNotMatch(html, /id="view-hierarchy"/)
   assert.match(html, /data-dashboard-panel="hierarchy"[^>]*title="Equipment Hierarchy"/)
   assert.match(html, /class="dashboard-panels">[\s\S]*id="hierarchycard"[\s\S]*id="hscroll"/)
-  assert.match(html, /DASHBOARD_PANELS=new Set\(\[\.\.\.DASHBOARD_ISSUE_PANELS,'hypothesis',\.\.\.DASHBOARD_RISK_PANELS,'hierarchy'\]\)/)
+  assert.match(html, /DASHBOARD_PANELS=new Set\(\[\.\.\.DASHBOARD_ISSUE_PANELS,'hypothesis',\.\.\.DASHBOARD_RISK_PANELS,'ahj','hierarchy'\]\)/)
   assert.match(html, /if\(state\.dashboardPanel==='hierarchy'\) renderHierarchy\(false\)/)
   assert.match(html, /state\.dashboardPanel='hierarchy';\s*goto\('dashboard'\);/)
   assert.match(html, /\$\('#dashboard-export-bar'\)\.hidden=panel==='hierarchy'/)
@@ -633,7 +633,43 @@ test('dashboard KPI cards follow filters and preserve drilldown context per pane
   assert.match(html, /setDashboardKpiContext\('repeat',repeatFocusKpis/)
   assert.match(html, /setDashboardKpiContext\('risk',riskFocusKpis/)
   assert.match(html, /setDashboardKpiContext\('fat',fatFocusKpis/)
+  assert.match(html, /setDashboardKpiContext\('ahj',ahjFocusKpis/)
   assert.match(html, /@keyframes kpi-refresh/)
+})
+
+test('AHJ Inspection includes Completed, Not Started, and In Progress equipment', () => {
+  const ctx = loadPipeline()
+  const parsed = ctx.parseEquipmentStatus([
+    ['Equipment Name', 'Description', 'Building', 'UPN Tag', 'Discipline', 'Milestone', 'AHJ Inspection'],
+    ['Pump A', '', 'B1', '1001', 'Mechanical', 'M1', 'Completed'],
+    ['Pump B', '', 'B1', '1001', 'Mechanical', 'M1', '  not   started  '],
+    ['Panel C', '', 'B2', '2002', 'Electrical', 'M2', 'In Progress'],
+    ['Panel D', '', 'B2', '2002', 'Electrical', 'M2', ''],
+  ])
+  const rows = parsed.equipment.map((row, index) => ({
+    ...row,
+    systemName: index < 2 ? 'Water' : 'Power',
+    classification: index < 2 ? 'Pump' : 'Panel',
+  }))
+
+  assert.equal(parsed.ahjCol, 6)
+  assert.equal(JSON.stringify(parsed.equipment.map((row) => row.ahjInspectionStatus)), JSON.stringify(['Completed', 'Not Started', 'In Progress', '']))
+  assert.equal(JSON.stringify(ctx.ahjInspectionRows(rows, 'System', {}).map((row) => [row.key, row.equipmentCount, row.completed, row.notStarted, row.inProgress])), JSON.stringify([['Water', 2, 1, 1, 0], ['Power', 1, 0, 0, 1]]))
+  assert.equal(JSON.stringify(ctx.ahjInspectionRows(rows, 'System', { status: 'Completed' }).map((row) => [row.key, row.equipmentCount])), JSON.stringify([['Water', 1]]))
+  assert.equal(JSON.stringify(ctx.ahjInspectionRows(rows, 'System', { status: 'In Progress' }).map((row) => [row.key, row.equipmentCount])), JSON.stringify([['Power', 1]]))
+})
+
+test('AHJ Inspection workspace supports drilldown and filtered exports', () => {
+  const html = loadHtml()
+
+  assert.match(html, /data-dashboard-section="inspections"/)
+  assert.match(html, /data-dashboard-panel="ahj"[^>]*title="AHJ Inspection"/)
+  assert.match(html, /id="ahjcard"/)
+  assert.match(html, /id="ahjdimpills"[\s\S]*data-ahj-dim="Classification"/)
+  assert.match(html, /id="ahjstatuspills"[\s\S]*data-ahj-status="Completed"[\s\S]*data-ahj-status="Not Started"[\s\S]*data-ahj-status="In Progress"/)
+  assert.match(html, /function enterAhjFocus\(row,rows\)/)
+  assert.match(html, /function exportAhjXlsx\(\)/)
+  assert.match(html, /state\.ahjChart\.toBase64Image/)
 })
 
 test('issue distribution can count issues by root cause from matched issue rows', () => {

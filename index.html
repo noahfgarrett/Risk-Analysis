@@ -666,6 +666,15 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
 .repeat-issue-table{width:100%;min-width:1060px!important;margin:0!important;background:var(--surface);border-collapse:collapse}
 .repeat-issue-table th,.repeat-issue-table td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 .repeat-issue-table th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.ahj-legend{display:flex;align-items:center;gap:16px;margin:0 3px 5px;color:var(--ink-2);font-size:11.5px;font-weight:650}
+.ahj-legend .lg{display:inline-flex;align-items:center;gap:6px}
+.ahj-status{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.ahj-status::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--ink-3)}
+.ahj-status.completed::before{background:#4f8b6d}
+.ahj-status.not-started::before{background:#8b97a4}
+.ahj-status.in-progress::before{background:#c18a35}
+.ahj-equipment-wrap{max-width:100%;overflow-x:auto;margin-top:4px;border:1px solid var(--line);border-radius:6px}
+.ahj-equipment-wrap .drilltable{min-width:920px;margin:0}
 
 /* ---- risk matrix (signature) ---- */
 .matrix{padding:20px}
@@ -789,7 +798,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
     </nav>
     <button class="versionbtn" id="version-btn" title="View updates and changelog">
       <span class="version-dot" aria-hidden="true"></span>
-      Risk Analysis v<span id="version-label">1.4.3</span>
+      Risk Analysis v<span id="version-label">1.4.4</span>
     </button>
   </header>
 
@@ -851,6 +860,14 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               </button>
               <button class="dashboard-nav-item" type="button" data-dashboard-panel="fat" title="FAT Risk">
                 <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v4M12 17h.01"/></svg></span><span class="dashboard-nav-text">FAT Risk</span>
+              </button>
+              </div>
+            </div>
+            <div class="dashboard-nav-section" data-dashboard-section="inspections">
+              <button class="dashboard-nav-section-head" type="button" data-dashboard-section-toggle="inspections" aria-expanded="true"><span class="dashboard-nav-label">Inspections</span><span class="dashboard-nav-section-caret">▾</span></button>
+              <div class="dashboard-nav-items">
+              <button class="dashboard-nav-item" type="button" data-dashboard-panel="ahj" title="AHJ Inspection">
+                <span class="dashboard-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6l1 2h3v16H5V5h3l1-2Z"/><path d="m9 13 2 2 4-5"/></svg></span><span class="dashboard-nav-text">AHJ Inspection</span>
               </button>
               </div>
             </div>
@@ -935,6 +952,53 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
             </table>
           </div>
           <div class="hcount" id="hcount"></div>
+        </div>
+        <div class="card dashboard-panel" id="ahjcard" style="padding:18px">
+          <div class="section-head">
+            <div>
+              <div class="chart-eyebrow-line"><div class="eyebrow">AHJ inspection</div><button type="button" class="chart-help" data-chart-help="ahj" aria-label="Explain AHJ Inspection" aria-expanded="false">?</button></div>
+              <h3 id="ahj-title">AHJ Inspection by System</h3>
+            </div>
+            <div class="section-actions">
+              <label class="sort-select">Sort <select id="sort-ahj"><option value="desc">High to low</option><option value="asc">Low to high</option></select></label>
+              <button class="btn ghost" data-fullscreen-target="ahjcard" title="View AHJ Inspection full screen">Full</button>
+              <button class="btn ghost" id="xlsx-ahj" title="Export filtered AHJ Inspection XLSX">XLSX</button>
+              <button class="btn ghost" id="dl-ahj" title="Download AHJ Inspection chart PNG">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>PNG
+              </button>
+            </div>
+          </div>
+          <div class="filter-shelf">
+            <div class="filter-group grow">
+              <span class="filter-title">Breakdown</span>
+              <div class="pills" id="ahjdimpills">
+                <button class="pill active" data-ahj-dim="System">System</button>
+                <button class="pill" data-ahj-dim="Discipline">Discipline</button>
+                <button class="pill" data-ahj-dim="Building">Building</button>
+                <button class="pill" data-ahj-dim="Milestone">Milestone</button>
+                <button class="pill" data-ahj-dim="Classification">Classification</button>
+              </div>
+            </div>
+            <div class="filter-group compact">
+              <span class="filter-title">Status</span>
+              <div class="pills" id="ahjstatuspills">
+                <button class="pill active" data-ahj-status="">All</button>
+                <button class="pill" data-ahj-status="Completed">Completed</button>
+                <button class="pill" data-ahj-status="Not Started">Not Started</button>
+                <button class="pill" data-ahj-status="In Progress">In Progress</button>
+              </div>
+            </div>
+            <label class="filter-search">
+              <span>Search</span>
+              <input type="search" id="ahj-search" placeholder="Search AHJ areas or equipment..." autocomplete="off" />
+            </label>
+          </div>
+          <div class="ahj-legend"><span class="lg"><span class="sw" style="background:#4f8b6d"></span>Completed</span><span class="lg"><span class="sw" style="background:#8b97a4"></span>Not Started</span><span class="lg"><span class="sw" style="background:#c18a35"></span>In Progress</span></div>
+          <div class="plotregion" id="ahjplotregion">
+            <div class="chartwrap" id="ahjscroll"><div class="chartholder" id="ahjholder"><canvas id="ahjchart"></canvas></div></div>
+            <div class="charthint" id="ahjhint"></div>
+            <div class="chartfocus" id="ahjfocus" hidden></div>
+          </div>
         </div>
         <div class="card issue-card dashboard-panel active" id="chartcard">
           <div class="issue-card-inner">
@@ -2122,6 +2186,31 @@ function riskAreaRows(equipment, dim, opts){
   const resolved=opts.resolved||'blind';
   return sortRowsByMetric(scoreRisk(areas,resolved).map(row=>({...row,metricValue:row.risk})),'risk',opts.sortDirection||'desc');
 }
+function normalizeAhjInspectionStatus(value){
+  const status=String(value==null?'':value).trim().toLowerCase().replace(/\s+/g,' ');
+  if(status==='completed') return 'Completed';
+  if(status==='not started') return 'Not Started';
+  if(status==='in progress') return 'In Progress';
+  return '';
+}
+function ahjInspectionRows(equipment, dim, opts){
+  opts=opts||{};
+  const status=normalizeAhjInspectionStatus(opts.status);
+  const rows=filterEquipmentForChart(equipment,opts).filter(e=>{
+    const current=normalizeAhjInspectionStatus(e.ahjInspectionStatus);
+    return current && (!status||current===status);
+  });
+  const map=new Map();
+  for(const e of rows){
+    const key=dimensionKey(e,dim); let row=map.get(key);
+    if(!row){ row={key,equipmentCount:0,completed:0,notStarted:0,inProgress:0,equipment:[]}; map.set(key,row); }
+    row.equipmentCount++; row.equipment.push(e);
+    if(e.ahjInspectionStatus==='Completed') row.completed++;
+    else if(e.ahjInspectionStatus==='Not Started') row.notStarted++;
+    else if(e.ahjInspectionStatus==='In Progress') row.inProgress++;
+  }
+  return sortRowsByMetric([...map.values()],'equipmentCount',opts.sortDirection||'desc');
+}
 function selectUpdateAsset(assets){
   const htmlAssets=(assets||[]).filter(a=>String(a.name||'').toLowerCase().endsWith('.html'));
   const html=htmlAssets.find(a=>/^Risk-Analysis-v\d+\.\d+\.\d+\.html$/i.test(String(a.name||''))) || htmlAssets[0];
@@ -2143,6 +2232,7 @@ function parseEquipmentStatus(aoa, opts = {}){
     cols[k] = (colOverride[k] != null && colOverride[k] >= 0) ? colOverride[k] : findCol(header, al);
   }
   const metaIdx = new Set(Object.values(cols).filter(i=>i>=0));
+  const ahjCol=findCol(header,['ahj inspection','ahjinspection']);
   const discIdx = cols.discipline;
   const stepCols=[];
   header.forEach((h,i)=>{
@@ -2167,14 +2257,15 @@ function parseEquipmentStatus(aoa, opts = {}){
     const present={QAQC:hasCat('QAQC'),DV:hasCat('DV'),EHS:hasCat('EHS')};
     const categories=Object.keys(present).filter(k=>present[k]);
     const steps={}; stepCols.forEach(s=>{steps[s.header]=norm(row[s.index]);});
+    const ahjInspectionStatus=ahjCol>=0?normalizeAhjInspectionStatus(row[ahjCol]):'';
     equipment.push({
       name, description:norm(row[cols.description]), building:norm(row[cols.building]),
       upn:digits(row[cols.upn]), upnRaw:norm(row[cols.upn]),
       discipline:norm(row[cols.discipline]), milestone:norm(row[cols.milestone]),
-      present, categories, score:categories.length, steps,
+      present, categories, score:categories.length, steps, ahjInspectionStatus,
     });
   }
-  return { equipment, header, headerIdx, cols, stepCols, catCols };
+  return { equipment, header, headerIdx, cols, stepCols, catCols, ahjCol };
 }
 function parseDropdowns(aoa){
   const headerIdx=detectHeaderRow(aoa,['system name','system']);
@@ -2407,7 +2498,8 @@ const CHART_HELP={
   risk:()=>state.riskMetric==='equipment'
     ? {show:'How much equipment belongs to each area.',read:'A longer bar means more equipment matches your selected filters.'}
     : {show:'Which areas may need the most attention.',read:'Blind Spots show where issues may be going undiscovered. Hotspots show where many issues are already being found.'},
-  fat:{show:'Where equipment experienced issues during FAT.',read:'Areas with FAT issues and missing QAQC, DV, or EHS coverage appear as higher risk.'}
+  fat:{show:'Where equipment experienced issues during FAT.',read:'Areas with FAT issues and missing QAQC, DV, or EHS coverage appear as higher risk.'},
+  ahj:{show:'Which equipment has the AHJ Inspection step assigned.',read:'Each bar splits AHJ equipment into Completed, Not Started, and In Progress.'}
 };
 const HELP_POPOVER=document.createElement('div'); HELP_POPOVER.id='chart-help-popover'; HELP_POPOVER.hidden=true; HELP_POPOVER.setAttribute('role','dialog'); HELP_POPOVER.setAttribute('aria-label','Chart explanation'); document.body.appendChild(HELP_POPOVER);
 $$('.chart-help').forEach(el=>{ el.setAttribute('aria-controls','chart-help-popover'); el.setAttribute('aria-haspopup','dialog'); });
@@ -2443,7 +2535,7 @@ document.addEventListener('click',e=>{
 HELP_POPOVER.addEventListener('mouseleave',()=>{ if(!_helpPinned) hideChartHelp(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&_helpTarget) hideChartHelp(); });
 window.addEventListener('resize',()=>{ if(_helpTarget) positionChartHelp(_helpTarget); });
-const APP_VERSION='1.4.3';
+const APP_VERSION='1.4.4';
 $('#version-label').textContent=APP_VERSION;
 $('#dashboard-version').textContent=APP_VERSION;
 
@@ -2461,13 +2553,14 @@ const state = {
   collapsed:new Set(), catInit:false, chart:null,
   excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
-  chartSearch:'', stepChartSearch:'', escalationSearch:'', repeatSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'',
+  chartSearch:'', stepChartSearch:'', escalationSearch:'', repeatSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'', ahjSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
-  dashboardPanel:'distribution', dashboardNavCollapsed:false, dashboardNavSectionsOpen:new Set(['issues','risk','data','global']),
+  dashboardPanel:'distribution', dashboardNavCollapsed:false, dashboardNavSectionsOpen:new Set(['issues','risk','inspections','data','global']),
   escalationChart:null, escalationFocus:null, escalationFocusDim:'System', escalationSort:'desc', escalationGroup:'original',
   escalationLegendOpen:false, escalationTypes:new Set(), escalationTypeGroupsOpen:new Set(),
   repeatDim:'System', repeatMinimum:2, repeatSort:'desc', repeatChart:null, repeatFocus:null,
   repeatRootCauses:new Set(), repeatLegendOpen:false, repeatRootSearch:'',
+  ahjDim:'System', ahjStatus:'', ahjSort:'desc', ahjChart:null, ahjFocus:null,
   dashboardKpiContexts:{},
   rootCauses:new Set(), rootPickerOpen:null,
   customViews:[], activeCustomViewId:'', customViewDraft:null, customViewOpen:new Set(CUSTOM_VIEW_DIMENSIONS), customViewSearch:{},
@@ -2479,6 +2572,15 @@ const GITHUB_API_URL='https://api.github.com/repos/noahfgarrett/Risk-Analysis/re
 const UPDATE_TIMEOUT_MS=5000;
 const UPDATE_CACHE_KEY=`risk-analysis:update:${APP_VERSION}`;
 const CHANGELOG=[
+  {
+    version:'1.4.4',
+    date:'2026-09-16T12:20:23Z',
+    type:'feature',
+    stats:'Inspection analysis',
+    notes:`### Updates
+- Added AHJ inspection analysis
+- Expanded filtered equipment review and exports`
+  },
   {
     version:'1.4.3',
     date:'2026-07-22T12:46:54Z',
@@ -3343,7 +3445,7 @@ function toggleDraftValue(dim,value,checked){
 function applyCustomViewChange(){
   updateCustomViewButton();
   if(!state.model) return;
-  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRiskFocus(true); exitFatRiskFocus(true); exitAhjFocus(true);
   renderDashboard();
 }
 function saveCustomViewDraft(){
@@ -3750,6 +3852,7 @@ function renderDashboard(){
   const matrixSort=$('#sort-matrix'); if(matrixSort) matrixSort.value=state.matrixSort;
   const riskSort=$('#sort-risk'); if(riskSort) riskSort.value=state.riskSort;
   const fatRiskSort=$('#sort-fat-risk'); if(fatRiskSort) fatRiskSort.value=state.fatRiskSort;
+  const ahjSort=$('#sort-ahj'); if(ahjSort) ahjSort.value=state.ahjSort;
   updateCustomViewButton();
   syncRootCauseFilters();
   syncEscalationGroupPills();
@@ -3848,6 +3951,15 @@ function fatKpiCards(){
     {label:'No-step FAT issues',value:rows.reduce((sum,row)=>sum+(row.unprotectedIssueCount||0),0),sub:'Highest exposure'}
   ];
 }
+function ahjKpiCards(){
+  const rows=currentAhjRows(), equipment=rows.flatMap(row=>row.equipment||[]);
+  return [
+    {label:'AHJ equipment',value:equipment.length,sub:'Current chart filters'},
+    {label:'Completed',value:equipment.filter(e=>e.ahjInspectionStatus==='Completed').length,sub:'AHJ Inspection'},
+    {label:'Not Started',value:equipment.filter(e=>e.ahjInspectionStatus==='Not Started').length,sub:'AHJ Inspection'},
+    {label:'In Progress',value:equipment.filter(e=>e.ahjInspectionStatus==='In Progress').length,sub:'AHJ Inspection'}
+  ];
+}
 function hypothesisKpiCards(){
   const equipment=matrixEquipment(), issues=equipment.reduce((sum,e)=>sum+(e.issueCount||0),0);
   return [
@@ -3866,6 +3978,7 @@ function dashboardPanelKpiCards(){
   if(state.dashboardPanel==='hypothesis') return hypothesisKpiCards();
   if(state.dashboardPanel==='risk') return riskKpiCards();
   if(state.dashboardPanel==='fat') return fatKpiCards();
+  if(state.dashboardPanel==='ahj') return ahjKpiCards();
   const scope=globalDashboardScope(); return equipmentSummaryCards(scope.equipment,scope.issues);
 }
 function renderDashboardKpis(){
@@ -3933,6 +4046,15 @@ function fatFocusKpis(row,label){
     {label:'No-step FAT issues',value:row.unprotectedIssueCount||0,sub:'Highest exposure'}
   ];
 }
+function ahjFocusKpis(row,label){
+  const total=row.equipmentCount||0;
+  return [
+    {label:'AHJ equipment',value:total,sub:label},
+    {label:'Completed',value:row.completed||0,sub:total?Math.round((row.completed||0)/total*100)+'% of AHJ equipment':'No equipment'},
+    {label:'Not Started',value:row.notStarted||0,sub:total?Math.round((row.notStarted||0)/total*100)+'% of AHJ equipment':'No equipment'},
+    {label:'In Progress',value:row.inProgress||0,sub:total?Math.round((row.inProgress||0)/total*100)+'% of AHJ equipment':'No equipment'}
+  ];
+}
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
 function alexCustomViewText(){ return state.alexCustomView ? 'Remove Devices enabled' : 'Remove Devices off'; }
 function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,savedView:activeSavedView(),...(extra||{})}; }
@@ -3943,11 +4065,11 @@ function searchQuery(value){ return lc(value).replace(/\s+/g,' ').trim(); }
 function objectKeysText(obj){ return Object.keys(obj||{}).join(' '); }
 function arrayValue(value){ return Array.isArray(value) ? value : []; }
 function chartRowSearchText(row){
-  const parts=[row&&row.key,row&&row.label,row&&row.score,row&&row.risk,row&&row.issueCount,row&&row.equipmentCount,row&&row.n];
+  const parts=[row&&row.key,row&&row.label,row&&row.score,row&&row.risk,row&&row.issueCount,row&&row.equipmentCount,row&&row.n,row&&row.ahjInspectionStatus];
   parts.push(objectKeysText(row&&row.categoryCounts),objectKeysText(row&&row.transitionCounts),objectKeysText(row&&row.rootCauseCounts),objectKeysText(row&&row.cxStepCounts));
   arrayValue(row&&row.segments).forEach(s=>parts.push(s.category,s.transition,s.count));
   arrayValue(row&&row.issues).slice(0,80).forEach(issue=>parts.push(issue.issueId,issue.createdBy,issue.equipmentName,issue.systemName,issue.discipline,issue.building,issue.milestone,issue.classification,issue.cxStep,issue.category,issue.rootCause,issue.originalCategory,issue.issueCategory,issue.transition));
-  arrayValue(row&&row.equipment).slice(0,80).forEach(e=>parts.push(e.name,e.systemName,e.discipline,e.building,e.milestone,e.classification,(e.categories||[]).join(' '),objectKeysText(e.categoryCounts),objectKeysText(e.rootCauseCounts)));
+  arrayValue(row&&row.equipment).slice(0,80).forEach(e=>parts.push(e.name,e.systemName,e.discipline,e.building,e.milestone,e.classification,e.ahjInspectionStatus,(e.categories||[]).join(' '),objectKeysText(e.categoryCounts),objectKeysText(e.rootCauseCounts)));
   arrayValue(row&&row.entries).slice(0,120).forEach(entry=>{
     const cluster=entry.cluster||{};
     parts.push(cluster.equipmentName,cluster.rootCause,cluster.issueCount,entry.repeatCount);
@@ -3974,6 +4096,7 @@ function syncChartSearchInputs(){
     ['#matrix-search','matrixSearch'],
     ['#risk-search','riskSearch'],
     ['#fat-risk-search','fatRiskSearch'],
+    ['#ahj-search','ahjSearch'],
   ];
   pairs.forEach(([sel,key])=>{ const el=$(sel); if(el&&el.value!==state[key]) el.value=state[key]; });
 }
@@ -4120,14 +4243,16 @@ function repeatChartOptions(){
 function currentRepeatRows(){
   return filterRowsBySearch(repeatIssueRows(state.model.issueRows,state.model.equipment,state.repeatDim,repeatChartOptions()),state.repeatSearch);
 }
+function ahjChartOptions(){ return chartFilterOptions({status:state.ahjStatus,sortDirection:state.ahjSort}); }
+function currentAhjRows(){ return filterRowsBySearch(ahjInspectionRows(state.model.equipment,state.ahjDim,ahjChartOptions()),state.ahjSearch); }
 $('#excludeRooms').addEventListener('change',e=>{
   state.excludeRooms=e.target.checked;
-  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true); exitAhjFocus(true);
   renderDashboard();
 });
 $('#alexCustomView').addEventListener('change',e=>{
   state.alexCustomView=e.target.checked;
-  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true);
+  exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true); exitAhjFocus(true);
   renderDashboard();
 });
 $('#sort-chart').addEventListener('change',e=>{ state.chartSort=e.target.value; exitFocus(true); renderChart(); });
@@ -4157,6 +4282,7 @@ $('#repeat-minimum').addEventListener('change',e=>{
 $('#sort-matrix').addEventListener('change',e=>{ state.matrixSort=e.target.value; renderMatrix(); });
 $('#sort-risk').addEventListener('change',e=>{ state.riskSort=e.target.value; exitRiskFocus(true); renderRisk(); });
 $('#sort-fat-risk').addEventListener('change',e=>{ state.fatRiskSort=e.target.value; exitFatRiskFocus(true); renderFatRisk(); });
+$('#sort-ahj').addEventListener('change',e=>{ state.ahjSort=e.target.value; exitAhjFocus(true); renderAhjChart(); });
 $('#chart-search').addEventListener('input',debounce(e=>{ state.chartSearch=e.target.value; exitFocus(true); renderChart(); },120));
 $('#step-chart-search').addEventListener('input',debounce(e=>{ state.stepChartSearch=e.target.value; exitStepFocus(true); renderStepChart(); },120));
 $('#escalation-search').addEventListener('input',debounce(e=>{ state.escalationSearch=e.target.value; exitEscalationFocus(true); renderEscalationChart(); },120));
@@ -4164,6 +4290,17 @@ $('#repeat-search').addEventListener('input',debounce(e=>{ state.repeatSearch=e.
 $('#matrix-search').addEventListener('input',debounce(e=>{ state.matrixSearch=e.target.value; renderMatrix(); },120));
 $('#risk-search').addEventListener('input',debounce(e=>{ state.riskSearch=e.target.value; exitRiskFocus(true); renderRisk(); },120));
 $('#fat-risk-search').addEventListener('input',debounce(e=>{ state.fatRiskSearch=e.target.value; exitFatRiskFocus(true); renderFatRisk(); },120));
+$('#ahj-search').addEventListener('input',debounce(e=>{ state.ahjSearch=e.target.value; exitAhjFocus(true); renderAhjChart(); },120));
+$$('#ahjdimpills .pill').forEach(p=>p.addEventListener('click',()=>{
+  state.ahjDim=p.dataset.ahjDim||'System';
+  $$('#ahjdimpills .pill').forEach(x=>x.classList.toggle('active',x===p));
+  exitAhjFocus(true); renderAhjChart();
+}));
+$$('#ahjstatuspills .pill').forEach(p=>p.addEventListener('click',()=>{
+  state.ahjStatus=p.dataset.ahjStatus||'';
+  $$('#ahjstatuspills .pill').forEach(x=>x.classList.toggle('active',x===p));
+  exitAhjFocus(true); renderAhjChart();
+}));
 function renderIssueCardSide(){
   if(state.issueCardSide==='step') renderStepChart();
   else if(state.issueCardSide==='escalation') renderEscalationChart();
@@ -4172,7 +4309,7 @@ function renderIssueCardSide(){
 }
 const DASHBOARD_ISSUE_PANELS=new Set(['distribution','step','escalation','repeat']);
 const DASHBOARD_RISK_PANELS=new Set(['risk','fat']);
-const DASHBOARD_PANELS=new Set([...DASHBOARD_ISSUE_PANELS,'hypothesis',...DASHBOARD_RISK_PANELS,'hierarchy']);
+const DASHBOARD_PANELS=new Set([...DASHBOARD_ISSUE_PANELS,'hypothesis',...DASHBOARD_RISK_PANELS,'ahj','hierarchy']);
 function syncDashboardWorkspace(){
   let panel=DASHBOARD_PANELS.has(state.dashboardPanel)?state.dashboardPanel:'distribution';
   state.dashboardPanel=panel;
@@ -4186,6 +4323,7 @@ function syncDashboardWorkspace(){
   $('#chartcard').classList.toggle('active',DASHBOARD_ISSUE_PANELS.has(panel));
   $('#matrixcard').classList.toggle('active',panel==='hypothesis');
   $('#riskcard').classList.toggle('active',DASHBOARD_RISK_PANELS.has(panel));
+  $('#ahjcard').classList.toggle('active',panel==='ahj');
   $('#hierarchycard').classList.toggle('active',panel==='hierarchy');
   $('#dashboard-export-bar').hidden=panel==='hierarchy';
   syncIssueViewUI();
@@ -4197,6 +4335,7 @@ function renderActiveDashboardPanel(){
   else if(DASHBOARD_ISSUE_PANELS.has(state.dashboardPanel)) renderIssueCardSide();
   else if(state.dashboardPanel==='hypothesis') renderMatrix();
   else if(state.dashboardPanel==='fat') renderFatRisk();
+  else if(state.dashboardPanel==='ahj') renderAhjChart();
   else renderRisk();
   resizeChartsSoon();
 }
@@ -4249,7 +4388,7 @@ $('#dashboardNavToggle').addEventListener('click',()=>{
   resizeChartsSoon();
 });
 function resizeChartsSoon(){
-  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.escalationChart) state.escalationChart.resize(); if(state.repeatChart) state.repeatChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); };
+  const resize=()=>{ if(state.chart) state.chart.resize(); if(state.stepChart) state.stepChart.resize(); if(state.escalationChart) state.escalationChart.resize(); if(state.repeatChart) state.repeatChart.resize(); if(state.riskChart) state.riskChart.resize(); if(state.fatRiskChart) state.fatRiskChart.resize(); if(state.ahjChart) state.ahjChart.resize(); };
   requestAnimationFrame(resize);
   [80,360,680].forEach(ms=>setTimeout(resize,ms));
 }
@@ -4314,7 +4453,7 @@ function setLabelText(selector, text){
   el.textContent=text;
   el.title=text;
 }
-const ROW_ACTION_CHARTS=new Set(['mainchart','stepchart','escalationchart','repeatchart','riskchart','fatriskchart']);
+const ROW_ACTION_CHARTS=new Set(['mainchart','stepchart','escalationchart','repeatchart','riskchart','fatriskchart','ahjchart']);
 function chartRowBounds(chart,index){
   const yScale=chart&&chart.scales&&chart.scales.y, area=chart&&chart.chartArea;
   const labels=chart&&chart.data&&chart.data.labels;
@@ -4384,6 +4523,65 @@ function renderChart(){
   });
   if(state.dashboardPanel==='distribution') renderDashboardKpis();
 }
+function renderAhjChart(){
+  if(!state.model) return;
+  const dim=state.ahjDim, allRows=ahjInspectionRows(state.model.equipment,dim,ahjChartOptions()), rows=currentAhjRows();
+  const statusLabel=state.ahjStatus?` · ${state.ahjStatus}`:'';
+  setLabelText('#ahj-title',`AHJ Inspection by ${dim}${statusLabel}`);
+  $$('#ahjdimpills .pill').forEach(p=>p.classList.toggle('active',p.dataset.ahjDim===state.ahjDim));
+  $$('#ahjstatuspills .pill').forEach(p=>p.classList.toggle('active',(p.dataset.ahjStatus||'')===state.ahjStatus));
+  const holderH=Math.min(CHART_MAXH,Math.max(340,rows.length*CHART_PERBAR+44));
+  $('#ahjholder').style.height=holderH+'px';
+  const searchHint=searchQuery(state.ahjSearch)?`Showing ${rows.length.toLocaleString()} of ${allRows.length.toLocaleString()} ${dim.toLowerCase()} groups.`:'';
+  const scrollHint=holderH>CHART_VP?`All ${rows.length.toLocaleString()} ${dim.toLowerCase()} groups — scroll to see them.`:'';
+  const sourceHint=state.esr&&state.esr.ahjCol<0?'AHJ Inspection column was not found in Equipment Status Report.':'';
+  $('#ahjhint').textContent=[sourceHint,searchHint,scrollHint].filter(Boolean).join(' ');
+  if(state.ahjChart) state.ahjChart.destroy();
+  const ctx=$('#ahjchart').getContext('2d');
+  state.ahjChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:rows.map(row=>row.key),datasets:[
+      {label:'Completed',data:rows.map(row=>row.completed),backgroundColor:'#4f8b6d',borderRadius:4,maxBarThickness:26,totalLabels:rows.map(row=>`${row.equipmentCount.toLocaleString()} eq`)},
+      {label:'Not Started',data:rows.map(row=>row.notStarted),backgroundColor:'#8b97a4',borderRadius:4,maxBarThickness:26},
+      {label:'In Progress',data:rows.map(row=>row.inProgress),backgroundColor:'#c18a35',borderRadius:4,maxBarThickness:26}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      animation:{duration:rows.length>400?250:600,easing:'easeOutQuart'},
+      onClick:(evt,els)=>{ const i=chartRowIndexFromClick(state.ahjChart,evt,els); if(i>=0&&rows[i]) enterAhjFocus(rows[i],rows); },
+      plugins:{rowHover:{onRowClick:i=>{ if(rows[i]) enterAhjFocus(rows[i],rows); }},legend:{display:false},tooltip:{callbacks:{label:c=>{ const row=rows[c.dataIndex],count=Number(c.raw)||0,pct=row&&row.equipmentCount?Math.round(count/row.equipmentCount*100):0; return ` ${c.dataset.label}: ${count.toLocaleString()} equipment (${pct}%)`; }}}},
+      scales:{x:{beginAtZero:true,stacked:true,grid:{color:'#eef2f6'},ticks:{font:{family:'monospace'}},title:{display:true,text:'Equipment with AHJ Inspection'}},y:{stacked:true,grid:{display:false},ticks:categoryAxisTicks(30,18),afterFit:categoryAxisFit(130,220,92,132)}}}
+  });
+  if(state.dashboardPanel==='ahj') renderDashboardKpis();
+}
+function enterAhjFocus(row,rows){
+  state.ahjFocus={key:row.key,row};
+  setDashboardKpiContext('ahj',ahjFocusKpis(row,row.key));
+  const equipment=(row.equipment||[]).slice().sort((a,b)=>String(a.ahjInspectionStatus).localeCompare(String(b.ahjInspectionStatus))||String(a.name).localeCompare(String(b.name)));
+  const f=$('#ahjfocus');
+  f.innerHTML=`
+    <button class="focus-back" id="ahjfocus-back">← All ${esc(state.ahjDim.toLowerCase())} groups</button>
+    <div class="focus-head"><div class="focus-name">${esc(row.key)}</div><div class="focus-sub">${esc(state.ahjDim)} · AHJ Inspection equipment</div></div>
+    <div class="focus-stats">
+      <div class="fstat"><div class="l">AHJ equipment</div><div class="v">${row.equipmentCount.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">Completed</div><div class="v">${row.completed.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">Not Started</div><div class="v">${row.notStarted.toLocaleString()}</div></div>
+      <div class="fstat"><div class="l">In Progress</div><div class="v">${row.inProgress.toLocaleString()}</div></div>
+    </div>
+    <div class="fc-head">Equipment with AHJ Inspection · ${equipment.length.toLocaleString()}</div>
+    <div class="ahj-equipment-wrap"><table class="drilltable"><thead><tr><th>Equipment Name</th><th>AHJ Status</th><th>System</th><th>Discipline</th><th>Building</th><th>Milestone</th><th>Classification</th></tr></thead><tbody>
+      ${equipment.map(e=>`<tr><td><b>${esc(e.name)}</b></td><td><span class="ahj-status ${e.ahjInspectionStatus==='Completed'?'completed':e.ahjInspectionStatus==='In Progress'?'in-progress':'not-started'}">${esc(e.ahjInspectionStatus)}</span></td><td>${esc(e.systemName)||'—'}</td><td>${esc(e.discipline)||'—'}</td><td>${esc(e.building)||'—'}</td><td>${esc(e.milestone)||'—'}</td><td>${esc(e.classification)||'—'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  $('#ahjscroll').classList.add('dive'); $('#ahjhint').classList.add('dive');
+  f.hidden=false; f.scrollTop=0; requestAnimationFrame(()=>f.classList.add('in'));
+}
+function exitAhjFocus(instant){
+  const f=$('#ahjfocus'); state.ahjFocus=null; clearDashboardKpiContext('ahj');
+  if(!f||f.hidden) return;
+  $('#ahjscroll').classList.remove('dive'); $('#ahjhint').classList.remove('dive'); f.classList.remove('in');
+  if(instant){ f.hidden=true; return; }
+  setTimeout(()=>{ f.hidden=true; },300);
+}
+$('#ahjfocus').addEventListener('click',ev=>{ if(ev.target.closest('#ahjfocus-back')) exitAhjFocus(); });
 function hashColor(text){
   const palette=['#4b7fb6','#7d65a9','#5b9279','#b28b39','#9d6b5f','#5b7b8e','#8a7a43'];
   let h=0; for(const ch of String(text||'')) h=(h*31+ch.charCodeAt(0))>>>0;
@@ -5768,6 +5966,24 @@ function exportRepeatXlsx(){
     {name:'Issue Audit',aoa:issueDetail,widths:[24,24,18,22,12,24,14,22,24,16,14,14,20]}
   ]);
 }
+function exportAhjXlsx(){
+  const rows=currentAhjRows(), equipment=rows.flatMap(row=>(row.equipment||[]).map(e=>({group:row.key,e})));
+  const status=state.ahjStatus||'Completed + Not Started + In Progress';
+  const summary=[
+    ...filterSummaryRows('AHJ Inspection',{Dimension:state.ahjDim,Status:status,Search:state.ahjSearch||'None'}),
+    [state.ahjDim,'AHJ Equipment','Completed','Not Started','In Progress','Completed %','Not Started %','In Progress %'],
+    ...rows.map(row=>[row.key,row.equipmentCount,row.completed,row.notStarted,row.inProgress,row.equipmentCount?Math.round(row.completed/row.equipmentCount*100):0,row.equipmentCount?Math.round(row.notStarted/row.equipmentCount*100):0,row.equipmentCount?Math.round(row.inProgress/row.equipmentCount*100):0])
+  ];
+  const detail=[
+    ...filterSummaryRows('AHJ Inspection Equipment',{Dimension:state.ahjDim,Status:status,Search:state.ahjSearch||'None'}),
+    [state.ahjDim,'Equipment Name','AHJ Inspection','System','Discipline','Building','Milestone','Classification','Description'],
+    ...equipment.map(({group,e})=>[group,e.name,e.ahjInspectionStatus,e.systemName,e.discipline,e.building,e.milestone,e.classification,e.description])
+  ];
+  writeFilteredWorkbook(`ahj_inspection_by_${safeFilePart(state.ahjDim)}${state.ahjStatus?'_'+safeFilePart(state.ahjStatus):''}${chartFilterFileSuffix()}.xlsx`,[
+    {name:'AHJ Summary',aoa:summary,widths:[28,15,12,14,14,14,16,16]},
+    {name:'Equipment Detail',aoa:detail,widths:[24,24,18,28,16,14,14,22,32]}
+  ]);
+}
 function exportRiskXlsx(){
   const totalMode=riskMetricIsEquipment(), resolved=riskResolved(), rows=currentRiskRows();
   const filter=stepSelectionSummary(riskSelection(),'No filter');
@@ -5959,7 +6175,7 @@ Chart.register(
     ctx.restore();
   }},
   {id:'stackPercentLabels',afterDatasetsDraw(chart){
-    if(!['stepchart','escalationchart'].includes(chart.canvas.id)) return;
+    if(!['stepchart','escalationchart','ahjchart'].includes(chart.canvas.id)) return;
     const ctx=chart.ctx, rows=chart.data.labels||[];
     ctx.save();
     ctx.font='800 10px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');
@@ -5983,7 +6199,7 @@ Chart.register(
     ctx.restore();
   }},
   {id:'stackTotalLabels',afterDatasetsDraw(chart){
-    if(!['escalationchart','repeatchart'].includes(chart.canvas.id)) return;
+    if(!['escalationchart','repeatchart','ahjchart'].includes(chart.canvas.id)) return;
     const ctx=chart.ctx, xScale=chart.scales.x, firstMeta=chart.getDatasetMeta(0);
     ctx.save();
     ctx.font='800 11px '+getComputedStyle(document.documentElement).getPropertyValue('--mono');
@@ -6014,6 +6230,10 @@ $('#dl-repeat').addEventListener('click',()=>{ if(!state.repeatChart)return;
   clearChartRowHover(state.repeatChart);
   const a=document.createElement('a'); a.href=state.repeatChart.toBase64Image('image/png',1); a.download=`repeat_issues_by_${safeFilePart(state.repeatDim)}_min_${state.repeatMinimum}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
 $('#xlsx-repeat').addEventListener('click',exportRepeatXlsx);
+$('#dl-ahj').addEventListener('click',()=>{ if(!state.ahjChart)return;
+  clearChartRowHover(state.ahjChart);
+  const a=document.createElement('a'); a.href=state.ahjChart.toBase64Image('image/png',1); a.download=`ahj_inspection_by_${safeFilePart(state.ahjDim)}${state.ahjStatus?'_'+safeFilePart(state.ahjStatus):''}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
+$('#xlsx-ahj').addEventListener('click',exportAhjXlsx);
 $('#dl-fat-risk').addEventListener('click',()=>{ if(!state.fatRiskChart)return;
   clearChartRowHover(state.fatRiskChart);
   const a=document.createElement('a'); a.href=state.fatRiskChart.toBase64Image('image/png',1); a.download=`fat_risk_by_${safeFilePart(state.fatRiskDim)}${chartFilterFileSuffix()}.png`; a.click(); toast('Chart PNG saved'); });
@@ -6033,7 +6253,7 @@ $('#dl-matrix').addEventListener('click',()=>pngOf($('#matrixcard'),`risk_hypoth
 $('#xlsx-matrix').addEventListener('click',exportMatrixXlsx);
 $('#dl-dash').addEventListener('click',async()=>{
   // temporarily un-clip both charts so the PNG captures every bar, not just the viewport
-  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#escalationscroll'),$('#repeatscroll'),$('#riskscroll'),$('#fatriskscroll')].filter(Boolean);
+  const scs=[$('#chartscroll'),$('#stepchartscroll'),$('#escalationscroll'),$('#repeatscroll'),$('#riskscroll'),$('#fatriskscroll'),$('#ahjscroll')].filter(Boolean);
   const prev=scs.map(sc=>({sc,h:sc.style.height,o:sc.style.overflow}));
   scs.forEach(sc=>{ sc.style.height='auto'; sc.style.overflow='visible'; });
   try{ await pngOf($('#view-dashboard'),'cardinal_dashboard.png'); }
