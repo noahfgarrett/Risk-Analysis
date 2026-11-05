@@ -2376,7 +2376,12 @@ function buildModel(esr, dropdowns, issues, fullExport, issueSql){
     const classification=(cls==null||cls==='')?'(unclassified)':cls;
     return {...eq, systemName, classification};
   });
-  const equipmentByKey=new Map(baseEquipment.map(eq=>[eq.name.toLowerCase(),eq]));
+  // If the equipment sheet repeats a name, the first row owns that name's issues.
+  const equipmentByKey=new Map();
+  for(const eq of baseEquipment){
+    const key=eq.name.toLowerCase();
+    if(!equipmentByKey.has(key)) equipmentByKey.set(key,eq);
+  }
   const sqlRowsById=new Map();
   for(const row of (sql.rows||[])){
     if(row.issueKey&&!sqlRowsById.has(row.issueKey)) sqlRowsById.set(row.issueKey,row);
@@ -2417,7 +2422,8 @@ function buildModel(esr, dropdowns, issues, fullExport, issueSql){
     issueRowsByEquipment.get(row.equipmentKey).push(row);
   }
   const equipment=baseEquipment.map(eq=>{
-    const rows=issueRowsByEquipment.get(eq.name.toLowerCase())||[];
+    const key=eq.name.toLowerCase();
+    const rows=equipmentByKey.get(key)===eq ? (issueRowsByEquipment.get(key)||[]) : [];
     return {...eq, issueRows:rows, issueCount:rows.length, hasIssues:rows.length>0};
   });
   const systems={};

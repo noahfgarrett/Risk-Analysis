@@ -830,3 +830,21 @@ test('step headers only count as DV when DV starts a word', () => {
   assert.deepEqual([...classifyStep('Advanced Testing')], [])
   assert.deepEqual([...classifyStep('EHS Review 1')], ['EHS'])
 })
+
+test('issues are counted once when the equipment sheet repeats a name', () => {
+  const ctx = loadPipeline()
+  const issues = ctx.parseIssues([
+    ['Issue ID', 'Equipment Name', 'UPN Tag', 'Cx Step', 'Category', 'Root Cause'],
+    ['Issue-1', 'Pump A', '1001', 'Functional Test', 'DWN', 'Design'],
+    ['Issue-2', 'Pump A', '1001', 'Functional Test', 'DWN', 'Install'],
+  ])
+  const pump = { name: 'Pump A', upn: '1001', upnRaw: '1001', discipline: 'Mechanical', building: 'B1', milestone: 'M1', score: 0, present: {}, categories: [] }
+  const model = ctx.buildModel(
+    { equipment: [pump, { ...pump, building: 'B2' }] },
+    { map: { 1001: 'Water System' } }, issues, { byId: new Map() }, null)
+
+  const total = model.equipment.reduce((sum, eq) => sum + eq.issueCount, 0)
+  assert.equal(total, 2)
+  assert.equal(model.equipment[0].issueCount, 2)
+  assert.equal(model.equipment[1].issueCount, 0)
+})
