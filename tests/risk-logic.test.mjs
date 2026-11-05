@@ -821,3 +821,12 @@ test('chart metric sorting supports high-to-low and low-to-high directions', () 
   assert.equal(JSON.stringify(ctx.sortRowsByMetric(rows, 'issueCount', 'desc').map((row) => row.key)), JSON.stringify(['High', 'Middle', 'Low']))
   assert.equal(JSON.stringify(ctx.sortRowsByMetric(rows, 'issueCount', 'asc').map((row) => row.key)), JSON.stringify(['Low', 'Middle', 'High']))
 })
+
+test('step headers only count as DV when DV starts a word', () => {
+  const { classifyStep } = loadPipeline()
+  assert.deepEqual([...classifyStep('DV Check 1')], ['DV'])
+  assert.deepEqual([...classifyStep('QAQC/DV Walkdown')], ['QAQC', 'DV'])
+  assert.deepEqual([...classifyStep('DV2 Review')], ['DV'])
+  assert.deepEqual([...classifyStep('Advanced Testing')], [])
+  assert.deepEqual([...classifyStep('EHS Review 1')], ['EHS'])
+})

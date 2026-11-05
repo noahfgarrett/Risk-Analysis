@@ -1519,7 +1519,8 @@ function findCol(headerRow, aliases){
 function classifyStep(header){
   const h=lc(header); const cats=[];
   if (h.includes('qaqc')) cats.push('QAQC');
-  if (h.includes('dv'))   cats.push('DV');
+  // "DV" only counts at the start of a word, so headers like "Advanced" don't match.
+  if (/(^|[^a-z])dv/.test(h)) cats.push('DV');
   if (h.includes('ehs'))  cats.push('EHS');
   return cats;
 }
