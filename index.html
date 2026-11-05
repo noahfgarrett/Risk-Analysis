@@ -895,7 +895,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
               <label class="dashboard-filter-toggle" data-tip="Filters charts to these equipment classifications: RIO, SSH, BRP, LAT, MAIN, AFD, DIST-SS, PLC, GDP, LCP, DIST-PVC, TFRM-DRY, ACU, DIST-SS304, SKD, BCD, BDR, DIST-CS, EMO, LSS, PMP, PUR, SC, STRATIX ENCLOSURE, STRATIX RING, BAT-SWG, CC, CDM, DIST-PP, EF, GC, PCZ, RCTO, SUBMAIN, SYS, VMB." title="Remove devices">
                 <span class="dashboard-filter-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
                 <span class="dashboard-filter-text">Remove devices</span>
-                <input type="checkbox" id="alexCustomView" />
+                <input type="checkbox" id="classificationView" />
                 <span class="dashboard-switch" aria-hidden="true"></span>
               </label>
               <button class="custom-view-btn dashboard-custom-view" id="customViewBtn" type="button" title="Create and manage locally saved custom chart views">
@@ -1489,7 +1489,7 @@ input[type=text]:focus,input[type=search]:focus,select:focus{outline:2px solid v
   </div>
 </div>
 <script id="pipeline">
-/* ==== PIPELINE (verified in Node, 22/22 assertions) ============================ */
+/* ==== PIPELINE (covered by tests/risk-logic.test.mjs) ========================= */
 const norm = (v) => (v == null ? '' : String(v).trim());
 const lc = (v) => norm(v).toLowerCase();
 const digits = (v) => { const m = String(v == null ? '' : v).match(/\d+/); return m ? m[0] : ''; };
@@ -1525,13 +1525,13 @@ function classifyStep(header){
 }
 
 const STEP_CATEGORIES = ['QAQC','DV','EHS'];
-const ALEX_M_CUSTOM_CLASSIFICATIONS = [
+const CLASSIFICATION_VIEW_CODES = [
   'RIO','SSH','BRP','LAT','MAIN','AFD','DIST-SS','PLC','GDP','LCP','DIST-PVC',
   'TFRM-DRY','ACU','DIST-SS304','SKD','BCD','BDR','DIST-CS','EMO','LSS','PMP',
   'PUR','SC','STRATIX ENCLOSURE','STRATIX RING','BAT-SWG','CC','CDM','DIST-PP',
   'EF','GC','PCZ','RCTO','SUBMAIN','SYS','VMB'
 ];
-const ALEX_M_CLASSIFICATION_SET = new Set(ALEX_M_CUSTOM_CLASSIFICATIONS);
+const CLASSIFICATION_VIEW_SET = new Set(CLASSIFICATION_VIEW_CODES);
 const CUSTOM_VIEW_DIMENSIONS = ['System','Discipline','Milestone','Classification','Building'];
 function stepComboLabel(e){
   return STEP_CATEGORIES.filter(c=>e.present&&e.present[c]).join(' + ') || 'None';
@@ -1539,12 +1539,12 @@ function stepComboLabel(e){
 function normalizeClassificationCode(value){
   return String(value==null?'':value).trim().replace(/\s+/g,' ').toUpperCase();
 }
-function isAlexCustomEquipment(e){
-  return ALEX_M_CLASSIFICATION_SET.has(normalizeClassificationCode(e&&e.classification));
+function isClassificationViewEquipment(e){
+  return CLASSIFICATION_VIEW_SET.has(normalizeClassificationCode(e&&e.classification));
 }
-function filterAlexCustomEquipment(equipment, enabled){
+function filterClassificationViewEquipment(equipment, enabled){
   const rows=equipment||[];
-  return enabled ? rows.filter(isAlexCustomEquipment) : rows.slice();
+  return enabled ? rows.filter(isClassificationViewEquipment) : rows.slice();
 }
 function customViewValue(e, dim){
   return dimensionKey(e,dim);
@@ -1602,7 +1602,7 @@ function filterRoomEquipment(equipment, excludeRooms){
 function filterEquipmentForChart(equipment, opts){
   opts=opts||{};
   let rows=filterRoomEquipment(equipment, !!opts.excludeRooms);
-  rows=filterAlexCustomEquipment(rows, !!opts.alexCustomView);
+  rows=filterClassificationViewEquipment(rows, !!opts.classificationView);
   rows=filterSavedViewEquipment(rows, opts.savedView);
   if(opts.stepSelection) rows=rows.filter(e=>matchStepSelection(e, opts.stepSelection));
   return rows;
@@ -2551,7 +2551,7 @@ const state = {
   fatCatSel:new Set(), fatCatNone:false, fatCatMode:'any',
   catAssign:{}, ignoreNA:false, colOverride:{}, fxOverride:{}, sqlOverride:{},
   collapsed:new Set(), catInit:false, chart:null,
-  excludeRooms:false, alexCustomView:false, matrixExpanded:new Set(), fullscreenCard:null,
+  excludeRooms:false, classificationView:false, matrixExpanded:new Set(), fullscreenCard:null,
   chartSort:'desc', matrixSort:'desc', riskSort:'desc',
   chartSearch:'', stepChartSearch:'', escalationSearch:'', repeatSearch:'', matrixSearch:'', riskSearch:'', fatRiskSearch:'', ahjSearch:'',
   issueCardSide:'distribution', stepChart:null, stepFocus:null, stepFocusDim:'System',
@@ -3843,7 +3843,7 @@ window.addEventListener('resize',debounce(()=>{ if(state.visible) renderWindow()
 /* ---- dashboard ---- */
 function renderDashboard(){
   const roomToggle=$('#excludeRooms'); if(roomToggle) roomToggle.checked=state.excludeRooms;
-  const alexToggle=$('#alexCustomView'); if(alexToggle) alexToggle.checked=state.alexCustomView;
+  const classificationToggle=$('#classificationView'); if(classificationToggle) classificationToggle.checked=state.classificationView;
   const chartSort=$('#sort-chart'); if(chartSort) chartSort.value=state.chartSort;
   const stepChartSort=$('#sort-step-chart'); if(stepChartSort) stepChartSort.value=state.chartSort;
   const escalationSort=$('#sort-escalation'); if(escalationSort) escalationSort.value=state.escalationSort;
@@ -4056,9 +4056,9 @@ function ahjFocusKpis(row,label){
   ];
 }
 function roomFilterText(){ return state.excludeRooms ? 'Rooms removed (RR)' : 'Rooms included'; }
-function alexCustomViewText(){ return state.alexCustomView ? 'Remove Devices enabled' : 'Remove Devices off'; }
-function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,alexCustomView:state.alexCustomView,savedView:activeSavedView(),...(extra||{})}; }
-function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.alexCustomView?'_remove_devices':''}${activeCustomViewFileSuffix()}`; }
+function classificationViewText(){ return state.classificationView ? 'Remove Devices enabled' : 'Remove Devices off'; }
+function chartFilterOptions(extra){ return {excludeRooms:state.excludeRooms,classificationView:state.classificationView,savedView:activeSavedView(),...(extra||{})}; }
+function chartFilterFileSuffix(){ return `${state.excludeRooms?'_no_rooms':''}${state.classificationView?'_remove_devices':''}${activeCustomViewFileSuffix()}`; }
 function baseChartEquipment(){ return filterEquipmentForChart(state.model.equipment,chartFilterOptions()); }
 function matrixEquipment(){ return baseChartEquipment(); }
 function searchQuery(value){ return lc(value).replace(/\s+/g,' ').trim(); }
@@ -4250,8 +4250,8 @@ $('#excludeRooms').addEventListener('change',e=>{
   exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true); exitAhjFocus(true);
   renderDashboard();
 });
-$('#alexCustomView').addEventListener('change',e=>{
-  state.alexCustomView=e.target.checked;
+$('#classificationView').addEventListener('change',e=>{
+  state.classificationView=e.target.checked;
   exitFocus(true); exitStepFocus(true); exitEscalationFocus(true); exitRepeatFocus(true); exitRiskFocus(true); exitFatRiskFocus(true); exitAhjFocus(true);
   renderDashboard();
 });
@@ -5852,7 +5852,7 @@ function thin(){const s={style:'thin',color:{rgb:'D3DBE3'}};return{top:s,bottom:
 function styleCell(v,st){return {v:v,t:typeof v==='number'?'n':'s',s:st};}
 function safeFilePart(v){ return String(v||'data').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'data'; }
 function filterSummaryRows(kind, extra){
-  const rows=[['Export',kind],['Room filter',roomFilterText()],['Remove Devices',alexCustomViewText()],['Saved custom view',customViewExportLabel()]];
+  const rows=[['Export',kind],['Room filter',roomFilterText()],['Remove Devices',classificationViewText()],['Saved custom view',customViewExportLabel()]];
   if(extra) Object.entries(extra).forEach(([k,v])=>rows.push([k,v]));
   rows.push([]);
   return rows;

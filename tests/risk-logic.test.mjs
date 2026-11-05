@@ -309,7 +309,7 @@ test('room filtering removes equipment whose system or UPN is RR', () => {
   assert.equal(ctx.filterRoomEquipment(rows, false).length, 4)
 })
 
-test('alex custom view keeps only the approved equipment classifications', () => {
+test('classification view keeps only the approved equipment classifications', () => {
   const ctx = loadPipeline()
   const rows = [
     { name: 'pump', systemName: 'Alpha', classification: 'PMP', score: 1, present: { QAQC: true } },
@@ -320,11 +320,11 @@ test('alex custom view keeps only the approved equipment classifications', () =>
     { name: 'unclassified', systemName: 'Beta', classification: '(unclassified)', score: 0, present: {} },
   ]
 
-  const filtered = ctx.filterEquipmentForChart(rows, { alexCustomView: true })
+  const filtered = ctx.filterEquipmentForChart(rows, { classificationView: true })
 
   assert.deepEqual(filtered.map((row) => row.name), ['pump', 'panel', 'branch panel', 'gas cabinet'])
-  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'Classification', { alexCustomView: true }).map((row) => row.key)), JSON.stringify(['BRP', 'dist-pvc', 'GC', 'PMP']))
-  assert.equal(ctx.filterEquipmentForChart(rows, { alexCustomView: false }).length, 6)
+  assert.equal(JSON.stringify(ctx.issueDistributionRows(rows, 'Classification', { classificationView: true }).map((row) => row.key)), JSON.stringify(['BRP', 'dist-pvc', 'GC', 'PMP']))
+  assert.equal(ctx.filterEquipmentForChart(rows, { classificationView: false }).length, 6)
 })
 
 test('saved custom views match selected values within each dimension', () => {
@@ -600,7 +600,7 @@ test('chart selectors and dashboard sidebar share one state-preserving workspace
   assert.match(html, /data-dashboard-section-toggle="risk"/)
   assert.match(html, /data-dashboard-section-toggle="data"/)
   assert.match(html, /data-dashboard-section-toggle="global"/)
-  assert.match(html, /<div class="dashboard-global-section"[\s\S]*id="excludeRooms"[\s\S]*id="alexCustomView"[\s\S]*id="customViewBtn"[\s\S]*<div class="dashboard-side-foot"/)
+  assert.match(html, /<div class="dashboard-global-section"[\s\S]*id="excludeRooms"[\s\S]*id="classificationView"[\s\S]*id="customViewBtn"[\s\S]*<div class="dashboard-side-foot"/)
   assert.doesNotMatch(html, /class="dashboard-utility"/)
   assert.doesNotMatch(html, /rotateY\(/)
   assert.match(html, /function syncRiskViewUI\(\)[\s\S]*risk-face-front'[\s\S]*classList\.toggle\('active'/)
