@@ -6,6 +6,8 @@ The question behind it: does equipment with more step coverage end up with more 
 
 ![Issue distribution by system, using the sample workbook](docs/screenshots/issue-distribution.png)
 
+Try it at https://noahfgarrett.github.io/Risk-Analysis/ with the [sample workbook](sample/sample-equipment.xlsx) (download it, then drop it on the page).
+
 ## What it does
 
 - Matches the workbook tabs and header rows automatically. A Mapping tab lets you override sheet and column picks, reassign step columns to categories, and see issue rows whose Equipment ID doesn't match any equipment.
